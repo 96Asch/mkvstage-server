@@ -17,6 +17,7 @@ jobs:
       DB_USER: root
       DB_PASS: root
       DB_HOST: localhost
+      DB_PORT: 3036
 
   
     steps:
@@ -41,7 +42,7 @@ jobs:
         echo $DSN
         sed -i "s/dns/$DSN/" .env
       env:
-        DSN: ${{ env.DB_USER }}:${{ env.DB_PASS }}@tcp(${{ env.DB_HOST }}/${{ job.services.mysql.ports['3306'] }})/${{ env.DB_NAME }}  
+        DSN: ${{ env.DB_USER }}:${{ env.DB_PASS }}@tcp(${{ env.DB_HOST }}\/${{ env.DB_PORT }})\/${{ env.DB_NAME }}  
 
     - name: Run Testsuite
       run: go test -v ./...

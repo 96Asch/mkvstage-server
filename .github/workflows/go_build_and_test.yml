@@ -38,8 +38,10 @@ jobs:
     - name: Configure Test environment variables
       run: |
         cp .env_sample .env
-        DSN="${{ env.DB_USER }}:${{ env.DB_PASS }}@tcp(${{ env.DB_HOST }}/${{ job.services.mysql.ports['3306'] }})/(${{ env.DB_NAME }})"  
+        echo $DSN
         sed -i "s/example-dns/$DSN/" .env
+      env:
+        DSN: ${{ env.DB_USER }}:${{ env.DB_PASS }}@tcp(${{ env.DB_HOST }}/${{ job.services.mysql.ports['3306'] }})/${{ env.DB_NAME }}  
 
     - name: Run Testsuite
       run: go test -v ./...

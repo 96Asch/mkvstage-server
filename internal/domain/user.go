@@ -19,7 +19,13 @@ type User struct {
 	DeletedAt    gorm.DeletedAt `json:"-"`
 }
 
+type UserService interface {
+	Getter[User]
+	Store(ctx context.Context, user *User) error
+	Remove(ctx context.Context, user *User) error
+}
+
 type UserRepository interface {
-	GetAll(ctx context.Context) ([]*User, error)
-	GetByID(ctx context.Context, id int64) (*User, error)
+	Creator[User]
+	Getter[User]
 }

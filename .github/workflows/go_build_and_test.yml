@@ -35,6 +35,8 @@ jobs:
 
     - name: Build Go Server
       run: go build -v ./cmd/main.go
+      env:
+        API_BASE: / api/stage
 
     - name: Configure Test environment variables
       run: |

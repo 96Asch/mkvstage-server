@@ -17,18 +17,13 @@ func NewUserService(ur domain.UserRepository) domain.UserService {
 }
 
 func (us *userService) FetchByID(ctx context.Context, id int64) (*domain.User, error) {
-	user, err := us.userRepo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return us.userRepo.GetByID(ctx, id)
 }
 
-func (us *userService) FetchAll(ctx context.Context) ([]*domain.User, error) {
-	return []*domain.User{}, nil
+func (us *userService) FetchAll(ctx context.Context) (*[]domain.User, error) {
+	return us.userRepo.GetAll(ctx)
 }
 
 func (us userService) Store(ctx context.Context, user *domain.User) error {
-	return nil
+	return us.userRepo.Create(ctx, user)
 }

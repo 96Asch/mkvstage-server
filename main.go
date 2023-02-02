@@ -59,11 +59,13 @@ func main() {
 
 	host := os.Getenv("MYSQL_HOST")
 	port := os.Getenv("MYSQL_PORT")
-	name := os.Getenv("MYSQL_DATABASE")
+	name := os.Getenv("MYSQL_NAME")
 	user := os.Getenv("MYSQL_USER")
 	pass := os.Getenv("MYSQL_PASS")
 
-	db, err := store.GetDB(host, port, name, user, pass, "time")
+	log.Printf("host:%v, port:%v, name:%v, user:%v, pass:%v", host, port, name, user, pass)
+
+	db, err := store.GetDB(user, pass, host, port, name)
 	if err != nil {
 		log.Fatal(err)
 	}

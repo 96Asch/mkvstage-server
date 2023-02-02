@@ -6,9 +6,9 @@ services:
       - "3406:3406"
     environment:
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASSWORD: ${MYSQL_PASS}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASS}
+      MYSQL_DATABASE: ${MYSQL_NAME}
     networks:
       - fullstack
 
@@ -21,6 +21,7 @@ services:
       - fullstack
 
   app:
+    name: mkv_app
     build:
       dockerfile: Dockerfile
       context: .
@@ -29,19 +30,14 @@ services:
       - .:/opt/app/api
     environment:
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASS: ${MYSQL_PASS}
+      MYSQL_NAME: ${MYSQL_NAME}
       MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
     ports:
       - "8080:8080"
     networks:
       - fullstack
-    healthcheck:
-        test: ["CMD-SHELL", 'mysqladmin ping']
-        interval: 10s
-        timeout: 2s
-        retries: 10
-          
 
 networks:
   fullstack:

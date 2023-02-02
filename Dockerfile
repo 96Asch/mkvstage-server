@@ -3,6 +3,7 @@ FROM golang:alpine as base
 RUN apk update && apk upgrade
 RUN apk add curl
 
+
 # Run the air command in the directory where our code will live
 WORKDIR /opt/app/api
 
@@ -11,7 +12,7 @@ COPY go.sum .
 
 RUN go mod tidy
 
-
+COPY . /opt/app/api/
 
 # Create another stage called "dev" that is based off of our "base" stage (so we have golang available to us)
 FROM base as dev

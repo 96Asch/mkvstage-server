@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql
+    ports:
+      - "3406:3406"
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    networks:
+      - fullstack
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "4080:4000"
+    networks:
+      - fullstack
+
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: dev
+    volumes:
+      - .:/opt/app/api
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_HOST: ${MYSQL_HOST}
+    ports:
+      - "8080:8080"
+    networks:
+      - fullstack
+    healthcheck:
+        test: ["CMD-SHELL", 'mysqladmin ping']
+        interval: 10s
+        timeout: 2s
+        retries: 10
+          
+
+networks:
+  fullstack:
+    driver: bridge

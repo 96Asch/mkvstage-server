@@ -4,11 +4,15 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/handler"
+	"github.com/96Asch/mkvstage-server/internal/repository"
+	"github.com/96Asch/mkvstage-server/internal/service"
+	"github.com/96Asch/mkvstage-server/internal/store"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,7 +56,21 @@ func run(config *handler.Config) {
 
 func main() {
 	router := gin.Default()
-	config := handler.Config{Router: router}
+
+	host := os.Getenv("MYSQL_HOST")
+	port := os.Getenv("MYSQL_PORT")
+	name := os.Getenv("MYSQL_DATABASE")
+	user := os.Getenv("MYSQL_USER")
+	pass := os.Getenv("MYSQL_PASS")
+
+	db, err := store.GetDB(host, port, name, user, pass, "time")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ur := repository.NewUserRepository(db)
+	us := service.NewUserService(ur)
+	config := handler.Config{Router: router, U: us}
 
 	run(&config)
 }

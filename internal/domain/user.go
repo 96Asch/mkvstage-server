@@ -20,9 +20,9 @@ type User struct {
 }
 
 type UserService interface {
-	Getter[User]
+	Fetcher[User]
 	Store(ctx context.Context, user *User) error
-	Remove(ctx context.Context, user *User) error
+	// Remove(ctx context.Context, user *User) error
 }
 
 type UserRepository interface {

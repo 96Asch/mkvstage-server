@@ -1,27 +1,28 @@
 package handler
 
 import (
-	"net/http"
 	"os"
 
+	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct {
+type Config struct {
+	Router *gin.Engine
+	U      domain.UserService
+}
+
+func (cfg *Config) New() *Config {
+	return &Config{
+		Router: gin.Default(),
+	}
 }
 
 func Initialize(config *Config) {
 
-	h := Handler{}
-
 	base := config.Router.Group(os.Getenv("API_BASE"))
 	v1 := base.Group("v1")
 
-	user := v1.Group("users")
-	user.GET("/me", h.Me)
+	NewUserHandler(v1, &config.U)
 
-}
-
-func (h *Handler) Me(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "Hello me!")
 }

@@ -33,23 +33,6 @@ services:
     networks:
       - fullstack
 
-  phpmyadmin-test:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_container_test
-    depends_on:
-      - mkv-mysql-test
-    environment:
-      PMA_HOST: mkv-mysql-test
-      PMA_USER: ${MYSQL_USER}
-      PMA_PORT: ${MYSQL_PORT}
-      PMA_PASSWORD: ${MYSQL_PASS}
-    ports:
-      - 9090:80
-    restart: always
-    networks:
-      - fullstack
-
-
 networks:
   fullstack:
     driver: bridge

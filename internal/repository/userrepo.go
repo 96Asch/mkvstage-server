@@ -55,7 +55,7 @@ func (ur userRepository) GetAll(ctx context.Context) (*[]domain.User, error) {
 	var users []domain.User
 	res := ur.db.Find(&users)
 	if err := res.Error; err != nil {
-		return nil, nil
+		return nil, domain.NewInternalErr()
 	}
 
 	return &users, nil

@@ -16,6 +16,7 @@ func Initialize(rg *gin.RouterGroup, userService domain.UserService) {
 
 	us := rg.Group("users")
 
+	us.GET("/", uh.GetAll)
 	us.GET("/me", uh.Me)
 	us.POST("/create", uh.Create)
 }

@@ -26,7 +26,7 @@ func (ur userRepository) Create(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (ur userRepository) CreateBatch(ctx context.Context, users []*domain.User) error {
+func (ur userRepository) CreateBatch(ctx context.Context, users *[]domain.User) error {
 	res := ur.db.CreateInBatches(users, 50)
 	if res.Error != nil {
 		return domain.NewInternalErr()

@@ -68,6 +68,7 @@ func main() {
 	db, err := store.GetDB(user, pass, host, port, name)
 	if err != nil {
 		log.Fatal(err)
+		panic(err)
 	}
 
 	ur := repository.NewUserRepository(db)

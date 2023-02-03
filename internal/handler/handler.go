@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"os"
-
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,9 +19,8 @@ func (cfg *Config) New() *Config {
 
 func Initialize(config *Config) {
 
-	base := config.Router.Group(os.Getenv("API_BASE"))
+	base := config.Router.Group("api")
 	v1 := base.Group("v1")
 
-	NewUserHandler(v1, &config.U)
-
+	userhandler.Initialize(v1, config.U)
 }

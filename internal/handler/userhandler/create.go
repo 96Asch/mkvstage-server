@@ -1,4 +1,4 @@
-package handler
+package userhandler
 
 import (
 	"net/http"
@@ -6,24 +6,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/gin-gonic/gin"
 )
-
-type UserHandler struct {
-	us domain.UserService
-}
-
-func NewUserHandler(rg *gin.RouterGroup, userService *domain.UserService) {
-	uh := &UserHandler{
-		us: *userService,
-	}
-
-	us := rg.Group("users")
-
-	us.GET("/me", uh.Me)
-}
-
-func (u *UserHandler) Me(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "Hello me!")
-}
 
 func (u *UserHandler) Create(ctx *gin.Context) {
 
@@ -34,7 +16,7 @@ func (u *UserHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	if err := u.us.Store(ctx, &user); err != nil {
+	if err := u.userService.Store(ctx, &user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}

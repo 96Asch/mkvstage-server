@@ -8,13 +8,13 @@ import (
 )
 
 type User struct {
-	ID           uint           `json:"id"`
+	ID           int64          `json:"id"`
 	Email        string         `json:"email" binding:"email" gorm:"unique"`
-	Password     string         `json:"password"`
-	FirstName    string         `json:"first_name"`
-	LastName     string         `json:"last_name"`
-	Permission   string         `json:"permission"`
-	ProfileColor string         `binding:"required"`
+	Password     string         `json:"password" binding:"required"`
+	FirstName    string         `json:"first_name" binding:"required"`
+	LastName     string         `json:"last_name" binding:"required"`
+	Permission   string         `json:"permission" binding:"required"`
+	ProfileColor string         `json:"profile_color" binding:"required"`
 	UpdatedAt    time.Time      `json:"last_modified"`
 	DeletedAt    gorm.DeletedAt `json:"-"`
 }

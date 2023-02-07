@@ -11,11 +11,10 @@ type updateUser struct {
 	Password     string `json:"password" binding:"required"`
 	FirstName    string `json:"first_name" binding:"required"`
 	LastName     string `json:"last_name" binding:"required"`
-	Permission   string `json:"permission" binding:"required"`
 	ProfileColor string `json:"profile_color" binding:"required"`
 }
 
-func (uh *UserHandler) UpdateByID(ctx *gin.Context) {
+func (uh *UserHandler) Update(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		err := domain.NewInternalErr()
@@ -35,7 +34,7 @@ func (uh *UserHandler) UpdateByID(ctx *gin.Context) {
 		Password:     uUser.Password,
 		FirstName:    uUser.FirstName,
 		LastName:     uUser.LastName,
-		Permission:   uUser.Permission,
+		Permission:   val.(*domain.User).Permission,
 		ProfileColor: uUser.ProfileColor,
 	}
 

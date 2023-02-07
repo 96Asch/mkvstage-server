@@ -42,3 +42,21 @@ func (us userService) Update(ctx context.Context, user *domain.User) error {
 
 	return us.userRepo.Update(ctx, user)
 }
+
+func (us userService) Remove(ctx context.Context, user *domain.User, id int64) error {
+
+	deleteId := id
+	if id == 0 {
+		deleteId = user.ID
+	}
+
+	if user.ID != id && !user.HasClearance() {
+		return domain.NewNotAuthorizedErr("cannot delete given id")
+	}
+
+	if err := us.userRepo.Delete(ctx, deleteId); err != nil {
+		return err
+	}
+
+	return nil
+}

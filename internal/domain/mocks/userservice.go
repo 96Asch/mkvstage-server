@@ -64,3 +64,14 @@ func (m *MockUserService) Update(ctx context.Context, user *domain.User) error {
 
 	return r0
 }
+
+func (m *MockUserService) Remove(ctx context.Context, user *domain.User, id int64) error {
+	ret := m.Called(ctx, user, id)
+
+	var r0 error
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(error)
+	}
+
+	return r0
+}

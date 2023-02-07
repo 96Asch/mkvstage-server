@@ -12,7 +12,6 @@ type newUser struct {
 	Password     string `json:"password" binding:"required"`
 	FirstName    string `json:"first_name" binding:"required"`
 	LastName     string `json:"last_name" binding:"required"`
-	Permission   string `json:"permission" binding:"required"`
 	ProfileColor string `json:"profile_color" binding:"required"`
 }
 
@@ -30,7 +29,7 @@ func (u *UserHandler) Create(ctx *gin.Context) {
 		Password:     nUser.Password,
 		FirstName:    nUser.FirstName,
 		LastName:     nUser.LastName,
-		Permission:   nUser.Permission,
+		Permission:   domain.GUEST,
 		ProfileColor: nUser.ProfileColor,
 	}
 

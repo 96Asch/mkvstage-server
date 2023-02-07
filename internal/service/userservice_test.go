@@ -19,7 +19,7 @@ func TestFetchByIDUser(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -44,7 +44,7 @@ func TestFetchAllUserCorrect(t *testing.T) {
 			FirstName:    "Foo",
 			LastName:     "Foo",
 			Email:        "Foo@Foo.com",
-			Permission:   "member",
+			Permission:   domain.MEMBER,
 			ProfileColor: "FFFFFF",
 		},
 		{
@@ -52,7 +52,7 @@ func TestFetchAllUserCorrect(t *testing.T) {
 			FirstName:    "Bar",
 			LastName:     "Bar",
 			Email:        "Bar@Bar.com",
-			Permission:   "member",
+			Permission:   domain.MEMBER,
 			ProfileColor: "FFFFF0",
 		},
 	}
@@ -63,7 +63,7 @@ func TestFetchAllUserCorrect(t *testing.T) {
 			FirstName:    "Foo",
 			LastName:     "Foo",
 			Email:        "Foo@Foo.com",
-			Permission:   "member",
+			Permission:   domain.MEMBER,
 			ProfileColor: "FFFFFF",
 		},
 		{
@@ -71,7 +71,7 @@ func TestFetchAllUserCorrect(t *testing.T) {
 			FirstName:    "Bar",
 			LastName:     "Bar",
 			Email:        "Bar@Bar.com",
-			Permission:   "member",
+			Permission:   domain.MEMBER,
 			ProfileColor: "FFFFF0",
 		},
 	}
@@ -111,7 +111,7 @@ func TestStoreUser(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -135,7 +135,7 @@ func TestStoreUser(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -151,7 +151,7 @@ func TestUpdateUserCorrect(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -170,7 +170,7 @@ func TestUpdateUserCorrect(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -186,7 +186,7 @@ func TestUpdateUserZeroID(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.ADMIN,
 		ProfileColor: "FFFFFF",
 	}
 

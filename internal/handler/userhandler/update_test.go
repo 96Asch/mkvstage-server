@@ -25,7 +25,7 @@ func TestUpdateCorrect(t *testing.T) {
 		FirstName:    "Foob",
 		LastName:     "Bars",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}).Return(nil)
 
@@ -132,7 +132,7 @@ func TestUpdateInternalErr(t *testing.T) {
 		FirstName:    "Foob",
 		LastName:     "Bars",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}).Return(expectedError)
 

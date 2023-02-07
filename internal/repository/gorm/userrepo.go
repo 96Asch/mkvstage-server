@@ -70,3 +70,11 @@ func (ur gormUserRepository) Update(ctx context.Context, user *domain.User) erro
 	}
 	return nil
 }
+
+func (ur gormUserRepository) Delete(ctx context.Context, id int64) error {
+	res := ur.db.Delete(&domain.User{}, id)
+	if err := res.Error; err != nil {
+		return domain.NewInternalErr()
+	}
+	return nil
+}

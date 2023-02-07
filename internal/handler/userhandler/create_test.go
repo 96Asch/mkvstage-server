@@ -20,7 +20,7 @@ func TestCreateCorrect(t *testing.T) {
 		LastName:     "Bar",
 		Password:     "FooBar",
 		Email:        "Foo@Bar.com",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -44,7 +44,6 @@ func TestCreateCorrect(t *testing.T) {
 		"last_name":     "Bar",
 		"email":         "Foo@Bar.com",
 		"password":      "FooBar",
-		"permission":    "member",
 		"profile_color": "FFFFFF",
 	})
 	assert.NoError(t, err)
@@ -62,7 +61,7 @@ func TestCreateCorrect(t *testing.T) {
 			FirstName:    "Foo",
 			LastName:     "Bar",
 			Email:        "Foo@Bar.com",
-			Permission:   "member",
+			Permission:   domain.MEMBER,
 			ProfileColor: "FFFFFF",
 		},
 	})
@@ -89,7 +88,6 @@ func TestCreateInvalidEmail(t *testing.T) {
 		"last_name":     "Bar",
 		"email":         "Foocom",
 		"password":      "Foo",
-		"permission":    "Foo",
 		"profile_color": "Foo",
 	})
 	assert.NoError(t, err)
@@ -121,7 +119,6 @@ func TestCreateInvalidBind(t *testing.T) {
 		"last_name":    "Bar",
 		"emails":       "Foo@bar.com",
 		"password":     "Foo",
-		"permission":   "Foo",
 		"profileColor": "Foo",
 	})
 	assert.NoError(t, err)
@@ -143,7 +140,7 @@ func TestCreateServerError(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 

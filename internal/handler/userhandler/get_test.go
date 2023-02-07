@@ -21,7 +21,7 @@ func TestGetAllCorrect(t *testing.T) {
 			FirstName:    "Foo",
 			LastName:     "Foo",
 			Email:        "Foo@Foo.com",
-			Permission:   "member",
+			Permission:   domain.ADMIN,
 			ProfileColor: "FFFFFF",
 		},
 		{
@@ -29,7 +29,7 @@ func TestGetAllCorrect(t *testing.T) {
 			FirstName:    "Bar",
 			LastName:     "Bar",
 			Email:        "Bar@Bar.com",
-			Permission:   "member",
+			Permission:   domain.GUEST,
 			ProfileColor: "FFFFF0",
 		},
 	}

@@ -74,3 +74,14 @@ func (m *MockUserRepository) Update(ctx context.Context, user *domain.User) erro
 
 	return r0
 }
+
+func (m *MockUserRepository) Delete(ctx context.Context, id int64) error {
+	ret := m.Called(ctx, id)
+
+	var r0 error
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(error)
+	}
+
+	return r0
+}

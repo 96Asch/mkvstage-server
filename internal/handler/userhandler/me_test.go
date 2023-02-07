@@ -20,7 +20,7 @@ func TestMeCorrect(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -78,7 +78,7 @@ func TestMeNotFound(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   "member",
+		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",
 	}
 

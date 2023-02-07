@@ -20,30 +20,25 @@ func (us *userService) FetchByID(ctx context.Context, id int64) (*domain.User, e
 	return us.userRepo.GetByID(ctx, id)
 }
 
-func (us *userService) FetchAll(ctx context.Context) (*[]domain.PublicUser, error) {
+func (us *userService) FetchAll(ctx context.Context) (*[]domain.User, error) {
 
 	users, err := us.userRepo.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	publicUsers := make([]domain.PublicUser, len(*users))
-	for idx, user := range *users {
-		publicUsers[idx] = domain.PublicUser{
-			ID:           user.ID,
-			LastName:     user.LastName,
-			FirstName:    user.FirstName,
-			Email:        user.Email,
-			Permission:   user.Permission,
-			ProfileColor: user.ProfileColor,
-			UpdatedAt:    user.UpdatedAt,
-		}
-
-	}
-
-	return &publicUsers, nil
+	return users, nil
 }
 
 func (us userService) Store(ctx context.Context, user *domain.User) error {
 	return us.userRepo.Create(ctx, user)
+}
+
+func (us userService) Update(ctx context.Context, user *domain.User) error {
+
+	if user.ID == 0 {
+		return domain.NewRecordNotFoundErr("user_id", "0")
+	}
+
+	return us.userRepo.Update(ctx, user)
 }

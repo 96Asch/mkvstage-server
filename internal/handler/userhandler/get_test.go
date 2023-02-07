@@ -15,7 +15,7 @@ import (
 
 func TestGetAllCorrect(t *testing.T) {
 
-	mockUsers := &[]domain.PublicUser{
+	mockUsers := &[]domain.User{
 		{
 			ID:           1,
 			FirstName:    "Foo",
@@ -37,7 +37,8 @@ func TestGetAllCorrect(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("FetchAll", mock.Anything).Return(mockUsers, nil)
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 	group := router.Group("test")
 	Initialize(group, mockUS)
 
@@ -63,7 +64,8 @@ func TestGetAllInternalErr(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("FetchAll", mock.Anything).Return(nil, expectedErr)
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 	group := router.Group("test")
 	Initialize(group, mockUS)
 

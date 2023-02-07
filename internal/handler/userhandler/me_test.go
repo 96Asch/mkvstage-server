@@ -29,7 +29,8 @@ func TestMeCorrect(t *testing.T) {
 
 	r := httptest.NewRecorder()
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 	router.Use(func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 	})
@@ -55,7 +56,8 @@ func TestMeNoContext(t *testing.T) {
 
 	r := httptest.NewRecorder()
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 
 	group := router.Group("test")
 	Initialize(group, mockUS)
@@ -86,7 +88,8 @@ func TestMeNotFound(t *testing.T) {
 
 	r := httptest.NewRecorder()
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 	router.Use(func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 	})

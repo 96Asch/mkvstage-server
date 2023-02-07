@@ -19,4 +19,5 @@ func Initialize(rg *gin.RouterGroup, userService domain.UserService) {
 	us.GET("/", uh.GetAll)
 	us.GET("/me", uh.Me)
 	us.POST("/create", uh.Create)
+	us.PATCH("/update", uh.UpdateByID)
 }

@@ -57,7 +57,7 @@ func TestFetchAllUserCorrect(t *testing.T) {
 		},
 	}
 
-	mockPublicUsers := &[]domain.PublicUser{
+	mockPublicUsers := &[]domain.User{
 		{
 			ID:           1,
 			FirstName:    "Foo",
@@ -142,4 +142,63 @@ func TestStoreUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedUser, mockUser)
 	mockUR.AssertExpectations(t)
+}
+
+func TestUpdateUserCorrect(t *testing.T) {
+	mockUser := &domain.User{
+		ID:           1,
+		FirstName:    "Foo",
+		LastName:     "Bar",
+		Email:        "Foo@Bar.com",
+		Password:     "FooBar",
+		Permission:   "member",
+		ProfileColor: "FFFFFF",
+	}
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.On("Update", ctx, mockUser).Return(nil)
+
+	US := NewUserService(mockUR)
+	err := US.Update(ctx, mockUser)
+
+	expectedUser := &domain.User{
+		ID:           1,
+		FirstName:    "Foo",
+		LastName:     "Bar",
+		Email:        "Foo@Bar.com",
+		Password:     "FooBar",
+		Permission:   "member",
+		ProfileColor: "FFFFFF",
+	}
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedUser, mockUser)
+	mockUR.AssertExpectations(t)
+}
+
+func TestUpdateUserZeroID(t *testing.T) {
+	mockUser := &domain.User{
+		ID:           0,
+		FirstName:    "Foo",
+		LastName:     "Bar",
+		Email:        "Foo@Bar.com",
+		Password:     "FooBar",
+		Permission:   "member",
+		ProfileColor: "FFFFFF",
+	}
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.On("Update", ctx, mockUser).Return(nil)
+
+	US := NewUserService(mockUR)
+	err := US.Update(ctx, mockUser)
+
+	assert.Error(t, err)
+	mockUR.AssertNotCalled(t, "Update")
 }

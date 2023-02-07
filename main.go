@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/handler"
-	"github.com/96Asch/mkvstage-server/internal/repository"
+	repository "github.com/96Asch/mkvstage-server/internal/repository/gorm"
 	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/96Asch/mkvstage-server/internal/store"
 	"github.com/gin-gonic/gin"
@@ -71,7 +71,7 @@ func main() {
 		panic(err)
 	}
 
-	ur := repository.NewUserRepository(db)
+	ur := repository.NewGormUserRepository(db)
 	us := service.NewUserService(ur)
 	config := handler.Config{Router: router, U: us}
 

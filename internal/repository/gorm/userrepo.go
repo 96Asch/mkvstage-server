@@ -8,17 +8,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type userRepository struct {
+type gormUserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) *userRepository {
-	return &userRepository{
+func NewGormUserRepository(db *gorm.DB) *gormUserRepository {
+	return &gormUserRepository{
 		db: db,
 	}
 }
 
-func (ur userRepository) Create(ctx context.Context, user *domain.User) error {
+func (ur gormUserRepository) Create(ctx context.Context, user *domain.User) error {
 	res := ur.db.Create(user)
 	if err := res.Error; err != nil {
 		return domain.NewInternalErr()
@@ -26,7 +26,7 @@ func (ur userRepository) Create(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (ur userRepository) CreateBatch(ctx context.Context, users *[]domain.User) error {
+func (ur gormUserRepository) CreateBatch(ctx context.Context, users *[]domain.User) error {
 	res := ur.db.CreateInBatches(users, 50)
 	if res.Error != nil {
 		return domain.NewInternalErr()
@@ -34,7 +34,7 @@ func (ur userRepository) CreateBatch(ctx context.Context, users *[]domain.User) 
 	return nil
 }
 
-func (ur userRepository) GetByID(ctx context.Context, id int64) (*domain.User, error) {
+func (ur gormUserRepository) GetByID(ctx context.Context, id int64) (*domain.User, error) {
 	var user domain.User
 	res := ur.db.First(&user, id)
 	if err := res.Error; err != nil {
@@ -51,7 +51,7 @@ func (ur userRepository) GetByID(ctx context.Context, id int64) (*domain.User, e
 	return nil, nil
 }
 
-func (ur userRepository) GetAll(ctx context.Context) (*[]domain.User, error) {
+func (ur gormUserRepository) GetAll(ctx context.Context) (*[]domain.User, error) {
 	var users []domain.User
 	res := ur.db.Find(&users)
 	if err := res.Error; err != nil {
@@ -59,4 +59,14 @@ func (ur userRepository) GetAll(ctx context.Context) (*[]domain.User, error) {
 	}
 
 	return &users, nil
+}
+
+// Update updates a user by the given non-zero user.ID and only updates columns
+// with non-zero values.
+func (ur gormUserRepository) Update(ctx context.Context, user *domain.User) error {
+	res := ur.db.Updates(user)
+	if err := res.Error; err != nil {
+		return domain.NewInternalErr()
+	}
+	return nil
 }

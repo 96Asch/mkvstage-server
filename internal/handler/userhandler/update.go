@@ -7,8 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type newUser struct {
-	Email        string `json:"email" gorm:"unique" binding:"required,email"`
+type updateUser struct {
 	Password     string `json:"password" binding:"required"`
 	FirstName    string `json:"first_name" binding:"required"`
 	LastName     string `json:"last_name" binding:"required"`
@@ -16,29 +15,27 @@ type newUser struct {
 	ProfileColor string `json:"profile_color" binding:"required"`
 }
 
-func (u *UserHandler) Create(ctx *gin.Context) {
-
-	var nUser newUser
-	if err := ctx.BindJSON(&nUser); err != nil {
+func (uh *UserHandler) UpdateByID(ctx *gin.Context) {
+	var uUser updateUser
+	if err := ctx.BindJSON(&uUser); err != nil {
 		newError := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newError), gin.H{"error": newError})
 		return
 	}
 
 	user := domain.User{
-		Email:        nUser.Email,
-		Password:     nUser.Password,
-		FirstName:    nUser.FirstName,
-		LastName:     nUser.LastName,
-		Permission:   nUser.Permission,
-		ProfileColor: nUser.ProfileColor,
+		Password:     uUser.Password,
+		FirstName:    uUser.FirstName,
+		LastName:     uUser.LastName,
+		Permission:   uUser.Permission,
+		ProfileColor: uUser.ProfileColor,
 	}
 
 	context := ctx.Request.Context()
-	if err := u.userService.Store(context, &user); err != nil {
+	if err := uh.userService.Update(context, &user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"user": user})
+	ctx.JSON(http.StatusOK, gin.H{"user": user})
 }

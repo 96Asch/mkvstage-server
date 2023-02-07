@@ -18,28 +18,35 @@ func TestCreateCorrect(t *testing.T) {
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
-		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
+		Email:        "Foo@Bar.com",
 		Permission:   "member",
 		ProfileColor: "FFFFFF",
 	}
 
 	mockUS := new(mocks.MockUserService)
-	mockUS.On("Store", mock.Anything, mockUser).
+	mockUS.On("Store", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*domain.User)
 			arg.ID = 1
 		})
 
-	router := gin.Default()
-
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
 	Initialize(group, mockUS)
 
-	mockByte, err := json.Marshal(mockUser)
+	mockByte, err := json.Marshal(gin.H{
+		"first_name":    "Foo",
+		"last_name":     "Bar",
+		"email":         "Foo@Bar.com",
+		"password":      "FooBar",
+		"permission":    "member",
+		"profile_color": "FFFFFF",
+	})
 	assert.NoError(t, err)
 
 	bodyReader := bytes.NewReader(mockByte)
@@ -55,7 +62,6 @@ func TestCreateCorrect(t *testing.T) {
 			FirstName:    "Foo",
 			LastName:     "Bar",
 			Email:        "Foo@Bar.com",
-			Password:     "FooBar",
 			Permission:   "member",
 			ProfileColor: "FFFFFF",
 		},
@@ -70,7 +76,8 @@ func TestCreateCorrect(t *testing.T) {
 func TestCreateInvalidEmail(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 
 	w := httptest.NewRecorder()
 
@@ -78,12 +85,12 @@ func TestCreateInvalidEmail(t *testing.T) {
 	Initialize(group, mockUS)
 
 	mockByte, err := json.Marshal(gin.H{
-		"first_name":   "Foo",
-		"last_name":    "Bar",
-		"email":        "Foo@bar.com",
-		"password":     "Foo",
-		"permission":   "Foo",
-		"profileColor": "Foo",
+		"first_name":    "Foo",
+		"last_name":     "Bar",
+		"email":         "Foocom",
+		"password":      "Foo",
+		"permission":    "Foo",
+		"profile_color": "Foo",
 	})
 	assert.NoError(t, err)
 
@@ -95,13 +102,14 @@ func TestCreateInvalidEmail(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	mockUS.AssertNotCalled(t, "Create")
+	mockUS.AssertNotCalled(t, "Store")
 }
 
 func TestCreateInvalidBind(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 
 	w := httptest.NewRecorder()
 
@@ -129,7 +137,7 @@ func TestCreateInvalidBind(t *testing.T) {
 	mockUS.AssertNotCalled(t, "Create")
 }
 
-func TestCreateServiceError(t *testing.T) {
+func TestCreateServerError(t *testing.T) {
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -144,14 +152,22 @@ func TestCreateServiceError(t *testing.T) {
 	mockUS.On("Store", mock.Anything, mockUser).
 		Return(expectedErr)
 
-	router := gin.Default()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
 	Initialize(group, mockUS)
 
-	mockByte, err := json.Marshal(mockUser)
+	mockByte, err := json.Marshal(gin.H{
+		"first_name":    "Foo",
+		"last_name":     "Bar",
+		"email":         "Foo@Bar.com",
+		"password":      "FooBar",
+		"permission":    "member",
+		"profile_color": "FFFFFF",
+	})
 	assert.NoError(t, err)
 
 	bodyReader := bytes.NewReader(mockByte)

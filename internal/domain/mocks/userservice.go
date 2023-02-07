@@ -27,12 +27,12 @@ func (m *MockUserService) FetchByID(ctx context.Context, id int64) (*domain.User
 	return r0, r1
 }
 
-func (m *MockUserService) FetchAll(ctx context.Context) (*[]domain.PublicUser, error) {
+func (m *MockUserService) FetchAll(ctx context.Context) (*[]domain.User, error) {
 	ret := m.Called(ctx)
 
-	var r0 *[]domain.PublicUser
+	var r0 *[]domain.User
 	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*[]domain.PublicUser)
+		r0 = ret.Get(0).(*[]domain.User)
 	}
 
 	var r1 error
@@ -44,6 +44,17 @@ func (m *MockUserService) FetchAll(ctx context.Context) (*[]domain.PublicUser, e
 }
 
 func (m *MockUserService) Store(ctx context.Context, user *domain.User) error {
+	ret := m.Called(ctx, user)
+
+	var r0 error
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(error)
+	}
+
+	return r0
+}
+
+func (m *MockUserService) Update(ctx context.Context, user *domain.User) error {
 	ret := m.Called(ctx, user)
 
 	var r0 error

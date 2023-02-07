@@ -16,6 +16,13 @@ type updateUser struct {
 }
 
 func (uh *UserHandler) UpdateByID(ctx *gin.Context) {
+	val, exists := ctx.Get("user")
+	if !exists {
+		err := domain.NewInternalErr()
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		return
+	}
+
 	var uUser updateUser
 	if err := ctx.BindJSON(&uUser); err != nil {
 		newError := domain.NewBadRequestErr(err.Error())
@@ -24,6 +31,7 @@ func (uh *UserHandler) UpdateByID(ctx *gin.Context) {
 	}
 
 	user := domain.User{
+		ID:           val.(*domain.User).ID,
 		Password:     uUser.Password,
 		FirstName:    uUser.FirstName,
 		LastName:     uUser.LastName,

@@ -1,47 +1,59 @@
 version: "3.9"
 services:
-  mysql:
-    image: mysql
-    ports:
-      - "3406:3406"
-    environment:
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-    networks:
-      - fullstack
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - "4080:4000"
-    networks:
-      - fullstack
-
   app:
-    build:
-      dockerfile: Dockerfile
-      context: .
-      target: dev
-    volumes:
-      - .:/opt/app/api
+    container_name: mkv_app
+    build: .
     environment:
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PASS: ${MYSQL_PASS}
+      MYSQL_NAME: ${MYSQL_NAME}
+      MYSQL_HOST: mkv-mysql 
+      MYSQL_PORT: ${MYSQL_PORT}
     ports:
-      - "8080:8080"
+      - 8080:8080
+    restart: always
+    depends_on:
+      - mkv-mysql
     networks:
       - fullstack
-    healthcheck:
-        test: ["CMD-SHELL", 'mysqladmin ping']
-        interval: 10s
-        timeout: 2s
-        retries: 10
-          
+    volumes:
+      - main_app:/usr/src/app
+
+  mkv-mysql:
+    image: mysql:8.0
+    container_name: mkv-mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASS}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_NAME}
+      MYSQL_ROOT_HOST: ${MYSQL_HOST} 
+    networks:
+      - fullstack
+    volumes:
+      - database_mysql:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
+    depends_on:
+      - mkv-mysql
+    environment:
+      PMA_HOST: mkv-mysql
+      PMA_USER: ${MYSQL_USER}
+      PMA_PORT: ${MYSQL_PORT}
+      PMA_PASSWORD: ${MYSQL_PASS}
+    ports:
+      - 9090:80
+    restart: always
+    networks:
+      - fullstack
+
+volumes:
+  main_app:
+  database_mysql:       
 
 networks:
   fullstack:

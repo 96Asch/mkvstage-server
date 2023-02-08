@@ -1,27 +1,27 @@
-FROM golang:alpine as base
+FROM golang:alpine as builder
 
-RUN apk update && apk upgrade
-RUN apk add curl
+LABEL version="1.0"
+LABEL maintainer="Andrew Huang <aschhuang@gmail.com>"
 
-# Run the air command in the directory where our code will live
-WORKDIR /opt/app/api
+RUN apk update && apk upgrade --no-cache git
 
-COPY go.mod .
-COPY go.sum .
+WORKDIR /app
 
-RUN go mod tidy
+COPY go.mod go.sum ./
 
+RUN go mod download
 
+COPY . .
 
-# Create another stage called "dev" that is based off of our "base" stage (so we have golang available to us)
-FROM base as dev
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
-# Install the air binary so we get live code-reloading when we save files
-RUN curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
 
+WORKDIR /root/
 
+COPY --from=builder /app/server .
 
+EXPOSE 8080
 
-
-CMD ["air"]
-
+CMD [ "./server" ]

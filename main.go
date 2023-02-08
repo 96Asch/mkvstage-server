@@ -4,11 +4,15 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/handler"
+	repository "github.com/96Asch/mkvstage-server/internal/repository/gorm"
+	"github.com/96Asch/mkvstage-server/internal/service"
+	"github.com/96Asch/mkvstage-server/internal/store"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,7 +56,24 @@ func run(config *handler.Config) {
 
 func main() {
 	router := gin.Default()
-	config := handler.Config{Router: router}
+
+	host := os.Getenv("MYSQL_HOST")
+	port := os.Getenv("MYSQL_PORT")
+	name := os.Getenv("MYSQL_NAME")
+	user := os.Getenv("MYSQL_USER")
+	pass := os.Getenv("MYSQL_PASS")
+
+	log.Printf("host:%v, port:%v, name:%v, user:%v, pass:%v", host, port, name, user, pass)
+
+	db, err := store.GetDB(user, pass, host, port, name)
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+
+	ur := repository.NewGormUserRepository(db)
+	us := service.NewUserService(ur)
+	config := handler.Config{Router: router, U: us}
 
 	run(&config)
 }

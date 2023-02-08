@@ -8,7 +8,7 @@ import (
 )
 
 type deleteID struct {
-	ID int64 `json:"id"`
+	ID int64 `json:"id" binding:"required"`
 }
 
 func (uh *UserHandler) Delete(ctx *gin.Context) {

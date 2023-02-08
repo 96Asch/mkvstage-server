@@ -20,7 +20,7 @@ func TestCreateCorrect(t *testing.T) {
 		LastName:     "Bar",
 		Password:     "FooBar",
 		Email:        "Foo@Bar.com",
-		Permission:   domain.MEMBER,
+		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",
 	}
 
@@ -61,7 +61,7 @@ func TestCreateCorrect(t *testing.T) {
 			FirstName:    "Foo",
 			LastName:     "Bar",
 			Email:        "Foo@Bar.com",
-			Permission:   domain.MEMBER,
+			Permission:   domain.GUEST,
 			ProfileColor: "FFFFFF",
 		},
 	})
@@ -140,7 +140,7 @@ func TestCreateServerError(t *testing.T) {
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
 		Password:     "FooBar",
-		Permission:   domain.MEMBER,
+		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",
 	}
 

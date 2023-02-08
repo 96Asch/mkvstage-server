@@ -1,12 +1,12 @@
 package service
 
 import (
-	"net/http/httptest"
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -23,8 +23,7 @@ func TestFetchByIDUser(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
+	ctx := context.TODO()
 
 	mockUR := new(mocks.MockUserRepository)
 	mockUR.On("GetByID", ctx, mockUser.ID).Return(mockUser, nil)
@@ -76,8 +75,7 @@ func TestFetchAllUserCorrect(t *testing.T) {
 		},
 	}
 
-	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
+	ctx := context.TODO()
 
 	mockUR := new(mocks.MockUserRepository)
 	mockUR.On("GetAll", ctx).Return(mockUsers, nil)
@@ -90,8 +88,8 @@ func TestFetchAllUserCorrect(t *testing.T) {
 }
 
 func TestFetchAllUserInternalErr(t *testing.T) {
-	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
+
+	ctx := context.TODO()
 
 	expectedErr := domain.NewInternalErr()
 	mockUR := new(mocks.MockUserRepository)
@@ -115,8 +113,7 @@ func TestStoreUser(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
+	ctx := context.TODO()
 
 	mockUR := new(mocks.MockUserRepository)
 	mockUR.On("Create", ctx, mockUser).
@@ -155,8 +152,7 @@ func TestUpdateUserCorrect(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
+	ctx := context.TODO()
 
 	mockUR := new(mocks.MockUserRepository)
 	mockUR.On("Update", ctx, mockUser).Return(nil)
@@ -190,8 +186,7 @@ func TestUpdateUserZeroID(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
+	ctx := context.TODO()
 
 	mockUR := new(mocks.MockUserRepository)
 	mockUR.On("Update", ctx, mockUser).Return(nil)
@@ -199,6 +194,108 @@ func TestUpdateUserZeroID(t *testing.T) {
 	US := NewUserService(mockUR)
 	err := US.Update(ctx, mockUser)
 
-	assert.Error(t, err)
+	expectedErr := domain.NewBadRequestErr("")
+	assert.ErrorAs(t, err, &expectedErr)
 	mockUR.AssertNotCalled(t, "Update")
+}
+
+func TestDeleteUserCorrectOnlyUser(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.MEMBER,
+	}
+
+	ctx := context.TODO()
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).Return(nil)
+	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).Return(nil, nil)
+
+	US := NewUserService(mockUR)
+	err := US.Remove(ctx, mockUser, 0)
+
+	assert.NoError(t, err)
+	mockUR.AssertExpectations(t)
+}
+
+func TestDeleteUserCorrectOtherUser(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+	var otherID int64 = 2
+
+	ctx := context.TODO()
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.On("Delete", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil)
+	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, nil)
+
+	US := NewUserService(mockUR)
+	err := US.Remove(ctx, mockUser, otherID)
+
+	assert.NoError(t, err)
+	mockUR.AssertExpectations(t)
+}
+
+func TestDeleteUserNotAuthorized(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.MEMBER,
+	}
+	var otherID int64 = 2
+
+	ctx := context.TODO()
+
+	mockUR := new(mocks.MockUserRepository)
+
+	US := NewUserService(mockUR)
+	err := US.Remove(ctx, mockUser, otherID)
+
+	expectedErr := domain.NewNotAuthorizedErr("")
+	assert.ErrorAs(t, err, &expectedErr)
+	mockUR.AssertNotCalled(t, "Delete")
+	mockUR.AssertNotCalled(t, "GetByID")
+}
+
+func TestDeleteUserNoRecord(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+	var otherID int64 = 2
+
+	ctx := context.TODO()
+
+	expectedErr := domain.NewRecordNotFoundErr("id", fmt.Sprint(otherID))
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, expectedErr)
+
+	US := NewUserService(mockUR)
+	err := US.Remove(ctx, mockUser, otherID)
+
+	assert.ErrorAs(t, err, &expectedErr)
+	mockUR.AssertCalled(t, "GetByID", ctx, otherID)
+	mockUR.AssertNotCalled(t, "Delete")
+}
+
+func TestDeleteUserInternalErr(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+	var otherID int64 = 2
+
+	ctx := context.TODO()
+
+	expectedErr := domain.NewInternalErr()
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, nil)
+	mockUR.On("Delete", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(expectedErr)
+
+	US := NewUserService(mockUR)
+	err := US.Remove(ctx, mockUser, otherID)
+
+	assert.ErrorAs(t, err, &expectedErr)
+	mockUR.AssertExpectations(t)
 }

@@ -50,8 +50,12 @@ func (us userService) Remove(ctx context.Context, user *domain.User, id int64) e
 		deleteId = user.ID
 	}
 
-	if user.ID != id && !user.HasClearance() {
+	if user.ID != deleteId && !user.HasClearance() {
 		return domain.NewNotAuthorizedErr("cannot delete given id")
+	}
+
+	if _, err := us.userRepo.GetByID(ctx, deleteId); err != nil {
+		return err
 	}
 
 	if err := us.userRepo.Delete(ctx, deleteId); err != nil {

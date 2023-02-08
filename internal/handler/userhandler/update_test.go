@@ -25,7 +25,7 @@ func TestUpdateCorrect(t *testing.T) {
 		FirstName:    "Foob",
 		LastName:     "Bars",
 		Password:     "FooBar",
-		Permission:   domain.MEMBER,
+		Permission:   0,
 		ProfileColor: "FFFFFF",
 	}).Return(nil)
 
@@ -44,14 +44,13 @@ func TestUpdateCorrect(t *testing.T) {
 		"first_name":    "Foob",
 		"last_name":     "Bars",
 		"password":      "FooBar",
-		"permission":    "member",
 		"profile_color": "FFFFFF",
 	})
 	assert.NoError(t, err)
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/update", bodyReader)
+	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -90,7 +89,7 @@ func TestUpdateInvalidBind(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/update", bodyReader)
+	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -110,7 +109,7 @@ func TestUpdateNoContext(t *testing.T) {
 	group := router.Group("test")
 	Initialize(group, mockUS)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/update", nil)
+	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(r, req)
@@ -132,7 +131,7 @@ func TestUpdateInternalErr(t *testing.T) {
 		FirstName:    "Foob",
 		LastName:     "Bars",
 		Password:     "FooBar",
-		Permission:   domain.MEMBER,
+		Permission:   0,
 		ProfileColor: "FFFFFF",
 	}).Return(expectedError)
 
@@ -158,7 +157,7 @@ func TestUpdateInternalErr(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/update", bodyReader)
+	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)

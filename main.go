@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/handler"
-	repository "github.com/96Asch/mkvstage-server/internal/repository/gorm"
+	"github.com/96Asch/mkvstage-server/internal/repository"
 	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/96Asch/mkvstage-server/internal/store"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
+	"gorm.io/gorm"
 )
 
 func run(config *handler.Config) {
@@ -57,23 +59,46 @@ func run(config *handler.Config) {
 func main() {
 	router := gin.Default()
 
-	host := os.Getenv("MYSQL_HOST")
-	port := os.Getenv("MYSQL_PORT")
-	name := os.Getenv("MYSQL_NAME")
-	user := os.Getenv("MYSQL_USER")
-	pass := os.Getenv("MYSQL_PASS")
+	mode := os.Getenv("MODE")
 
-	log.Printf("host:%v, port:%v, name:%v, user:%v, pass:%v", host, port, name, user, pass)
+	dbHost := os.Getenv("MYSQL_HOST")
+	dbPort := os.Getenv("MYSQL_PORT")
+	dbName := os.Getenv("MYSQL_NAME")
+	dbUser := os.Getenv("MYSQL_USER")
+	dbPass := os.Getenv("MYSQL_PASS")
 
-	db, err := store.GetDB(user, pass, host, port, name)
-	if err != nil {
-		log.Fatal(err)
-		panic(err)
+	log.Printf("host:%v, port:%v, name:%v, user:%v, pass:%v", dbHost, dbPort, dbName, dbUser, dbPass)
+
+	var db *gorm.DB
+	var err error
+	if mode != "TEST" {
+		db, err = store.GetDB(dbUser, dbPass, dbHost, dbPort, dbName)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
+
+	var rdb *redis.Client
+	if mode != "TEST" {
+		rdb, err = store.GetRedis(redisHost, redisPort)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	tr := repository.NewRedisTokenRepository(rdb)
+	ts := service.NewTokenService(tr)
 
 	ur := repository.NewGormUserRepository(db)
 	us := service.NewUserService(ur)
-	config := handler.Config{Router: router, U: us}
+	config := handler.Config{
+		Router: router,
+		U:      us,
+		T:      ts,
+	}
 
 	run(&config)
 }

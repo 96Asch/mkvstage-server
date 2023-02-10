@@ -1,6 +1,8 @@
 package userhandler
 
 import (
+	"log"
+
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +12,7 @@ type UserHandler struct {
 }
 
 func Initialize(rg *gin.RouterGroup, userService domain.UserService) {
+	log.Println("Setting up user handlers")
 	uh := &UserHandler{
 		userService: userService,
 	}

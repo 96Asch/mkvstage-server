@@ -34,11 +34,13 @@ type UserService interface {
 	Store(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
 	Remove(ctx context.Context, user *User, id int64) error
+	Authorize(ctx context.Context, email, password string) (*User, error)
 }
 
 type UserRepository interface {
 	Creator[User]
 	Getter[User]
+	GetByEmail(ctx context.Context, email string) (*User, error)
 	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id int64) error
 }

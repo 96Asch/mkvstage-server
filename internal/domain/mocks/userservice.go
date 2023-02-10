@@ -75,3 +75,19 @@ func (m *MockUserService) Remove(ctx context.Context, user *domain.User, id int6
 
 	return r0
 }
+
+func (m *MockUserService) Authorize(ctx context.Context, email, password string) (*domain.User, error) {
+	ret := m.Called(ctx, email, password)
+
+	var r0 *domain.User
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*domain.User)
+	}
+
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
+}

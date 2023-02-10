@@ -61,6 +61,23 @@ func (ur gormUserRepository) GetAll(ctx context.Context) (*[]domain.User, error)
 	return &users, nil
 }
 
+func (ur gormUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	var user domain.User
+	res := ur.db.Where("Email = ?", email).First(&user)
+	if err := res.Error; err != nil {
+
+		switch {
+		case errors.Is(gorm.ErrRecordNotFound, err):
+			return nil, domain.NewRecordNotFoundErr("email", email)
+		default:
+			return nil, domain.NewInternalErr()
+		}
+
+	}
+
+	return nil, nil
+}
+
 // Update updates a user by the given non-zero user.ID and only updates columns
 // with non-zero values.
 func (ur gormUserRepository) Update(ctx context.Context, user *domain.User) error {

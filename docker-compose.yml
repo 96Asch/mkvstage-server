@@ -1,5 +1,6 @@
 version: "3.9"
 services:
+
   app:
     container_name: mkv_app
     build: .
@@ -9,11 +10,14 @@ services:
       MYSQL_NAME: ${MYSQL_NAME}
       MYSQL_HOST: mkv-mysql 
       MYSQL_PORT: ${MYSQL_PORT}
+      REDIS_HOST: mkv-redis
+      REDIS_PORT: ${REDIS_PORT}
     ports:
       - 8080:8080
     restart: always
     depends_on:
       - mkv-mysql
+      - mkv-redis
     networks:
       - fullstack
     volumes:
@@ -51,9 +55,18 @@ services:
     networks:
       - fullstack
 
+  mkv-redis:
+    container_name: mkv-redis
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - database_redis:/data
+
 volumes:
   main_app:
-  database_mysql:       
+  database_mysql:  
+  database_redis:     
 
 networks:
   fullstack:

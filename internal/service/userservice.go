@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/util"
 )
 
 type userService struct {
@@ -63,4 +64,17 @@ func (us userService) Remove(ctx context.Context, user *domain.User, id int64) e
 	}
 
 	return nil
+}
+
+func (us userService) Authorize(ctx context.Context, email, password string) (*domain.User, error) {
+	user, err := us.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := util.Validate(password, user.Password); err != nil {
+		return nil, domain.NewNotAuthorizedErr("email and/or password is incorrect")
+	}
+
+	return user, nil
 }

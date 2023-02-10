@@ -48,12 +48,29 @@ func (m *MockUserRepository) GetByID(ctx context.Context, id int64) (*domain.Use
 
 	return r0, r1
 }
+
 func (m *MockUserRepository) GetAll(ctx context.Context) (*[]domain.User, error) {
 	ret := m.Called(ctx)
 
 	var r0 *[]domain.User
 	if ret.Get(0) != nil {
 		r0 = ret.Get(0).(*[]domain.User)
+	}
+
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
+}
+
+func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	ret := m.Called(ctx, email)
+
+	var r0 *domain.User
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*domain.User)
 	}
 
 	var r1 error

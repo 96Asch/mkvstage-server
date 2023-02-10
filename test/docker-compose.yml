@@ -11,6 +11,7 @@ services:
       MYSQL_NAME: ${MYSQL_NAME}
       MYSQL_HOST: mkv-mysql-test
       MYSQL_PORT: ${MYSQL_PORT}
+      MODE: TEST
     ports:
       - 8080:8080
     restart: on-failure

@@ -1,0 +1,29 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ "master", "dev" ]
+  pull_request:
+    branches: [ "master", "dev" ]
+
+jobs:
+
+
+  build:
+    runs-on: ubuntu-latest
+  
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+
+    - name: Build Go Server
+      run: go build -v ./main.go
+      env:
+        MODE: TEST
+
+    - name: Run Testsuite
+      run: go test -v ./...

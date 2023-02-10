@@ -7,11 +7,11 @@ import (
 type RefreshToken struct {
 	ID      uuid.UUID `json:"-"`
 	UserID  int64     `json:"-"`
-	Refresh string    `json:"access"`
+	Refresh string    `json:"refresh"`
 }
 
 type AccessToken struct {
-	Access string `json:"-"`
+	Access string `json:"access"`
 }
 
 type Tokens struct {

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (us *UserHandler) GetAll(ctx *gin.Context) {
+func (us *userHandler) GetAll(ctx *gin.Context) {
 	context := ctx.Request.Context()
 	users, err := us.userService.FetchAll(context)
 	if err != nil {

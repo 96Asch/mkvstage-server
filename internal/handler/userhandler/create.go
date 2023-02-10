@@ -15,7 +15,7 @@ type newUser struct {
 	ProfileColor string `json:"profile_color" binding:"required"`
 }
 
-func (u *UserHandler) Create(ctx *gin.Context) {
+func (u *userHandler) Create(ctx *gin.Context) {
 
 	var nUser newUser
 	if err := ctx.BindJSON(&nUser); err != nil {

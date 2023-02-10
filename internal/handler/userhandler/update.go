@@ -14,7 +14,7 @@ type updateUser struct {
 	ProfileColor string `json:"profile_color" binding:"required"`
 }
 
-func (uh *UserHandler) Update(ctx *gin.Context) {
+func (uh *userHandler) Update(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		err := domain.NewInternalErr()

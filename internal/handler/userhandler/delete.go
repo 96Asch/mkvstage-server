@@ -11,7 +11,7 @@ type deleteID struct {
 	ID int64 `json:"id" binding:"required"`
 }
 
-func (uh *UserHandler) Delete(ctx *gin.Context) {
+func (uh *userHandler) Delete(ctx *gin.Context) {
 
 	val, exists := ctx.Get("user")
 	if !exists {

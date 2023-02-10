@@ -7,13 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserHandler struct {
-	userService domain.UserService
+type userHandler struct {
+	userService  domain.UserService
+	tokenService domain.TokenService
 }
 
 func Initialize(rg *gin.RouterGroup, userService domain.UserService) {
 	log.Println("Setting up user handlers")
-	uh := &UserHandler{
+	uh := &userHandler{
 		userService: userService,
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (u *UserHandler) Me(ctx *gin.Context) {
+func (u *userHandler) Me(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		err := domain.NewInternalErr()

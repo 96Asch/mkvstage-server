@@ -7,11 +7,12 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-func TestFetchByIDUser(t *testing.T) {
+func TestFetchByIDUserCorrect(t *testing.T) {
 
 	mockUser := &domain.User{
 		ID:           1,
@@ -297,5 +298,97 @@ func TestDeleteUserInternalErr(t *testing.T) {
 	err := US.Remove(ctx, mockUser, otherID)
 
 	assert.ErrorAs(t, err, &expectedErr)
+	mockUR.AssertExpectations(t)
+}
+
+func TestAuthorizeCorrect(t *testing.T) {
+
+	mockUser := &domain.User{
+		Email:    "Foo@Bar.com",
+		Password: "FooBar",
+	}
+
+	expectedUser := &domain.User{
+		ID:           1,
+		FirstName:    "Foo",
+		LastName:     "Bar",
+		Email:        "Foo@Bar.com",
+		Permission:   domain.MEMBER,
+		ProfileColor: "FFFFFF",
+	}
+
+	hashPass, err := util.Encrypt(mockUser.Password)
+	assert.NoError(t, err)
+	expectedUser.Password = hashPass
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.
+		On("GetByEmail", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email).
+		Return(expectedUser, nil)
+
+	ctx := context.TODO()
+
+	US := NewUserService(mockUR)
+	user, err := US.Authorize(ctx, mockUser.Email, mockUser.Password)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedUser, user)
+	mockUR.AssertExpectations(t)
+}
+
+func TestAuthorizeNoUserFound(t *testing.T) {
+	mockUser := &domain.User{
+		Email:    "Foobar@foo.com",
+		Password: "Foobar",
+	}
+
+	expectedErr := domain.NewRecordNotFoundErr("email", mockUser.Email)
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.
+		On("GetByEmail", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email).
+		Return(nil, expectedErr)
+
+	ctx := context.TODO()
+
+	US := NewUserService(mockUR)
+	user, err := US.Authorize(ctx, mockUser.Email, mockUser.Password)
+
+	assert.ErrorAs(t, err, &expectedErr)
+	assert.Nil(t, user)
+	mockUR.AssertExpectations(t)
+}
+
+func TestAuthorizeNotAuthorized(t *testing.T) {
+	mockUser := &domain.User{
+		Email:    "Foo@Bar.com",
+		Password: "FooBar",
+	}
+
+	expectedUser := &domain.User{
+		ID:           1,
+		FirstName:    "Foo",
+		LastName:     "Bar",
+		Email:        "Foo@Bar.com",
+		Permission:   domain.MEMBER,
+		ProfileColor: "FFFFFF",
+	}
+
+	expectedErr := domain.NewNotAuthorizedErr("email and/or password does not exist")
+
+	hashPass, err := util.Encrypt("FooBar2")
+	assert.NoError(t, err)
+	expectedUser.Password = hashPass
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.
+		On("GetByEmail", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email).
+		Return(expectedUser, nil)
+
+	ctx := context.TODO()
+
+	US := NewUserService(mockUR)
+	user, err := US.Authorize(ctx, mockUser.Email, mockUser.Password)
+	assert.ErrorAs(t, err, &expectedErr)
+	assert.Nil(t, user)
 	mockUR.AssertExpectations(t)
 }

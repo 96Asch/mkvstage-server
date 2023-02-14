@@ -22,8 +22,6 @@ jobs:
 
     - name: Build Go Server
       run: go build -v ./main.go
-      env:
-        MODE: TEST
 
     - name: Run Testsuite
       run: go test -v ./...

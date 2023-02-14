@@ -11,12 +11,14 @@ services:
       MYSQL_NAME: ${MYSQL_NAME}
       MYSQL_HOST: mkv-mysql-test
       MYSQL_PORT: ${MYSQL_PORT}
-      MODE: TEST
+      REDIS_HOST: ${REDIS_HOST}      
+      REDIS_PORT: ${REDIS_PORT}      
     ports:
       - 8080:8080
     restart: on-failure
     depends_on:
       - mkv-mysql-test
+      - mkv-redis-test
     networks:
       - fullstack
 
@@ -31,6 +33,14 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_NAME}
       MYSQL_ROOT_HOST: ${MYSQL_HOST} 
+    networks:
+      - fullstack
+
+  mkv-redis-test:
+    container_name: mkv-redis-test
+    image: redis:alpine
+    ports:
+      - 6379:6379
     networks:
       - fullstack
 

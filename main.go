@@ -71,10 +71,7 @@ func setupMigrations(db *gorm.DB) {
 
 }
 
-func main() {
-
-	router := gin.Default()
-
+func setupStore() (*gorm.DB, *redis.Client) {
 	dbHost := os.Getenv("MYSQL_HOST")
 	dbPort := os.Getenv("MYSQL_PORT")
 	dbName := os.Getenv("MYSQL_NAME")
@@ -98,6 +95,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	return db, rdb
+}
+
+func main() {
+
+	router := gin.Default()
+	db, rdb := setupStore()
 
 	accessSecret := os.Getenv("ACCESS_SECRET")
 	refreshSecret := os.Getenv("REFRESH_SECRET")

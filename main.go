@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"syscall"
 	"time"
 
+	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/handler"
 	"github.com/96Asch/mkvstage-server/internal/repository"
 	"github.com/96Asch/mkvstage-server/internal/service"
@@ -56,10 +58,22 @@ func run(config *handler.Config) {
 	log.Println("Server exiting")
 }
 
-func main() {
-	router := gin.Default()
+func setupMigrations(db *gorm.DB) {
 
-	mode := os.Getenv("MODE")
+	domains := [...]any{
+		&domain.User{},
+	}
+
+	for _, domain := range domains {
+		log.Printf("Inserting table %s", reflect.TypeOf(domain))
+		db.AutoMigrate(domain)
+	}
+
+}
+
+func main() {
+
+	router := gin.Default()
 
 	dbHost := os.Getenv("MYSQL_HOST")
 	dbPort := os.Getenv("MYSQL_PORT")
@@ -67,26 +81,22 @@ func main() {
 	dbUser := os.Getenv("MYSQL_USER")
 	dbPass := os.Getenv("MYSQL_PASS")
 
-	log.Printf("host:%v, port:%v, name:%v, user:%v, pass:%v", dbHost, dbPort, dbName, dbUser, dbPass)
-
 	var db *gorm.DB
 	var err error
-	if mode != "TEST" {
-		db, err = store.GetDB(dbUser, dbPass, dbHost, dbPort, dbName)
-		if err != nil {
-			log.Fatal(err)
-		}
+	db, err = store.GetDB(dbUser, dbPass, dbHost, dbPort, dbName)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	setupMigrations(db)
 
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 
 	var rdb *redis.Client
-	if mode != "TEST" {
-		rdb, err = store.GetRedis(redisHost, redisPort)
-		if err != nil {
-			log.Fatal(err)
-		}
+	rdb, err = store.GetRedis(redisHost, redisPort)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	accessSecret := os.Getenv("ACCESS_SECRET")

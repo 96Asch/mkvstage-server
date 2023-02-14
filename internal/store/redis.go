@@ -3,12 +3,13 @@ package store
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/go-redis/redis/v8"
 )
 
 func GetRedis(host, port string) (*redis.Client, error) {
-	fmt.Printf("Connecting to Redis: (%s:%s)\n", host, port)
+	log.Printf("Connecting to Redis: (%s:%s)\n", host, port)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", host, port),
 		Password: "",
@@ -19,6 +20,6 @@ func GetRedis(host, port string) (*redis.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println("Connection to Redis succeeded!")
 	return rdb, nil
 }

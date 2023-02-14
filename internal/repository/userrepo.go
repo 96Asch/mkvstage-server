@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ func NewGormUserRepository(db *gorm.DB) *gormUserRepository {
 func (ur gormUserRepository) Create(ctx context.Context, user *domain.User) error {
 	res := ur.db.Create(user)
 	if err := res.Error; err != nil {
+		log.Println(err)
 		return domain.NewInternalErr()
 	}
 	return nil

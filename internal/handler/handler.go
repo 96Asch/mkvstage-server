@@ -1,27 +1,36 @@
 package handler
 
 import (
-	"net/http"
-	"os"
+	"log"
 
+	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/handler/mehandler"
+	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
+	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct {
+type Config struct {
+	Router *gin.Engine
+	U      domain.UserService
+	T      domain.TokenService
+	MH     domain.MiddlewareHandler
+}
+
+func (cfg *Config) New() *Config {
+	return &Config{
+		Router: gin.Default(),
+	}
 }
 
 func Initialize(config *Config) {
 
-	h := Handler{}
-
-	base := config.Router.Group(os.Getenv("API_BASE"))
+	log.Println("Initializing handlers...")
+	base := config.Router.Group("api")
 	v1 := base.Group("v1")
 
-	user := v1.Group("users")
-	user.GET("/me", h.Me)
+	ug := userhandler.Initialize(v1, config.U, config.T)
+	tokenhandler.Initialize(v1, config.T, config.U)
 
-}
-
-func (h *Handler) Me(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "Hello me!")
+	mehandler.Initialize(ug, config.U, config.T, config.MH)
 }

@@ -97,3 +97,7 @@ func (ts tokenService) CreateRefresh(ctx context.Context, uid int64, currentRefr
 
 	return refreshToken, nil
 }
+
+func (ts tokenService) Logout(ctx context.Context, uid int64) error {
+	return ts.tokenRepo.DeleteAll(ctx, uid)
+}

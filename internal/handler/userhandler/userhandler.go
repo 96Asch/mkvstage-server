@@ -27,4 +27,5 @@ func Initialize(rg *gin.RouterGroup, us domain.UserService, ts domain.TokenServi
 	users.POST("/login", uh.Login)
 	users.PATCH("/me/update", uh.Update)
 	users.DELETE("/me/delete", uh.Delete)
+	users.DELETE("/me/logout", uh.Logout)
 }

@@ -106,6 +106,7 @@ func main() {
 
 	accessSecret := os.Getenv("ACCESS_SECRET")
 	refreshSecret := os.Getenv("REFRESH_SECRET")
+	log.Println(accessSecret, refreshSecret)
 
 	ur := repository.NewGormUserRepository(db)
 	us := service.NewUserService(ur)

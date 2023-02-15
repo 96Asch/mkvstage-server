@@ -8,10 +8,12 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASS: ${MYSQL_PASS}
       MYSQL_NAME: ${MYSQL_NAME}
-      MYSQL_HOST: mkv-mysql 
+      MYSQL_HOST: mkv-mysql
       MYSQL_PORT: ${MYSQL_PORT}
-      REDIS_HOST: mkv-redis
-      REDIS_PORT: ${REDIS_PORT}
+      REDIS_HOST: mkv-redis      
+      REDIS_PORT: ${REDIS_PORT} 
+      ACCESS_SECRET: ${ACCESS_SECRET}     
+      REFRESH_SECRET: ${REFRESH_SECRET}    
     ports:
       - 8080:8080
     restart: on-failure
@@ -57,11 +59,26 @@ services:
 
   mkv-redis:
     container_name: mkv-redis
+    hostname: mkv-redis
     image: redis:alpine
     ports:
       - 6379:6379
     volumes:
       - database_redis:/data
+    networks:
+      - fullstack
+  
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    restart: always
+    depends_on:
+      - mkv-redis
+    environment:
+      - REDIS_HOSTS=local:mkv-redis:6379
+    ports:
+      - 8081:8081
     networks:
       - fullstack
 

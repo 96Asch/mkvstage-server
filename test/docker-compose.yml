@@ -12,7 +12,9 @@ services:
       MYSQL_HOST: mkv-mysql-test
       MYSQL_PORT: ${MYSQL_PORT}
       REDIS_HOST: ${REDIS_HOST}      
-      REDIS_PORT: ${REDIS_PORT}      
+      REDIS_PORT: ${REDIS_PORT} 
+      ACCESS_SECRET: ${ACCESS_SECRET}     
+      REFRESH_SECRET: ${REFRESH_SECRET}     
     ports:
       - 8080:8080
     restart: on-failure
@@ -43,6 +45,8 @@ services:
       - 6379:6379
     networks:
       - fullstack
+
+  
 
 networks:
   fullstack:

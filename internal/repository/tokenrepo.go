@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -53,8 +54,8 @@ func (tr redisTokenRepo) GetAll(ctx context.Context, uid int64) (*[]domain.Refre
 
 func (tr redisTokenRepo) Create(ctx context.Context, token *domain.RefreshToken) error {
 	key := fmt.Sprintf("%d:%s", token.UserID, token.Refresh)
-
-	cmd := tr.R.Set(ctx, key, "", token.ExpirationDuration)
+	log.Println(key)
+	cmd := tr.R.Set(ctx, key, 0, token.ExpirationDuration)
 	if err := cmd.Err(); err != nil {
 		return err
 	}

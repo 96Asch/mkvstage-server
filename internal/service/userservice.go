@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/util"
@@ -32,6 +33,18 @@ func (us *userService) FetchAll(ctx context.Context) (*[]domain.User, error) {
 }
 
 func (us userService) Store(ctx context.Context, user *domain.User) error {
+
+	if user.Password != "" {
+		password := user.Password
+
+		hash, err := util.Encrypt(password)
+		if err != nil {
+			return domain.NewInternalErr()
+		}
+
+		user.Password = hash
+	}
+
 	return us.userRepo.Create(ctx, user)
 }
 
@@ -72,6 +85,8 @@ func (us userService) Authorize(ctx context.Context, email, password string) (*d
 		return nil, err
 	}
 
+	log.Println(user)
+	log.Println(password)
 	if err := util.Validate(password, user.Password); err != nil {
 		return nil, domain.NewNotAuthorizedErr("email and/or password is incorrect")
 	}

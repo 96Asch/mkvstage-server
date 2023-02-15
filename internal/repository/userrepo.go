@@ -50,7 +50,7 @@ func (ur gormUserRepository) GetByID(ctx context.Context, id int64) (*domain.Use
 
 	}
 
-	return nil, nil
+	return &user, nil
 }
 
 func (ur gormUserRepository) GetAll(ctx context.Context) (*[]domain.User, error) {
@@ -65,7 +65,7 @@ func (ur gormUserRepository) GetAll(ctx context.Context) (*[]domain.User, error)
 
 func (ur gormUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
-	res := ur.db.Where("Email = ?", email).First(&user)
+	res := ur.db.Where("email = ?", &email).First(&user)
 	if err := res.Error; err != nil {
 
 		switch {
@@ -77,7 +77,7 @@ func (ur gormUserRepository) GetByEmail(ctx context.Context, email string) (*dom
 
 	}
 
-	return nil, nil
+	return &user, nil
 }
 
 // Update updates a user by the given non-zero user.ID and only updates columns

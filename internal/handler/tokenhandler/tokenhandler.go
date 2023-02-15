@@ -19,6 +19,6 @@ func Initialize(rg *gin.RouterGroup, ts domain.TokenService, us domain.UserServi
 
 	t := rg.Group("tokens")
 
-	t.POST("/create", th.CreateAccess)
+	t.POST("/renewaccess", th.CreateAccess)
 
 }

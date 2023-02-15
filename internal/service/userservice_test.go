@@ -138,6 +138,10 @@ func TestStoreUser(t *testing.T) {
 	}
 
 	assert.NoError(t, err)
+	assert.NotEqual(t, expectedUser.Password, mockUser.Password)
+
+	mockUser.Password = ""
+	expectedUser.Password = ""
 	assert.Equal(t, expectedUser, mockUser)
 	mockUR.AssertExpectations(t)
 }

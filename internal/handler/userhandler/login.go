@@ -33,8 +33,6 @@ func (us userHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	// TODO Add JWT token and send back Access token + Refresh token
-
 	refresh, err := us.tokenService.CreateRefresh(context, user.ID, "")
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})

@@ -30,7 +30,7 @@ type TokenConfig struct {
 }
 
 type TokenService interface {
-	ExtractUser(ctx context.Context, token *AccessToken) (*User, error)
+	ExtractUser(ctx context.Context, access string) (*User, error)
 	CreateAccess(ctx context.Context, currentRefresh string) (*AccessToken, error)
 	CreateRefresh(ctx context.Context, uid int64, currentRefresh string) (*RefreshToken, error)
 	Logout(ctx context.Context, uid int64) error

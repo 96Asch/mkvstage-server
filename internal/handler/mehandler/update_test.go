@@ -1,4 +1,4 @@
-package userhandler
+package mehandler
 
 import (
 	"bytes"
@@ -32,14 +32,18 @@ func TestUpdateCorrect(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(func(ctx *gin.Context) {
-		ctx.Set("user", mockUser)
-	})
 
 	w := httptest.NewRecorder()
 
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":    "Foob",
@@ -51,7 +55,7 @@ func TestUpdateCorrect(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", bodyReader)
+	req, err := http.NewRequest(http.MethodPatch, "/test/me/update", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -71,14 +75,18 @@ func TestUpdateInvalidBind(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(func(ctx *gin.Context) {
-		ctx.Set("user", mockUser)
-	})
 
 	w := httptest.NewRecorder()
 
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_names":  "Foo",
@@ -91,7 +99,7 @@ func TestUpdateInvalidBind(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", bodyReader)
+	req, err := http.NewRequest(http.MethodPatch, "/test/me/update", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -109,10 +117,16 @@ func TestUpdateNoContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", nil)
+	group := router.Group("test")
+	Initialize(group, mockUS, mockTS, mockMWH)
+
+	req, err := http.NewRequest(http.MethodPatch, "/test/me/update", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(r, req)
@@ -141,14 +155,18 @@ func TestUpdateInternalErr(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(func(ctx *gin.Context) {
-		ctx.Set("user", mockUser)
-	})
 
 	w := httptest.NewRecorder()
 
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":    "Foob",
@@ -161,7 +179,7 @@ func TestUpdateInternalErr(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", bodyReader)
+	req, err := http.NewRequest(http.MethodPatch, "/test/me/update", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)

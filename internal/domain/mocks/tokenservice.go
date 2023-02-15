@@ -11,7 +11,7 @@ type MockTokenService struct {
 	mock.Mock
 }
 
-func (m MockTokenService) ExtractUser(ctx context.Context, token *domain.AccessToken) (*domain.User, error) {
+func (m MockTokenService) ExtractUser(ctx context.Context, token string) (*domain.User, error) {
 	ret := m.Called(ctx, token)
 
 	var r0 *domain.User

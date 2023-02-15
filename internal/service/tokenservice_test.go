@@ -173,7 +173,7 @@ func TestExtractUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, at.Access)
 
-	user, err := TS.ExtractUser(ctx, at)
+	user, err := TS.ExtractUser(ctx, at.Access)
 	assert.NoError(t, err)
 	assert.Equal(t, mockUser, user)
 }
@@ -197,7 +197,7 @@ func TestExtractUserNotAuth(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, at.Access)
 
-	user, err := TS.ExtractUser(ctx, at)
+	user, err := TS.ExtractUser(ctx, at.Access)
 	expectedErr := domain.NewNotAuthorizedErr("")
 	assert.ErrorAs(t, err, &expectedErr)
 	assert.Nil(t, user)

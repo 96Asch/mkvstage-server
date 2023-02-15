@@ -1,4 +1,4 @@
-package userhandler
+package mehandler
 
 import (
 	"encoding/json"
@@ -37,10 +37,17 @@ func TestLogoutCorrect(t *testing.T) {
 	})
 	w := httptest.NewRecorder()
 
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 
-	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/logout", nil)
+	group := router.Group("test")
+	Initialize(group, mockUS, mockTS, mockMWH)
+
+	req, err := http.NewRequest(http.MethodDelete, "/test/me/logout", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -60,10 +67,16 @@ func TestLogoutNoContext(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 
-	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/logout", nil)
+	group := router.Group("test")
+	Initialize(group, mockUS, mockTS, mockMWH)
+
+	req, err := http.NewRequest(http.MethodDelete, "/test/me/logout", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -97,15 +110,19 @@ func TestLogoutLogoutErr(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(func(ctx *gin.Context) {
-		ctx.Set("user", mockUser)
-	})
 	w := httptest.NewRecorder()
 
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 
-	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/logout", nil)
+	group := router.Group("test")
+	Initialize(group, mockUS, mockTS, mockMWH)
+
+	req, err := http.NewRequest(http.MethodDelete, "/test/me/logout", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)

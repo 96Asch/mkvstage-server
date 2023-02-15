@@ -1,4 +1,4 @@
-package userhandler
+package mehandler
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (u *userHandler) Me(ctx *gin.Context) {
+func (u *meHandler) Me(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		err := domain.NewInternalErr()

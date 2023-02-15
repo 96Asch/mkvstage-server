@@ -12,6 +12,7 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/handler"
+	"github.com/96Asch/mkvstage-server/internal/handler/middleware"
 	"github.com/96Asch/mkvstage-server/internal/repository"
 	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/96Asch/mkvstage-server/internal/store"
@@ -113,10 +114,14 @@ func main() {
 
 	tr := repository.NewRedisTokenRepository(rdb)
 	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
+
+	mhw := middleware.NewGinMiddlewareHandler(ts)
+
 	config := handler.Config{
 		Router: router,
 		U:      us,
 		T:      ts,
+		MH:     mhw,
 	}
 
 	run(&config)

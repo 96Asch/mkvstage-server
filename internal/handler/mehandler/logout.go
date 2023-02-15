@@ -1,4 +1,4 @@
-package userhandler
+package mehandler
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (us userHandler) Logout(ctx *gin.Context) {
+func (us meHandler) Logout(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		newErr := domain.NewInternalErr()

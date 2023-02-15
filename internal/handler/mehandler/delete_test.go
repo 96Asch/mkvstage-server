@@ -1,4 +1,4 @@
-package userhandler
+package mehandler
 
 import (
 	"bytes"
@@ -32,8 +32,15 @@ func TestDeleteCorrect(t *testing.T) {
 	})
 	w := httptest.NewRecorder()
 
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
 	mockByte, err := json.Marshal(gin.H{
 		"id": deleteID,
@@ -42,7 +49,7 @@ func TestDeleteCorrect(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/delete", bodyReader)
+	req, err := http.NewRequest(http.MethodDelete, "/test/me/delete", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -60,10 +67,16 @@ func TestDeleteNoContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 
-	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/delete", nil)
+	group := router.Group("test")
+	Initialize(group, mockUS, mockTS, mockMWH)
+
+	req, err := http.NewRequest(http.MethodDelete, "/test/me/delete", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(r, req)
@@ -85,13 +98,17 @@ func TestDeleteInvalidBind(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(func(ctx *gin.Context) {
-		ctx.Set("user", mockUser)
-	})
 	w := httptest.NewRecorder()
 
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
 	mockByte, err := json.Marshal(gin.H{
 		"ids": deleteID,
@@ -100,7 +117,7 @@ func TestDeleteInvalidBind(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/delete", bodyReader)
+	req, err := http.NewRequest(http.MethodDelete, "/test/me/delete", bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -128,8 +145,15 @@ func TestDeleteRemoveErr(t *testing.T) {
 	})
 	w := httptest.NewRecorder()
 
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
 	mockByte, err := json.Marshal(gin.H{
 		"id": deleteID,
@@ -138,7 +162,7 @@ func TestDeleteRemoveErr(t *testing.T) {
 
 	bodyReader := bytes.NewReader(mockByte)
 
-	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/delete", bodyReader)
+	req, err := http.NewRequest(http.MethodDelete, "/test/me/delete", bodyReader)
 	req.Header.Set("Content-Type", "application/xml")
 	assert.NoError(t, err)
 

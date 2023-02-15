@@ -1,4 +1,4 @@
-package userhandler
+package mehandler
 
 import (
 	"net/http"
@@ -32,14 +32,18 @@ func TestMeCorrect(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(func(ctx *gin.Context) {
+
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
-	})
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
-	req, err := http.NewRequest(http.MethodGet, "/test/users/me", nil)
+	req, err := http.NewRequest(http.MethodGet, "/test/me", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(r, req)
@@ -61,10 +65,16 @@ func TestMeNoContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 
-	req, err := http.NewRequest(http.MethodGet, "/test/users/me", nil)
+	group := router.Group("test")
+	Initialize(group, mockUS, mockTS, mockMWH)
+
+	req, err := http.NewRequest(http.MethodGet, "/test/me", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(r, req)
@@ -93,14 +103,18 @@ func TestMeNotFound(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(func(ctx *gin.Context) {
+
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
-	})
+		ctx.Next()
+	}
+	mockMWH := new(mocks.MockMiddlewareHandler)
 
+	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
 	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
+	Initialize(group, mockUS, mockTS, mockMWH)
 
-	req, err := http.NewRequest(http.MethodGet, "/test/users/me", nil)
+	req, err := http.NewRequest(http.MethodGet, "/test/me", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(r, req)

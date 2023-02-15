@@ -24,8 +24,8 @@ func NewTokenService(tr domain.TokenRepository, ur domain.UserRepository, access
 	}
 }
 
-func (ts tokenService) ExtractUser(ctx context.Context, token *domain.AccessToken) (*domain.User, error) {
-	at, err := util.VerifyAccessToken(token.Access, ts.accessSecret)
+func (ts tokenService) ExtractUser(ctx context.Context, access string) (*domain.User, error) {
+	at, err := util.VerifyAccessToken(access, ts.accessSecret)
 
 	if err != nil {
 		return nil, domain.NewNotAuthorizedErr(err.Error())

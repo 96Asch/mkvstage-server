@@ -12,7 +12,7 @@ type userHandler struct {
 	tokenService domain.TokenService
 }
 
-func Initialize(rg *gin.RouterGroup, us domain.UserService, ts domain.TokenService) {
+func Initialize(rg *gin.RouterGroup, us domain.UserService, ts domain.TokenService) *gin.RouterGroup {
 	log.Println("Setting up user handlers")
 	uh := &userHandler{
 		userService:  us,
@@ -22,10 +22,8 @@ func Initialize(rg *gin.RouterGroup, us domain.UserService, ts domain.TokenServi
 	users := rg.Group("users")
 
 	users.GET("/", uh.GetAll)
-	users.GET("/me", uh.Me)
 	users.POST("/create", uh.Create)
 	users.POST("/login", uh.Login)
-	users.PATCH("/me/update", uh.Update)
-	users.DELETE("/me/delete", uh.Delete)
-	users.DELETE("/me/logout", uh.Logout)
+
+	return rg
 }

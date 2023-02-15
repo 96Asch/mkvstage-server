@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/util"
@@ -57,7 +56,7 @@ func (us userService) Update(ctx context.Context, user *domain.User) error {
 	return us.userRepo.Update(ctx, user)
 }
 
-func (us userService) Remove(ctx context.Context, user *domain.User, id int64) error {
+func (us userService) Remove(ctx context.Context, user *domain.User, id int64) (int64, error) {
 
 	deleteId := id
 	if id == 0 {
@@ -65,18 +64,18 @@ func (us userService) Remove(ctx context.Context, user *domain.User, id int64) e
 	}
 
 	if user.ID != deleteId && !user.HasClearance() {
-		return domain.NewNotAuthorizedErr("cannot delete given id")
+		return 0, domain.NewNotAuthorizedErr("cannot delete given id")
 	}
 
 	if _, err := us.userRepo.GetByID(ctx, deleteId); err != nil {
-		return err
+		return 0, err
 	}
 
 	if err := us.userRepo.Delete(ctx, deleteId); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return deleteId, nil
 }
 
 func (us userService) Authorize(ctx context.Context, email, password string) (*domain.User, error) {
@@ -85,8 +84,6 @@ func (us userService) Authorize(ctx context.Context, email, password string) (*d
 		return nil, err
 	}
 
-	log.Println(user)
-	log.Println(password)
 	if err := util.Validate(password, user.Password); err != nil {
 		return nil, domain.NewNotAuthorizedErr("email and/or password is incorrect")
 	}

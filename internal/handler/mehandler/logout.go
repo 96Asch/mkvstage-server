@@ -31,7 +31,7 @@ func (us meHandler) Logout(ctx *gin.Context) {
 	context := ctx.Request.Context()
 	err := us.tokenService.RemoveRefresh(context, user.ID, logout.Refresh)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}
 

@@ -33,7 +33,14 @@ func (uh *meHandler) Delete(ctx *gin.Context) {
 	user := val.(*domain.User)
 	context := ctx.Request.Context()
 
-	if err := uh.userService.Remove(context, user, dID.ID); err != nil {
+	id, err := uh.userService.Remove(context, user, dID.ID)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		return
+	}
+
+	if err := uh.tokenService.RemoveAllRefresh(context, id); err != nil {
 		log.Println(err)
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return

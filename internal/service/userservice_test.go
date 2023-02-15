@@ -217,7 +217,7 @@ func TestDeleteUserCorrectOnlyUser(t *testing.T) {
 	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).Return(nil, nil)
 
 	US := NewUserService(mockUR)
-	err := US.Remove(ctx, mockUser, 0)
+	_, err := US.Remove(ctx, mockUser, 0)
 
 	assert.NoError(t, err)
 	mockUR.AssertExpectations(t)
@@ -237,7 +237,7 @@ func TestDeleteUserCorrectOtherUser(t *testing.T) {
 	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, nil)
 
 	US := NewUserService(mockUR)
-	err := US.Remove(ctx, mockUser, otherID)
+	_, err := US.Remove(ctx, mockUser, otherID)
 
 	assert.NoError(t, err)
 	mockUR.AssertExpectations(t)
@@ -255,7 +255,7 @@ func TestDeleteUserNotAuthorized(t *testing.T) {
 	mockUR := new(mocks.MockUserRepository)
 
 	US := NewUserService(mockUR)
-	err := US.Remove(ctx, mockUser, otherID)
+	_, err := US.Remove(ctx, mockUser, otherID)
 
 	expectedErr := domain.NewNotAuthorizedErr("")
 	assert.ErrorAs(t, err, &expectedErr)
@@ -277,7 +277,7 @@ func TestDeleteUserNoRecord(t *testing.T) {
 	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, expectedErr)
 
 	US := NewUserService(mockUR)
-	err := US.Remove(ctx, mockUser, otherID)
+	_, err := US.Remove(ctx, mockUser, otherID)
 
 	assert.ErrorAs(t, err, &expectedErr)
 	mockUR.AssertCalled(t, "GetByID", ctx, otherID)
@@ -299,7 +299,7 @@ func TestDeleteUserInternalErr(t *testing.T) {
 	mockUR.On("Delete", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(expectedErr)
 
 	US := NewUserService(mockUR)
-	err := US.Remove(ctx, mockUser, otherID)
+	_, err := US.Remove(ctx, mockUser, otherID)
 
 	assert.ErrorAs(t, err, &expectedErr)
 	mockUR.AssertExpectations(t)

@@ -33,7 +33,7 @@ type UserService interface {
 	Fetcher[User]
 	Store(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
-	Remove(ctx context.Context, user *User, id int64) error
+	Remove(ctx context.Context, user *User, id int64) (int64, error)
 	Authorize(ctx context.Context, email, password string) (*User, error)
 }
 

@@ -43,8 +43,8 @@ func (m MockTokenService) CreateAccess(ctx context.Context, user *domain.User) (
 	return r0, r1
 }
 
-func (m MockTokenService) CreateRefresh(ctx context.Context, user *domain.User) (*domain.RefreshToken, error) {
-	ret := m.Called(ctx, user)
+func (m MockTokenService) CreateRefresh(ctx context.Context, user *domain.User, currentToken *domain.RefreshToken) (*domain.RefreshToken, error) {
+	ret := m.Called(ctx, user, currentToken)
 
 	var r0 *domain.RefreshToken
 	if ret.Get(0) != nil {

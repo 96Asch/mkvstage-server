@@ -47,7 +47,22 @@ func (ts tokenService) CreateAccess(ctx context.Context, user *domain.User) (*do
 	return accessToken, nil
 }
 
-func (ts tokenService) CreateRefresh(ctx context.Context, user *domain.User) (*domain.RefreshToken, error) {
+func (ts tokenService) CreateRefresh(ctx context.Context, user *domain.User, currentToken *domain.RefreshToken) (*domain.RefreshToken, error) {
+
+	// if currentToken is provided, delete the token if the token is not valid,
+	// otherwise return the given token
+	if currentToken != nil {
+		_, err := util.VerifyRefreshToken(currentToken.Refresh, ts.refreshSecret)
+		if err == nil {
+			return currentToken, nil
+		}
+
+		err = ts.tokenRepo.Delete(ctx, currentToken)
+		if err != nil {
+			return nil, domain.NewInternalErr()
+		}
+	}
+
 	config := domain.TokenConfig{
 		IAT:         time.Now(),
 		ExpDuration: time.Duration(72) * time.Hour,
@@ -59,7 +74,10 @@ func (ts tokenService) CreateRefresh(ctx context.Context, user *domain.User) (*d
 		return nil, domain.NewInternalErr()
 	}
 
-	// TODO Store Refresh in Redis
+	err = ts.tokenRepo.Create(ctx, refreshToken)
+	if err != nil {
+		return nil, domain.NewInternalErr()
+	}
 
 	return refreshToken, nil
 }

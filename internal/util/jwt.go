@@ -100,3 +100,23 @@ func VerifyAccessToken(tokenString, secret string) (*accessTokenClaims, error) {
 
 	return claims, nil
 }
+
+func VerifyRefreshToken(tokenString, secret string) (*refreshTokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &refreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("token is not valid")
+	}
+
+	claims, ok := token.Claims.(*refreshTokenClaims)
+	if !ok {
+		return nil, fmt.Errorf("could not cast claims to accesstokenclaims")
+	}
+
+	return claims, nil
+}

@@ -74,9 +74,10 @@ func GenerateRefreshToken(uid int64, config *domain.TokenConfig) (*domain.Refres
 	}
 
 	return &domain.RefreshToken{
-		UserID:  uid,
-		ID:      id,
-		Refresh: ss,
+		UserID:             uid,
+		ID:                 id,
+		Refresh:            ss,
+		ExpirationDuration: config.ExpDuration,
 	}, nil
 }
 

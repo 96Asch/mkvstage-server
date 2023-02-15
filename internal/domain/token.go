@@ -8,9 +8,10 @@ import (
 )
 
 type RefreshToken struct {
-	ID      uuid.UUID `json:"-"`
-	UserID  int64     `json:"-"`
-	Refresh string    `json:"refresh"`
+	ID                 uuid.UUID     `json:"-"`
+	UserID             int64         `json:"-"`
+	Refresh            string        `json:"refresh"`
+	ExpirationDuration time.Duration `json:"-"`
 }
 
 type AccessToken struct {
@@ -35,5 +36,8 @@ type TokenService interface {
 }
 
 type TokenRepository interface {
-	Create(ctx context.Context, token *RefreshToken)
+	GetAll(ctx context.Context, uid int64) (*[]RefreshToken, error)
+	Create(ctx context.Context, token *RefreshToken) error
+	Delete(ctx context.Context, token *RefreshToken) error
+	DeleteAll(ctx context.Context, uid int64) error
 }

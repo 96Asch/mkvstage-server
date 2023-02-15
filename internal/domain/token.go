@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
 
@@ -23,20 +22,6 @@ type Tokens struct {
 	RefreshToken
 }
 
-type AccessTokenClaims struct {
-	User *User `json:"user"`
-	jwt.RegisteredClaims
-}
-
-type RefreshTokenClaims struct {
-	UID int64 `json:"uid"`
-	jwt.RegisteredClaims
-}
-
-type Claims interface {
-	AccessTokenClaims | RefreshTokenClaims
-}
-
 type TokenConfig struct {
 	IAT         time.Time
 	ExpDuration time.Duration
@@ -50,4 +35,5 @@ type TokenService interface {
 }
 
 type TokenRepository interface {
+	Create(ctx context.Context, token *RefreshToken)
 }

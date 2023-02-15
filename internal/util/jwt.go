@@ -2,11 +2,22 @@ package util
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
+
+type accessTokenClaims struct {
+	User *domain.User `json:"user"`
+	jwt.RegisteredClaims
+}
+
+type refreshTokenClaims struct {
+	UID int64 `json:"uid"`
+	jwt.RegisteredClaims
+}
 
 func GenerateAccessToken(user *domain.User, config *domain.TokenConfig) (*domain.AccessToken, error) {
 
@@ -15,8 +26,15 @@ func GenerateAccessToken(user *domain.User, config *domain.TokenConfig) (*domain
 		return nil, errors.New("could not generate a uuid")
 	}
 
-	claims := domain.AccessTokenClaims{
-		User: user,
+	claims := accessTokenClaims{
+		User: &domain.User{
+			ID:           user.ID,
+			FirstName:    user.FirstName,
+			LastName:     user.LastName,
+			Email:        user.Email,
+			ProfileColor: user.ProfileColor,
+			Permission:   user.Permission,
+		},
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(config.IAT),
 			ExpiresAt: jwt.NewNumericDate(config.IAT.Add(config.ExpDuration)),
@@ -40,7 +58,7 @@ func GenerateRefreshToken(uid int64, config *domain.TokenConfig) (*domain.Refres
 		return nil, errors.New("could not generate a uuid")
 	}
 
-	claims := domain.RefreshTokenClaims{
+	claims := refreshTokenClaims{
 		UID: uid,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(config.IAT),
@@ -62,22 +80,22 @@ func GenerateRefreshToken(uid int64, config *domain.TokenConfig) (*domain.Refres
 	}, nil
 }
 
-func VerifyToken[T domain.Claims](tokenString, secret string) (*T, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("incorrect signing method")
-		}
-
+func VerifyAccessToken(tokenString, secret string) (*accessTokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &accessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(T)
-	if !ok || !token.Valid {
+	if !token.Valid {
 		return nil, errors.New("token is not valid")
 	}
 
-	return &claims, nil
+	claims, ok := token.Claims.(*accessTokenClaims)
+	if !ok {
+		return nil, fmt.Errorf("could not cast claims to accesstokenclaims")
+	}
+
+	return claims, nil
 }

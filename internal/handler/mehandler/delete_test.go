@@ -37,7 +37,7 @@ func TestDeleteCorrect(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -71,7 +71,7 @@ func TestDeleteNoContext(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -105,7 +105,7 @@ func TestDeleteInvalidBind(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -150,7 +150,7 @@ func TestDeleteRemoveErr(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)

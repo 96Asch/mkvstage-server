@@ -73,7 +73,7 @@ func (ts tokenService) CreateRefresh(ctx context.Context, uid int64, currentRefr
 			return &domain.RefreshToken{Refresh: currentRefresh}, nil
 		}
 
-		err = ts.tokenRepo.Delete(ctx, &domain.RefreshToken{Refresh: currentRefresh, UserID: uid})
+		err = ts.tokenRepo.Delete(ctx, uid, currentRefresh)
 		if err != nil {
 			return nil, domain.NewInternalErr()
 		}
@@ -98,6 +98,10 @@ func (ts tokenService) CreateRefresh(ctx context.Context, uid int64, currentRefr
 	return refreshToken, nil
 }
 
-func (ts tokenService) Logout(ctx context.Context, uid int64) error {
+func (ts tokenService) RemoveRefresh(ctx context.Context, uid int64, refresh string) error {
+	return ts.tokenRepo.Delete(ctx, uid, refresh)
+}
+
+func (ts tokenService) RemoveAllRefresh(ctx context.Context, uid int64) error {
 	return ts.tokenRepo.DeleteAll(ctx, uid)
 }

@@ -1,7 +1,7 @@
 
 runtest:
 	@echo "Starting Test Suite..."
-	docker-compose -f test/docker-compose.yml up --abort-on-container-exit
+	docker-compose -f test/docker-compose.yml up --abort-on-container-exit --build
 
 run:
 	@echo "Starting docker compose"

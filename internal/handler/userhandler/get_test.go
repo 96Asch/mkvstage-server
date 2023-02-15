@@ -45,7 +45,7 @@ func TestGetAllCorrect(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/test/users/", nil)
+	req, err := http.NewRequest(http.MethodGet, "/test/users", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -73,7 +73,7 @@ func TestGetAllInternalErr(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/test/users/", nil)
+	req, err := http.NewRequest(http.MethodGet, "/test/users", nil)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)

@@ -38,7 +38,7 @@ func TestMeCorrect(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -69,7 +69,7 @@ func TestMeNoContext(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -110,7 +110,7 @@ func TestMeNotFound(t *testing.T) {
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
 
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
 

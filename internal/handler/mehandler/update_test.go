@@ -40,7 +40,7 @@ func TestUpdateCorrect(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -83,7 +83,7 @@ func TestUpdateInvalidBind(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -121,7 +121,7 @@ func TestUpdateNoContext(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)
@@ -163,7 +163,7 @@ func TestUpdateInternalErr(t *testing.T) {
 		ctx.Next()
 	}
 	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthorizeUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	group := router.Group("test")
 	Initialize(group, mockUS, mockTS, mockMWH)

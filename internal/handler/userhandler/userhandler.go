@@ -21,9 +21,9 @@ func Initialize(rg *gin.RouterGroup, us domain.UserService, ts domain.TokenServi
 
 	users := rg.Group("users")
 
-	users.GET("/", uh.GetAll)
+	users.GET("", uh.GetAll)
 	users.POST("/create", uh.Create)
 	users.POST("/login", uh.Login)
 
-	return rg
+	return users
 }

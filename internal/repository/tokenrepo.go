@@ -63,8 +63,8 @@ func (tr redisTokenRepo) Create(ctx context.Context, token *domain.RefreshToken)
 	return nil
 }
 
-func (tr redisTokenRepo) Delete(ctx context.Context, token *domain.RefreshToken) error {
-	key := fmt.Sprintf("%d:%s", token.UserID, token.Refresh)
+func (tr redisTokenRepo) Delete(ctx context.Context, uid int64, refresh string) error {
+	key := fmt.Sprintf("%d:%s", uid, refresh)
 	err := tr.R.Del(ctx, key).Err()
 	if err != nil {
 		return err

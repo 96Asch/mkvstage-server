@@ -59,7 +59,18 @@ func (m MockTokenService) CreateRefresh(ctx context.Context, uid int64, currentR
 	return r0, r1
 }
 
-func (m MockTokenService) Logout(ctx context.Context, uid int64) error {
+func (m MockTokenService) RemoveRefresh(ctx context.Context, uid int64, refresh string) error {
+	ret := m.Called(ctx, uid, refresh)
+
+	var r0 error
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(error)
+	}
+
+	return r0
+}
+
+func (m MockTokenService) RemoveAllRefresh(ctx context.Context, uid int64) error {
 	ret := m.Called(ctx, uid)
 
 	var r0 error

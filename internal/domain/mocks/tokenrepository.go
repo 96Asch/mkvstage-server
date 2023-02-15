@@ -38,8 +38,8 @@ func (m MockTokenRepository) Create(ctx context.Context, token *domain.RefreshTo
 	return r0
 }
 
-func (m MockTokenRepository) Delete(ctx context.Context, token *domain.RefreshToken) error {
-	ret := m.Called(ctx, token)
+func (m MockTokenRepository) Delete(ctx context.Context, uid int64, refresh string) error {
+	ret := m.Called(ctx, uid, refresh)
 
 	var r0 error
 	if ret.Get(0) != nil {

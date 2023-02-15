@@ -33,6 +33,15 @@ func (ts tokenService) ExtractUser(ctx context.Context, access string) (*domain.
 	return at.User, nil
 }
 
+func containsRefreshToken(tokens *[]domain.RefreshToken, refresh string) bool {
+	for _, token := range *tokens {
+		if token.Refresh == refresh {
+			return true
+		}
+	}
+	return false
+}
+
 func (ts tokenService) CreateAccess(ctx context.Context, currentRefresh string) (*domain.AccessToken, error) {
 
 	if currentRefresh == "" {
@@ -41,7 +50,16 @@ func (ts tokenService) CreateAccess(ctx context.Context, currentRefresh string) 
 
 	claims, err := util.VerifyRefreshToken(currentRefresh, ts.refreshSecret)
 	if err != nil {
-		return nil, domain.NewNotAuthorizedErr("token invalid")
+		return nil, domain.NewNotAuthorizedErr("refresh token is invalid")
+	}
+
+	refreshTokens, err := ts.tokenRepo.GetAll(ctx, claims.UID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !containsRefreshToken(refreshTokens, currentRefresh) {
+		return nil, domain.NewNotAuthorizedErr("refresh token is invalid")
 	}
 
 	user, err := ts.userRepo.GetByID(ctx, claims.UID)

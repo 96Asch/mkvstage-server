@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -26,7 +25,7 @@ func (tr redisTokenRepo) GetAll(ctx context.Context, uid int64) (*[]domain.Refre
 	matcher := fmt.Sprintf("%d:*", uid)
 	scan := tr.R.Scan(ctx, 0, matcher, 10)
 	if err := scan.Err(); err != nil {
-		return nil, err
+		return nil, domain.NewInternalErr()
 	}
 
 	iterator := scan.Iterator()
@@ -35,12 +34,12 @@ func (tr redisTokenRepo) GetAll(ctx context.Context, uid int64) (*[]domain.Refre
 		split := strings.Split(iterator.Val(), ":")
 
 		if len(split) != 2 {
-			return nil, errors.New("invalid key found")
+			return nil, domain.NewInternalErr()
 		}
 
 		id, err := strconv.Atoi(split[0])
 		if err != nil {
-			return nil, errors.New("invalid conversion to integer")
+			return nil, domain.NewInternalErr()
 		}
 
 		tokens = append(tokens, domain.RefreshToken{
@@ -57,7 +56,7 @@ func (tr redisTokenRepo) Create(ctx context.Context, token *domain.RefreshToken)
 	log.Println(key)
 	cmd := tr.R.Set(ctx, key, 0, token.ExpirationDuration)
 	if err := cmd.Err(); err != nil {
-		return err
+		return domain.NewInternalErr()
 	}
 
 	return nil
@@ -67,7 +66,7 @@ func (tr redisTokenRepo) Delete(ctx context.Context, uid int64, refresh string) 
 	key := fmt.Sprintf("%d:%s", uid, refresh)
 	err := tr.R.Del(ctx, key).Err()
 	if err != nil {
-		return err
+		return domain.NewInternalErr()
 	}
 	return nil
 }
@@ -75,14 +74,14 @@ func (tr redisTokenRepo) Delete(ctx context.Context, uid int64, refresh string) 
 func (tr redisTokenRepo) DeleteAll(ctx context.Context, uid int64) error {
 	tokens, err := tr.GetAll(ctx, uid)
 	if err != nil {
-		return err
+		return domain.NewInternalErr()
 	}
 
 	for _, token := range *tokens {
 		key := fmt.Sprintf("%d:%s", token.UserID, token.Refresh)
 		err := tr.R.Del(ctx, key).Err()
 		if err != nil {
-			return err
+			return domain.NewInternalErr()
 		}
 	}
 

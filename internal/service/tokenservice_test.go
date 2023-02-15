@@ -21,6 +21,7 @@ func TestCreateAccessCorrect(t *testing.T) {
 	}
 
 	mockTR := new(mocks.MockTokenRepository)
+
 	mockUR := new(mocks.MockUserRepository)
 	mockUR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
@@ -33,6 +34,15 @@ func TestCreateAccessCorrect(t *testing.T) {
 		Secret:      TS.refreshSecret,
 	})
 	assert.NoError(t, err)
+
+	mockRefreshTokens := &[]domain.RefreshToken{
+		{
+			Refresh: refresh.Refresh,
+		},
+	}
+	mockTR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(mockRefreshTokens, nil)
 
 	ctx := context.TODO()
 	at, err := TS.CreateAccess(ctx, refresh.Refresh)
@@ -47,6 +57,75 @@ func TestCreateAccessCorrect(t *testing.T) {
 	mockUser.Password = ""
 	assert.Equal(t, mockUser, claims.User)
 
+}
+
+func TestCreateAccessRepoErr(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:       1,
+		Email:    "Foo@Bar.com",
+		Password: "FooBar",
+	}
+
+	mockTR := new(mocks.MockTokenRepository)
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(mockUser, nil)
+	TS := NewTokenService(mockTR, mockUR, "access-secret", "refresh-secret")
+
+	refresh, err := util.GenerateRefreshToken(mockUser.ID, &domain.TokenConfig{
+		IAT:         time.Now(),
+		ExpDuration: time.Minute,
+		Secret:      TS.refreshSecret,
+	})
+	assert.NoError(t, err)
+
+	mockErr := domain.NewInternalErr()
+	mockTR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(nil, mockErr)
+
+	ctx := context.TODO()
+	_, err = TS.CreateAccess(ctx, refresh.Refresh)
+
+	assert.ErrorAs(t, err, &mockErr)
+}
+
+func TestCreateAccessRefreshNotInRepo(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:       1,
+		Email:    "Foo@Bar.com",
+		Password: "FooBar",
+	}
+
+	mockTR := new(mocks.MockTokenRepository)
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(mockUser, nil)
+	TS := NewTokenService(mockTR, mockUR, "access-secret", "refresh-secret")
+
+	refresh, err := util.GenerateRefreshToken(mockUser.ID, &domain.TokenConfig{
+		IAT:         time.Now(),
+		ExpDuration: time.Minute,
+		Secret:      TS.refreshSecret,
+	})
+	assert.NoError(t, err)
+
+	mockErr := domain.NewInternalErr()
+	mockRefreshTokens := &[]domain.RefreshToken{}
+	mockTR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(mockRefreshTokens, nil)
+
+	ctx := context.TODO()
+	_, err = TS.CreateAccess(ctx, refresh.Refresh)
+
+	assert.ErrorAs(t, err, &mockErr)
 }
 
 func TestCreateAccessInvalidRefresh(t *testing.T) {
@@ -117,6 +196,33 @@ func TestCreateRefreshCorrect(t *testing.T) {
 	assert.Equal(t, mockUser.ID, claims.UID)
 }
 
+func TestCreateRefreshDeleteErr(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:       1,
+		Email:    "Foo@Bar.com",
+		Password: "FooBar",
+	}
+
+	refreshToken := "refresh-token"
+	mockErr := domain.NewInternalErr()
+	mockUR := new(mocks.MockUserRepository)
+	mockTR := new(mocks.MockTokenRepository)
+	mockTR.
+		On("Create", mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*domain.RefreshToken")).
+		Return(nil)
+	mockTR.
+		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, refreshToken).
+		Return(mockErr)
+
+	TS := NewTokenService(mockTR, mockUR, "access-secret", "refresh-secret")
+
+	ctx := context.TODO()
+	_, err := TS.CreateRefresh(ctx, mockUser.ID, refreshToken)
+
+	assert.ErrorAs(t, err, &mockErr)
+}
+
 func TestCreateRefreshNotExpired(t *testing.T) {
 
 	mockUser := &domain.User{
@@ -135,6 +241,16 @@ func TestCreateRefreshNotExpired(t *testing.T) {
 		Secret:      TS.refreshSecret,
 	})
 	assert.NoError(t, err)
+
+	mockRefreshTokens := &[]domain.RefreshToken{
+		{
+			Refresh: refresh.Refresh,
+		},
+	}
+
+	mockTR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(mockRefreshTokens, nil)
 
 	ctx := context.TODO()
 	at, err := TS.CreateRefresh(ctx, mockUser.ID, refresh.Refresh)
@@ -167,6 +283,16 @@ func TestExtractUser(t *testing.T) {
 		Secret:      TS.refreshSecret,
 	})
 	assert.NoError(t, err)
+
+	mockRefreshTokens := &[]domain.RefreshToken{
+		{
+			Refresh: refresh.Refresh,
+		},
+	}
+
+	mockTR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(mockRefreshTokens, nil)
 
 	ctx := context.TODO()
 	at, err := TS.CreateAccess(ctx, refresh.Refresh)

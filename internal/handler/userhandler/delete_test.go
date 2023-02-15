@@ -21,6 +21,7 @@ func TestDeleteCorrect(t *testing.T) {
 		Permission: domain.GUEST,
 	}
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockUser, deleteID).Return(nil)
 
@@ -32,7 +33,7 @@ func TestDeleteCorrect(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"id": deleteID,
@@ -52,6 +53,7 @@ func TestDeleteCorrect(t *testing.T) {
 
 func TestDeleteNoContext(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
+	mockTS := new(mocks.MockTokenService)
 
 	r := httptest.NewRecorder()
 
@@ -59,7 +61,7 @@ func TestDeleteNoContext(t *testing.T) {
 	router := gin.New()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	req, err := http.NewRequest(http.MethodDelete, "/test/users/me/delete", nil)
 	assert.NoError(t, err)
@@ -77,6 +79,7 @@ func TestDeleteInvalidBind(t *testing.T) {
 		Permission: domain.GUEST,
 	}
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockUser, int64(0)).Return(nil)
 
@@ -88,7 +91,7 @@ func TestDeleteInvalidBind(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"ids": deleteID,
@@ -114,6 +117,7 @@ func TestDeleteRemoveErr(t *testing.T) {
 	}
 
 	expectedErr := domain.NewRecordNotFoundErr("", "")
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockUser, deleteID).Return(expectedErr)
 
@@ -125,7 +129,7 @@ func TestDeleteRemoveErr(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"id": deleteID,

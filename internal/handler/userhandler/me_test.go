@@ -24,6 +24,7 @@ func TestMeCorrect(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("FetchByID", mock.Anything, mockUser.ID).Return(mockUser, nil)
 
@@ -36,7 +37,7 @@ func TestMeCorrect(t *testing.T) {
 	})
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	req, err := http.NewRequest(http.MethodGet, "/test/users/me", nil)
 	assert.NoError(t, err)
@@ -53,6 +54,7 @@ func TestMeCorrect(t *testing.T) {
 
 func TestMeNoContext(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
+	mockTS := new(mocks.MockTokenService)
 
 	r := httptest.NewRecorder()
 
@@ -60,7 +62,7 @@ func TestMeNoContext(t *testing.T) {
 	router := gin.New()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	req, err := http.NewRequest(http.MethodGet, "/test/users/me", nil)
 	assert.NoError(t, err)
@@ -83,6 +85,7 @@ func TestMeNotFound(t *testing.T) {
 	}
 
 	mockUS := new(mocks.MockUserService)
+	mockTS := new(mocks.MockTokenService)
 	notFoundErr := domain.NewRecordNotFoundErr("id", "1")
 	mockUS.On("FetchByID", mock.Anything, mockUser.ID).Return(nil, notFoundErr)
 
@@ -95,7 +98,7 @@ func TestMeNotFound(t *testing.T) {
 	})
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	req, err := http.NewRequest(http.MethodGet, "/test/users/me", nil)
 	assert.NoError(t, err)

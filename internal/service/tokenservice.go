@@ -10,13 +10,15 @@ import (
 
 type tokenService struct {
 	tokenRepo     domain.TokenRepository
+	userRepo      domain.UserRepository
 	accessSecret  string
 	refreshSecret string
 }
 
-func NewTokenService(tr domain.TokenRepository, accessSecret, refreshSecret string) *tokenService {
+func NewTokenService(tr domain.TokenRepository, ur domain.UserRepository, accessSecret, refreshSecret string) *tokenService {
 	return &tokenService{
 		tokenRepo:     tr,
+		userRepo:      ur,
 		accessSecret:  accessSecret,
 		refreshSecret: refreshSecret,
 	}
@@ -31,7 +33,21 @@ func (ts tokenService) ExtractUser(ctx context.Context, token *domain.AccessToke
 	return at.User, nil
 }
 
-func (ts tokenService) CreateAccess(ctx context.Context, user *domain.User) (*domain.AccessToken, error) {
+func (ts tokenService) CreateAccess(ctx context.Context, currentRefresh string) (*domain.AccessToken, error) {
+
+	if currentRefresh == "" {
+		return nil, domain.NewBadRequestErr("no token provided")
+	}
+
+	claims, err := util.VerifyRefreshToken(currentRefresh, ts.refreshSecret)
+	if err != nil {
+		return nil, domain.NewNotAuthorizedErr("token invalid")
+	}
+
+	user, err := ts.userRepo.GetByID(ctx, claims.UID)
+	if err != nil {
+		return nil, err
+	}
 
 	config := domain.TokenConfig{
 		IAT:         time.Now(),
@@ -47,17 +63,17 @@ func (ts tokenService) CreateAccess(ctx context.Context, user *domain.User) (*do
 	return accessToken, nil
 }
 
-func (ts tokenService) CreateRefresh(ctx context.Context, user *domain.User, currentToken *domain.RefreshToken) (*domain.RefreshToken, error) {
+func (ts tokenService) CreateRefresh(ctx context.Context, uid int64, currentRefresh string) (*domain.RefreshToken, error) {
 
 	// if currentToken is provided, delete the token if the token is not valid,
 	// otherwise return the given token
-	if currentToken != nil {
-		_, err := util.VerifyRefreshToken(currentToken.Refresh, ts.refreshSecret)
+	if currentRefresh != "" {
+		_, err := util.VerifyRefreshToken(currentRefresh, ts.refreshSecret)
 		if err == nil {
-			return currentToken, nil
+			return &domain.RefreshToken{Refresh: currentRefresh}, nil
 		}
 
-		err = ts.tokenRepo.Delete(ctx, currentToken)
+		err = ts.tokenRepo.Delete(ctx, &domain.RefreshToken{Refresh: currentRefresh, UserID: uid})
 		if err != nil {
 			return nil, domain.NewInternalErr()
 		}
@@ -69,7 +85,7 @@ func (ts tokenService) CreateRefresh(ctx context.Context, user *domain.User, cur
 		Secret:      ts.refreshSecret,
 	}
 
-	refreshToken, err := util.GenerateRefreshToken(user.ID, &config)
+	refreshToken, err := util.GenerateRefreshToken(uid, &config)
 	if err != nil {
 		return nil, domain.NewInternalErr()
 	}

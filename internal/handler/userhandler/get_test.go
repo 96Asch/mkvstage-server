@@ -34,13 +34,14 @@ func TestGetAllCorrect(t *testing.T) {
 		},
 	}
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("FetchAll", mock.Anything).Return(mockUsers, nil)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	w := httptest.NewRecorder()
 
@@ -61,13 +62,14 @@ func TestGetAllInternalErr(t *testing.T) {
 
 	expectedErr := domain.NewInternalErr()
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("FetchAll", mock.Anything).Return(nil, expectedErr)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	w := httptest.NewRecorder()
 

@@ -31,8 +31,8 @@ type TokenConfig struct {
 
 type TokenService interface {
 	ExtractUser(ctx context.Context, token *AccessToken) (*User, error)
-	CreateAccess(ctx context.Context, user *User) (*AccessToken, error)
-	CreateRefresh(ctx context.Context, user *User, currentToken *RefreshToken) (*RefreshToken, error)
+	CreateAccess(ctx context.Context, currentRefresh string) (*AccessToken, error)
+	CreateRefresh(ctx context.Context, uid int64, currentRefresh string) (*RefreshToken, error)
 }
 
 type TokenRepository interface {

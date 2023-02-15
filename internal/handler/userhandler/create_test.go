@@ -24,6 +24,7 @@ func TestCreateCorrect(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("Store", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(nil).
@@ -37,7 +38,7 @@ func TestCreateCorrect(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":    "Foo",
@@ -73,6 +74,7 @@ func TestCreateCorrect(t *testing.T) {
 }
 
 func TestCreateInvalidEmail(t *testing.T) {
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 
 	gin.SetMode(gin.TestMode)
@@ -81,7 +83,7 @@ func TestCreateInvalidEmail(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":    "Foo",
@@ -105,6 +107,7 @@ func TestCreateInvalidEmail(t *testing.T) {
 
 func TestCreateInvalidBind(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
+	mockTS := new(mocks.MockTokenService)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
@@ -112,7 +115,7 @@ func TestCreateInvalidBind(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":   "Foo",
@@ -145,6 +148,8 @@ func TestCreateServerError(t *testing.T) {
 	}
 
 	expectedErr := domain.NewInternalErr()
+
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("Store", mock.Anything, mockUser).
 		Return(expectedErr)
@@ -155,7 +160,7 @@ func TestCreateServerError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":    "Foo",

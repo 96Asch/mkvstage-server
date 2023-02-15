@@ -19,6 +19,7 @@ func TestUpdateCorrect(t *testing.T) {
 		ID: 1,
 	}
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
 		ID:           1,
@@ -38,7 +39,7 @@ func TestUpdateCorrect(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":    "Foob",
@@ -65,6 +66,7 @@ func TestUpdateInvalidBind(t *testing.T) {
 		ID: 1,
 	}
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 
 	gin.SetMode(gin.TestMode)
@@ -76,7 +78,7 @@ func TestUpdateInvalidBind(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_names":  "Foo",
@@ -100,6 +102,7 @@ func TestUpdateInvalidBind(t *testing.T) {
 
 func TestUpdateNoContext(t *testing.T) {
 	mockUS := new(mocks.MockUserService)
+	mockTS := new(mocks.MockTokenService)
 
 	r := httptest.NewRecorder()
 
@@ -107,7 +110,7 @@ func TestUpdateNoContext(t *testing.T) {
 	router := gin.New()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	req, err := http.NewRequest(http.MethodPatch, "/test/users/me/update", nil)
 	assert.NoError(t, err)
@@ -125,6 +128,7 @@ func TestUpdateInternalErr(t *testing.T) {
 
 	expectedError := domain.NewInternalErr()
 
+	mockTS := new(mocks.MockTokenService)
 	mockUS := new(mocks.MockUserService)
 	mockUS.On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
 		ID:           1,
@@ -144,7 +148,7 @@ func TestUpdateInternalErr(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	group := router.Group("test")
-	Initialize(group, mockUS)
+	Initialize(group, mockUS, mockTS)
 
 	mockByte, err := json.Marshal(gin.H{
 		"first_name":    "Foob",

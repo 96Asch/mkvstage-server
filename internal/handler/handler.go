@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
 	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
 	"github.com/gin-gonic/gin"
 )
@@ -26,5 +27,6 @@ func Initialize(config *Config) {
 	base := config.Router.Group("api")
 	v1 := base.Group("v1")
 
-	userhandler.Initialize(v1, config.U)
+	userhandler.Initialize(v1, config.U, config.T)
+	tokenhandler.Initialize(v1, config.T, config.U)
 }

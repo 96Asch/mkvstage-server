@@ -27,8 +27,8 @@ func (m MockTokenService) ExtractUser(ctx context.Context, token *domain.AccessT
 	return r0, r1
 }
 
-func (m MockTokenService) CreateAccess(ctx context.Context, user *domain.User) (*domain.AccessToken, error) {
-	ret := m.Called(ctx, user)
+func (m MockTokenService) CreateAccess(ctx context.Context, currentRefresh string) (*domain.AccessToken, error) {
+	ret := m.Called(ctx, currentRefresh)
 
 	var r0 *domain.AccessToken
 	if ret.Get(0) != nil {
@@ -43,8 +43,8 @@ func (m MockTokenService) CreateAccess(ctx context.Context, user *domain.User) (
 	return r0, r1
 }
 
-func (m MockTokenService) CreateRefresh(ctx context.Context, user *domain.User, currentToken *domain.RefreshToken) (*domain.RefreshToken, error) {
-	ret := m.Called(ctx, user, currentToken)
+func (m MockTokenService) CreateRefresh(ctx context.Context, uid int64, currentRefresh string) (*domain.RefreshToken, error) {
+	ret := m.Called(ctx, uid, currentRefresh)
 
 	var r0 *domain.RefreshToken
 	if ret.Get(0) != nil {

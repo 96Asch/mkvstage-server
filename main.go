@@ -107,11 +107,11 @@ func main() {
 	accessSecret := os.Getenv("ACCESS_SECRET")
 	refreshSecret := os.Getenv("REFRESH_SECRET")
 
-	tr := repository.NewRedisTokenRepository(rdb)
-	ts := service.NewTokenService(tr, accessSecret, refreshSecret)
-
 	ur := repository.NewGormUserRepository(db)
 	us := service.NewUserService(ur)
+
+	tr := repository.NewRedisTokenRepository(rdb)
+	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
 	config := handler.Config{
 		Router: router,
 		U:      us,

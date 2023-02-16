@@ -176,6 +176,15 @@ func TestRemoveCorrect(t *testing.T) {
 		ParentID: 1,
 	}
 
+	mockBundles := &[]domain.Bundle{
+		*mockBundle,
+		{
+			ID:       2,
+			Name:     "Bar",
+			ParentID: 0,
+		},
+	}
+
 	mockBR := new(mocks.MockBundleRepository)
 	mockBR.
 		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
@@ -183,12 +192,86 @@ func TestRemoveCorrect(t *testing.T) {
 	mockBR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(mockBundle, nil)
+	mockBR.
+		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
+		Return(mockBundles, nil)
 
 	BS := NewBundleService(mockBR)
 
 	ctx := context.TODO()
 	err := BS.Remove(ctx, mockBundle.ID, mockUser)
 	assert.NoError(t, err)
+
+	mockBR.AssertExpectations(t)
+}
+
+func TestRemoveNotLeaf(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockBundles := &[]domain.Bundle{
+		{
+			ID:       2,
+			Name:     "Bar",
+			ParentID: 0,
+		},
+	}
+
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(mockBundle, nil)
+	mockBR.
+		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
+		Return(mockBundles, nil)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Remove(ctx, mockBundle.ID, mockUser)
+	mockErr := domain.NewBadRequestErr("")
+	assert.ErrorAs(t, err, &mockErr)
+
+	mockBR.AssertExpectations(t)
+}
+
+func TestRemoveGetLeavesErr(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockErr := domain.NewInternalErr()
+
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(mockBundle, nil)
+	mockBR.
+		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
+		Return(nil, mockErr)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Remove(ctx, mockBundle.ID, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
 
 	mockBR.AssertExpectations(t)
 }

@@ -25,4 +25,5 @@ type BundleRepository interface {
 	Create(ctx context.Context, bundle *Bundle) error
 	Delete(ctx context.Context, bid int64) error
 	Update(ctx context.Context, bundle *Bundle) error
+	GetLeaves(ctx context.Context) (*[]Bundle, error)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"gorm.io/gorm"
@@ -37,6 +38,27 @@ func (br gormBundleRepository) GetAll(ctx context.Context) (*[]domain.Bundle, er
 	var bundles []domain.Bundle
 	res := br.db.Find(&bundles)
 	if err := res.Error; err != nil {
+		return nil, domain.NewInternalErr()
+	}
+
+	return &bundles, nil
+}
+
+func (br gormBundleRepository) GetLeaves(ctx context.Context) (*[]domain.Bundle, error) {
+
+	var bundles []domain.Bundle
+
+	res := br.db.Unscoped().
+		Table("bundles b").
+		Where("NOT EXISTS (?) AND deleted_at IS NULL",
+			br.db.Unscoped().
+				Model(&domain.Bundle{}).
+				Select("NULL").
+				Where("parent_id = b.id")).
+		Find(&bundles)
+
+	if err := res.Error; err != nil {
+		log.Println(err)
 		return nil, domain.NewInternalErr()
 	}
 

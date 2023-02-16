@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 )
@@ -43,6 +44,16 @@ func (bs bundleService) Store(ctx context.Context, bundle *domain.Bundle, princi
 	return bs.br.Create(ctx, bundle)
 }
 
+func contains(bundles *[]domain.Bundle, bid int64) bool {
+	for _, bundle := range *bundles {
+		if bundle.ID == bid {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (bs bundleService) Remove(ctx context.Context, bid int64, principal *domain.User) error {
 	if !principal.HasClearance(domain.MEMBER) {
 		return domain.NewNotAuthorizedErr("")
@@ -50,6 +61,17 @@ func (bs bundleService) Remove(ctx context.Context, bid int64, principal *domain
 
 	if _, err := bs.br.GetByID(ctx, bid); err != nil {
 		return err
+	}
+
+	leaves, err := bs.br.GetLeaves(ctx)
+	if err != nil {
+		return err
+	}
+
+	log.Println(leaves)
+
+	if !contains(leaves, bid) {
+		return domain.NewBadRequestErr("given id is not a leaf bundle")
 	}
 
 	return bs.br.Delete(ctx, bid)

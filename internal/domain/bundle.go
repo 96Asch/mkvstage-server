@@ -15,9 +15,9 @@ type Bundle struct {
 
 type BundleService interface {
 	Fetcher[Bundle]
-	Store(ctx context.Context, bundle *Bundle) error
-	Remove(ctx context.Context, bid int64) error
-	Update(ctx context.Context, bundle *Bundle) error
+	Store(ctx context.Context, bundle *Bundle, principal *User) error
+	Remove(ctx context.Context, bid int64, principal *User) error
+	Update(ctx context.Context, bundle *Bundle, principal *User) error
 }
 
 type BundleRepository interface {

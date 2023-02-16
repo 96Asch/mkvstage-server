@@ -43,8 +43,8 @@ func (m MockBundleService) FetchAll(ctx context.Context) (*[]domain.Bundle, erro
 	return r0, r1
 }
 
-func (m MockBundleService) Store(ctx context.Context, bundle *domain.Bundle) error {
-	ret := m.Called(ctx, bundle)
+func (m MockBundleService) Store(ctx context.Context, bundle *domain.Bundle, principal *domain.User) error {
+	ret := m.Called(ctx, bundle, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {
@@ -54,8 +54,8 @@ func (m MockBundleService) Store(ctx context.Context, bundle *domain.Bundle) err
 	return r0
 }
 
-func (m MockBundleService) Remove(ctx context.Context, bid int64) error {
-	ret := m.Called(ctx, bid)
+func (m MockBundleService) Remove(ctx context.Context, bid int64, principal *domain.User) error {
+	ret := m.Called(ctx, bid, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {
@@ -65,8 +65,8 @@ func (m MockBundleService) Remove(ctx context.Context, bid int64) error {
 	return r0
 }
 
-func (m MockBundleService) Update(ctx context.Context, bundle *domain.Bundle) error {
-	ret := m.Called(ctx, bundle)
+func (m MockBundleService) Update(ctx context.Context, bundle *domain.Bundle, principal *domain.User) error {
+	ret := m.Called(ctx, bundle, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {

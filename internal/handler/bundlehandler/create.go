@@ -21,14 +21,6 @@ func (bh bundleHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	principal := val.(*domain.User)
-
-	if !principal.HasClearance(domain.MEMBER) {
-		newErr := domain.NewNotAuthorizedErr("")
-		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
-		return
-	}
-
 	var bReq bundleReq
 	if err := ctx.BindJSON(&bReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
@@ -42,7 +34,8 @@ func (bh bundleHandler) Create(ctx *gin.Context) {
 	}
 
 	context := ctx.Request.Context()
-	if err := bh.bs.Store(context, bundle); err != nil {
+	principal := val.(*domain.User)
+	if err := bh.bs.Store(context, bundle, principal); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}

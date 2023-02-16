@@ -30,7 +30,7 @@ func TestCreateCorrect(t *testing.T) {
 
 	mockBS := new(mocks.MockBundleService)
 	mockBS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
+		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*domain.Bundle)
@@ -139,7 +139,7 @@ func TestCreateStoreErr(t *testing.T) {
 	mockErr := domain.NewInternalErr()
 	mockBS := new(mocks.MockBundleService)
 	mockBS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
+		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
 		Return(mockErr)
 
 	gin.SetMode(gin.TestMode)
@@ -218,8 +218,16 @@ func TestCreateNotAuth(t *testing.T) {
 		Email:      "Foo@Bar.com",
 		Permission: domain.GUEST,
 	}
+	mockBundle := &domain.Bundle{
+		Name:     "Foobar",
+		ParentID: 0,
+	}
 
+	mockErr := domain.NewNotAuthorizedErr("")
 	mockBS := new(mocks.MockBundleService)
+	mockBS.
+		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
+		Return(mockErr)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()

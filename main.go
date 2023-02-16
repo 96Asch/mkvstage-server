@@ -122,7 +122,7 @@ func main() {
 	bs := service.NewBundleService(br)
 
 	sr := repository.NewGormSongRepository(db)
-	ss := service.NewSongService(sr)
+	ss := service.NewSongService(ur, sr)
 
 	config := handler.Config{
 		Router: router,

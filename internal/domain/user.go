@@ -11,6 +11,7 @@ type Clearance int
 
 const (
 	ADMIN Clearance = iota + 1
+	EDITOR
 	MEMBER
 	GUEST
 )

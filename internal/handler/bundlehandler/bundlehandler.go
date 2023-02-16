@@ -18,6 +18,8 @@ func Initialize(rg *gin.RouterGroup, bs domain.BundleService, mwh domain.Middlew
 	}
 
 	bundle := rg.Group("bundles")
+	bundle.GET(":id", bh.Get)
+	bundle.GET("", bh.GetAll)
 	bundle.POST("create", mwh.AuthenticateUser(), bh.Create)
 
 }

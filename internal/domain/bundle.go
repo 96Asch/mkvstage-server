@@ -8,7 +8,7 @@ import (
 
 type Bundle struct {
 	ID        int64          `json:"id"`
-	Name      string         `json:"name" gorm:"uniqueIndex:name_id"`
+	Name      string         `json:"name" gorm:"type:varchar(255);uniqueIndex:name_id" `
 	ParentID  int64          `json:"parent_id" gorm:"uniqueIndex:name_id"`
 	DeletedAt gorm.DeletedAt `json:"-"`
 }

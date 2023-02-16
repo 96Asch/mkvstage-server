@@ -110,3 +110,159 @@ func TestStoreParentNotExist(t *testing.T) {
 	assert.ErrorAs(t, err, &mockErr)
 	mockBR.AssertExpectations(t)
 }
+
+func TestFetchByID(t *testing.T) {
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(mockBundle, nil)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	bundle, err := BS.FetchByID(ctx, mockBundle.ID)
+	assert.NoError(t, err)
+
+	assert.Equal(t, mockBundle, bundle)
+	mockBR.AssertExpectations(t)
+}
+
+func TestFetchAll(t *testing.T) {
+
+	mockBundles := &[]domain.Bundle{
+		{
+			ID:       1,
+			Name:     "Foo",
+			ParentID: 0,
+		},
+		{
+			ID:       2,
+			Name:     "Bar",
+			ParentID: 0,
+		},
+	}
+
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		Return(mockBundles, nil)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	bundles, err := BS.FetchAll(ctx)
+	assert.NoError(t, err)
+
+	assert.ElementsMatch(t, *mockBundles, *bundles)
+	mockBR.AssertExpectations(t)
+}
+
+func TestRemoveCorrect(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(nil)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Remove(ctx, mockBundle.ID, mockUser)
+	assert.NoError(t, err)
+
+	mockBR.AssertExpectations(t)
+}
+
+func TestRemoveNoClearance(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockBR := new(mocks.MockBundleRepository)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Remove(ctx, mockBundle.ID, mockUser)
+	mockErr := domain.NewNotAuthorizedErr("")
+	assert.ErrorAs(t, err, &mockErr)
+
+	mockBR.AssertExpectations(t)
+}
+
+func TestUpdatyeCorrect(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
+		Return(nil)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Update(ctx, mockBundle, mockUser)
+	assert.NoError(t, err)
+
+	mockBR.AssertExpectations(t)
+}
+
+func TestUpdateNoClearance(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockBR := new(mocks.MockBundleRepository)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Update(ctx, mockBundle, mockUser)
+	mockErr := domain.NewNotAuthorizedErr("")
+	assert.ErrorAs(t, err, &mockErr)
+
+	mockBR.AssertExpectations(t)
+}

@@ -33,8 +33,6 @@ func Initialize(config *Config) {
 
 	ug := userhandler.Initialize(v1, config.U, config.T)
 	tokenhandler.Initialize(v1, config.T, config.U)
-
 	mehandler.Initialize(ug, config.U, config.T, config.MH)
-
 	bundlehandler.Initialize(v1, config.B, config.MH)
 }

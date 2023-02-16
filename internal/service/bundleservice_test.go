@@ -180,6 +180,9 @@ func TestRemoveCorrect(t *testing.T) {
 	mockBR.
 		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(nil)
+	mockBR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(mockBundle, nil)
 
 	BS := NewBundleService(mockBR)
 
@@ -215,7 +218,35 @@ func TestRemoveNoClearance(t *testing.T) {
 	mockBR.AssertExpectations(t)
 }
 
-func TestUpdatyeCorrect(t *testing.T) {
+func TestDeleteNoRecord(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockErr := domain.NewRecordNotFoundErr("", "")
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(nil, mockErr)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Remove(ctx, mockBundle.ID, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
+
+	mockBR.AssertExpectations(t)
+}
+
+func TestUpdateCorrect(t *testing.T) {
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -232,12 +263,43 @@ func TestUpdatyeCorrect(t *testing.T) {
 	mockBR.
 		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
 		Return(nil)
+	mockBR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(mockBundle, nil)
 
 	BS := NewBundleService(mockBR)
 
 	ctx := context.TODO()
 	err := BS.Update(ctx, mockBundle, mockUser)
 	assert.NoError(t, err)
+
+	mockBR.AssertExpectations(t)
+}
+
+func TestUpdateNoRecord(t *testing.T) {
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "Foo",
+		ParentID: 1,
+	}
+
+	mockErr := domain.NewRecordNotFoundErr("", "")
+	mockBR := new(mocks.MockBundleRepository)
+	mockBR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		Return(nil, mockErr)
+
+	BS := NewBundleService(mockBR)
+
+	ctx := context.TODO()
+	err := BS.Update(ctx, mockBundle, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
 
 	mockBR.AssertExpectations(t)
 }

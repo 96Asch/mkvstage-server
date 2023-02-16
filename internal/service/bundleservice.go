@@ -48,12 +48,20 @@ func (bs bundleService) Remove(ctx context.Context, bid int64, principal *domain
 		return domain.NewNotAuthorizedErr("")
 	}
 
+	if _, err := bs.br.GetByID(ctx, bid); err != nil {
+		return err
+	}
+
 	return bs.br.Delete(ctx, bid)
 }
 
 func (bs bundleService) Update(ctx context.Context, bundle *domain.Bundle, principal *domain.User) error {
 	if !principal.HasClearance(domain.MEMBER) {
 		return domain.NewNotAuthorizedErr("")
+	}
+
+	if _, err := bs.br.GetByID(ctx, bundle.ID); err != nil {
+		return err
 	}
 
 	return bs.br.Update(ctx, bundle)

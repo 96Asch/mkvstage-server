@@ -116,11 +116,15 @@ func main() {
 
 	mhw := middleware.NewGinMiddlewareHandler(ts)
 
+	br := repository.NewGormBundleRepository(db)
+	bs := service.NewBundleService(br)
+
 	config := handler.Config{
 		Router: router,
 		U:      us,
 		T:      ts,
 		MH:     mhw,
+		B:      bs,
 	}
 
 	run(&config)

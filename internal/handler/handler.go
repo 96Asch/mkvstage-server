@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/handler/bundlehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/mehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
 	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
@@ -15,6 +16,7 @@ type Config struct {
 	U      domain.UserService
 	T      domain.TokenService
 	MH     domain.MiddlewareHandler
+	B      domain.BundleService
 }
 
 func (cfg *Config) New() *Config {
@@ -33,4 +35,6 @@ func Initialize(config *Config) {
 	tokenhandler.Initialize(v1, config.T, config.U)
 
 	mehandler.Initialize(ug, config.U, config.T, config.MH)
+
+	bundlehandler.Initialize(v1, config.B)
 }

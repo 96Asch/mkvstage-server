@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/gorm"
@@ -38,7 +39,15 @@ func (song Song) IsValidKey() bool {
 }
 
 type SongService interface {
+	Fetcher[Song]
+	AuthSingleRemover[Song]
+	AuthSingleStorer[Song]
+	AuthSingleUpdater[Song]
 }
 
 type SongRepository interface {
+	Getter[Song]
+	Create(ctx context.Context, song *Song) error
+	Delete(ctx context.Context, sid int64) error
+	Update(ctx context.Context, song *Song) error
 }

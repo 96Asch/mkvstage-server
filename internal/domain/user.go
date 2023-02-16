@@ -7,8 +7,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type Clearance int
+
 const (
-	ADMIN = iota + 1
+	ADMIN Clearance = iota + 1
 	MEMBER
 	GUEST
 )
@@ -19,14 +21,14 @@ type User struct {
 	Password     string         `json:"-"`
 	FirstName    string         `json:"first_name"`
 	LastName     string         `json:"last_name"`
-	Permission   int8           `json:"permission"`
+	Permission   Clearance      `json:"permission"`
 	ProfileColor string         `json:"profile_color"`
 	UpdatedAt    time.Time      `json:"last_modified"`
 	DeletedAt    gorm.DeletedAt `json:"-"`
 }
 
-func (u User) HasClearance() bool {
-	return u.Permission == ADMIN
+func (u User) HasClearance(clearance Clearance) bool {
+	return u.Permission <= clearance
 }
 
 type UserService interface {

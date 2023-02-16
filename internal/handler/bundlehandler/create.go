@@ -13,6 +13,22 @@ type bundleReq struct {
 }
 
 func (bh bundleHandler) Create(ctx *gin.Context) {
+
+	val, exists := ctx.Get("user")
+	if !exists {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+		return
+	}
+
+	principal := val.(*domain.User)
+
+	if !principal.HasClearance(domain.MEMBER) {
+		newErr := domain.NewNotAuthorizedErr("")
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+		return
+	}
+
 	var bReq bundleReq
 	if err := ctx.BindJSON(&bReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())

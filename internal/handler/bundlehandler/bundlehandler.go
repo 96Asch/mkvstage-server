@@ -11,13 +11,13 @@ type bundleHandler struct {
 	bs domain.BundleService
 }
 
-func Initialize(rg *gin.RouterGroup, bs domain.BundleService) {
+func Initialize(rg *gin.RouterGroup, bs domain.BundleService, mwh domain.MiddlewareHandler) {
 	log.Println("Setting up bundle handlers")
 	bh := &bundleHandler{
 		bs: bs,
 	}
 
-	bundle := rg.Group("bundle")
-	bundle.POST("create", bh.Create)
+	bundle := rg.Group("bundles")
+	bundle.POST("create", mwh.AuthenticateUser(), bh.Create)
 
 }

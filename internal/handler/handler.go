@@ -36,5 +36,5 @@ func Initialize(config *Config) {
 
 	mehandler.Initialize(ug, config.U, config.T, config.MH)
 
-	bundlehandler.Initialize(v1, config.B)
+	bundlehandler.Initialize(v1, config.B, config.MH)
 }

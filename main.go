@@ -64,6 +64,7 @@ func setupMigrations(db *gorm.DB) {
 	domains := [...]any{
 		&domain.User{},
 		&domain.Bundle{},
+		&domain.Song{},
 	}
 
 	for _, domain := range domains {
@@ -120,12 +121,16 @@ func main() {
 	br := repository.NewGormBundleRepository(db)
 	bs := service.NewBundleService(br)
 
+	sr := repository.NewGormSongRepository(db)
+	ss := service.NewSongService(sr)
+
 	config := handler.Config{
 		Router: router,
 		U:      us,
 		T:      ts,
 		MH:     mhw,
 		B:      bs,
+		S:      ss,
 	}
 
 	run(&config)

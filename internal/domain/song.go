@@ -1,0 +1,44 @@
+package domain
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+type Song struct {
+	ID        int64          `json:"id"`
+	BundleID  int64          `json:"bundle_id"`
+	CreatorID int64          `json:"creator_id"`
+	Title     string         `json:"title" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
+	Subtitle  string         `json:"subtitle" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
+	Key       string         `json:"key"`
+	Bpm       uint           `json:"bpm"`
+	Chordpro  string         `json:"chordpro"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-"`
+}
+
+var validKeys = []string{
+	"C", "D", "E", "F", "G", "A", "B",
+	"Cm", "Dm", "Em", "Fm", "Gm", "Am", "Bm",
+	"C#", "D#", "F#", "G#", "A#",
+	"C#m", "D#m", "F#m", "G#m", "A#m",
+	"Db", "Eb", "Gb", "Ab", "Bb",
+	"Dbm", "Ebm", "Gbm", "Abm", "Bbm",
+}
+
+func (song Song) IsValidKey() bool {
+	for _, val := range validKeys {
+		if song.Key == val {
+			return true
+		}
+	}
+	return false
+}
+
+type SongService interface {
+}
+
+type SongRepository interface {
+}

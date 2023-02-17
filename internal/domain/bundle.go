@@ -15,9 +15,9 @@ type Bundle struct {
 
 type BundleService interface {
 	Fetcher[Bundle]
-	Store(ctx context.Context, bundle *Bundle, principal *User) error
-	Remove(ctx context.Context, bid int64, principal *User) error
-	Update(ctx context.Context, bundle *Bundle, principal *User) error
+	AuthSingleStorer[Bundle]
+	AuthSingleUpdater[Bundle]
+	AuthSingleRemover[Bundle]
 }
 
 type BundleRepository interface {

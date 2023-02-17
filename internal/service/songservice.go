@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/util"
 )
 
 type songService struct {
@@ -44,6 +45,10 @@ func (ss songService) Update(ctx context.Context, song *domain.Song, principal *
 		return domain.NewBadRequestErr("invalid key")
 	}
 
+	if err := util.ValidateChordSheet(song.ChordSheet); err != nil {
+		return domain.NewBadRequestErr(err.Error())
+	}
+
 	if _, err := ss.ur.GetByID(ctx, song.CreatorID); err != nil {
 		return err
 	}
@@ -58,6 +63,10 @@ func (ss songService) Store(ctx context.Context, song *domain.Song, principal *d
 
 	if !song.IsValidKey() {
 		return domain.NewBadRequestErr("invalid key")
+	}
+
+	if err := util.ValidateChordSheet(song.ChordSheet); err != nil {
+		return domain.NewBadRequestErr(err.Error())
 	}
 
 	if _, err := ss.ur.GetByID(ctx, song.CreatorID); err != nil {

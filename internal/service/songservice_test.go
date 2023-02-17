@@ -8,6 +8,7 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/datatypes"
 )
 
 func TestCreateSongCorrect(t *testing.T) {
@@ -17,12 +18,12 @@ func TestCreateSongCorrect(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		CreatorID: mockUser.ID,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
 	mockUR := new(mocks.MockUserRepository)
@@ -54,12 +55,12 @@ func TestCreateSongNoClearance(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		CreatorID: mockUser.ID,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 	mockUR := new(mocks.MockUserRepository)
 	mockSR := new(mocks.MockSongRepository)
@@ -81,12 +82,12 @@ func TestCreateSongInvalidKey(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		CreatorID: mockUser.ID,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "Q",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "Q",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
 	mockSR := new(mocks.MockSongRepository)
@@ -109,12 +110,12 @@ func TestCreateSongCreatorNotExists(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		CreatorID: mockUser.ID,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
@@ -133,6 +134,36 @@ func TestCreateSongCreatorNotExists(t *testing.T) {
 	mockSR.AssertExpectations(t)
 }
 
+func TestCreateSongInvalidChordsheet(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockSong := &domain.Song{
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"`)),
+	}
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		Return(mockUser, nil)
+	mockSR := new(mocks.MockSongRepository)
+
+	ss := NewSongService(mockUR, mockSR)
+	ctx := context.TODO()
+	err := ss.Store(ctx, mockSong, mockUser)
+	mockErr := domain.NewBadRequestErr("")
+	assert.ErrorAs(t, err, &mockErr)
+	assert.Empty(t, mockSong.ID)
+	mockSR.AssertExpectations(t)
+}
+
 func TestUpdateSongCorrect(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
@@ -140,13 +171,13 @@ func TestUpdateSongCorrect(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		ID:        1,
-		CreatorID: mockUser.ID,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		ID:         1,
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
 	mockUR := new(mocks.MockUserRepository)
@@ -174,13 +205,13 @@ func TestUpdateSongNoClearanceNotCreator(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		ID:        1,
-		CreatorID: 2,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		ID:         1,
+		CreatorID:  2,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 	mockUR := new(mocks.MockUserRepository)
 	mockSR := new(mocks.MockSongRepository)
@@ -204,13 +235,13 @@ func TestUpdateSongNoClearanceGetByIDErr(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		ID:        1,
-		CreatorID: 2,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		ID:         1,
+		CreatorID:  2,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
@@ -235,12 +266,12 @@ func TestSongUpdateInvalidKey(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		CreatorID: mockUser.ID,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "Q",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "Q",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
 	mockSR := new(mocks.MockSongRepository)
@@ -263,12 +294,12 @@ func TestUpdateSongCreatorNotExists(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		CreatorID: mockUser.ID,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
@@ -287,6 +318,36 @@ func TestUpdateSongCreatorNotExists(t *testing.T) {
 	mockSR.AssertExpectations(t)
 }
 
+func TestUpdateSongInvalidChordsheet(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockSong := &domain.Song{
+		ID:         1,
+		CreatorID:  mockUser.ID,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar}`)),
+	}
+
+	mockUR := new(mocks.MockUserRepository)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		Return(mockUser, nil)
+	mockSR := new(mocks.MockSongRepository)
+
+	ss := NewSongService(mockUR, mockSR)
+	ctx := context.TODO()
+	err := ss.Update(ctx, mockSong, mockUser)
+	mockErr := domain.NewBadRequestErr("")
+	assert.ErrorAs(t, err, &mockErr)
+	mockSR.AssertExpectations(t)
+}
+
 func TestRemoveSongCorrect(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
@@ -294,13 +355,13 @@ func TestRemoveSongCorrect(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		ID:        1,
-		CreatorID: 1,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		ID:         1,
+		CreatorID:  1,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 	mockUR := new(mocks.MockUserRepository)
 	mockSR := new(mocks.MockSongRepository)
@@ -326,13 +387,13 @@ func TestRemoveSongNoClearanceNotCreator(t *testing.T) {
 	}
 
 	mockSong := &domain.Song{
-		ID:        1,
-		CreatorID: 2,
-		Title:     "Foo",
-		Subtitle:  "Bar",
-		Key:       "A",
-		Bpm:       120,
-		Chordpro:  "FooBar",
+		ID:         1,
+		CreatorID:  2,
+		Title:      "Foo",
+		Subtitle:   "Bar",
+		Key:        "A",
+		Bpm:        120,
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 	mockUR := new(mocks.MockUserRepository)
 	mockSR := new(mocks.MockSongRepository)

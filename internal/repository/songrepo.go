@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -50,6 +51,16 @@ func (sr gormSongRepository) Create(ctx context.Context, song *domain.Song) erro
 	res := sr.db.Create(song)
 
 	if err := res.Error; err != nil {
+		var mysqlErr *mysql.MySQLError
+
+		if errors.As(err, &mysqlErr) {
+			switch mysqlErr.Number {
+			case 1062:
+				return domain.NewBadRequestErr(mysqlErr.Message)
+			default:
+				return domain.NewInternalErr()
+			}
+		}
 		return domain.NewInternalErr()
 	}
 
@@ -71,6 +82,16 @@ func (sr gormSongRepository) Update(ctx context.Context, song *domain.Song) erro
 	res := sr.db.Save(song)
 
 	if err := res.Error; err != nil {
+		var mysqlErr *mysql.MySQLError
+
+		if errors.As(err, &mysqlErr) {
+			switch mysqlErr.Number {
+			case 1062:
+				return domain.NewBadRequestErr(mysqlErr.Message)
+			default:
+				return domain.NewInternalErr()
+			}
+		}
 		return domain.NewInternalErr()
 	}
 

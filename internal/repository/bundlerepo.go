@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -68,6 +69,16 @@ func (br gormBundleRepository) GetLeaves(ctx context.Context) (*[]domain.Bundle,
 func (br gormBundleRepository) Create(ctx context.Context, bundle *domain.Bundle) error {
 	res := br.db.Create(bundle)
 	if err := res.Error; err != nil {
+		var mysqlErr *mysql.MySQLError
+
+		if errors.As(err, &mysqlErr) {
+			switch mysqlErr.Number {
+			case 1062:
+				return domain.NewBadRequestErr(mysqlErr.Message)
+			default:
+				return domain.NewInternalErr()
+			}
+		}
 		return domain.NewInternalErr()
 	}
 

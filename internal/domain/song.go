@@ -4,20 +4,21 @@ import (
 	"context"
 	"time"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
 type Song struct {
-	ID        int64          `json:"id"`
-	BundleID  int64          `json:"bundle_id"`
-	CreatorID int64          `json:"creator_id"`
-	Title     string         `json:"title" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
-	Subtitle  string         `json:"subtitle" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
-	Key       string         `json:"key"`
-	Bpm       uint           `json:"bpm"`
-	Chordpro  string         `json:"chordpro"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-"`
+	ID         int64          `json:"id"`
+	BundleID   int64          `json:"bundle_id"`
+	CreatorID  int64          `json:"creator_id"`
+	Title      string         `json:"title" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
+	Subtitle   string         `json:"subtitle" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
+	Key        string         `json:"key"`
+	Bpm        uint           `json:"bpm"`
+	ChordSheet datatypes.JSON `json:"chord_sheet"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `json:"-"`
 }
 
 var validKeys = []string{

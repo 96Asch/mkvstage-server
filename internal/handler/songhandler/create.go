@@ -51,5 +51,5 @@ func (sh songHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"song": song})
+	ctx.JSON(http.StatusCreated, gin.H{"song": song})
 }

@@ -17,5 +17,7 @@ func Initialize(group *gin.RouterGroup, ss domain.SongService, mwh domain.Middle
 
 	songs := group.Group("songs")
 	songs.POST("create", mwh.AuthenticateUser(), sh.Create)
+	songs.GET("", sh.GetAll)
+	songs.GET(":id", sh.GetByID)
 
 }

@@ -18,7 +18,7 @@ func Initialize(rg *gin.RouterGroup, bs domain.BundleService, mwh domain.Middlew
 	}
 
 	bundle := rg.Group("bundles")
-	bundle.GET(":id", bh.Get)
+	bundle.GET(":id", bh.GetByID)
 	bundle.GET("", bh.GetAll)
 	bundle.POST("create", mwh.AuthenticateUser(), bh.Create)
 	bundle.DELETE(":id/delete", mwh.AuthenticateUser(), bh.Delete)

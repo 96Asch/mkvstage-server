@@ -1,4 +1,4 @@
-package bundlehandler
+package songhandler
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (bh bundleHandler) GetByID(ctx *gin.Context) {
+func (sh songHandler) GetByID(ctx *gin.Context) {
 	idField := ctx.Params.ByName("id")
 	id, err := strconv.Atoi(idField)
 	if err != nil {
@@ -18,22 +18,22 @@ func (bh bundleHandler) GetByID(ctx *gin.Context) {
 	}
 
 	context := ctx.Request.Context()
-	bundles, err := bh.bs.FetchByID(context, int64(id))
+	song, err := sh.ss.FetchByID(context, int64(id))
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"bundle": bundles})
+	ctx.JSON(http.StatusOK, gin.H{"song": song})
 }
 
-func (bh bundleHandler) GetAll(ctx *gin.Context) {
+func (sh songHandler) GetAll(ctx *gin.Context) {
 	context := ctx.Request.Context()
-	bundles, err := bh.bs.FetchAll(context)
+	songs, err := sh.ss.FetchAll(context)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"bundles": bundles})
+	ctx.JSON(http.StatusOK, gin.H{"songs": songs})
 }

@@ -20,31 +20,93 @@ func NewRoleService(rr domain.RoleRepository, ur domain.UserRepository, urr doma
 	}
 }
 
-func (rs roleService) FetchByID(ctx context.Context, id int64) (*domain.Role, error) {
-	return nil, nil
+func (rs roleService) FetchByID(ctx context.Context, rid int64) (*domain.Role, error) {
+	role, err := rs.rr.GetByID(ctx, rid)
+	if err != nil {
+		return nil, err
+	}
+
+	return role, nil
 }
 
 func (rs roleService) FetchAll(ctx context.Context) (*[]domain.Role, error) {
-	return nil, nil
+	role, err := rs.rr.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return role, nil
 
 }
 
-func (rs roleService) Update(ctx context.Context, domain *domain.Role, principal *domain.User) error {
+func (rs roleService) Update(ctx context.Context, role *domain.Role, principal *domain.User) error {
+	if role.ID == 0 {
+		return domain.NewBadRequestErr("id cannot be zero")
+	}
+
+	if principal.Permission != domain.ADMIN {
+		return domain.NewNotAuthorizedErr("not authorized to update roles")
+	}
+
+	_, err := rs.rr.GetByID(ctx, role.ID)
+	if err != nil {
+		return err
+	}
+
+	err = rs.rr.Update(ctx, role)
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
 
-func (rs roleService) UpdateBatch(ctx context.Context, domain *domain.Role, principal *domain.User) error {
-	return nil
+func (rs roleService) Store(ctx context.Context, role *domain.Role, principal *domain.User) error {
+	if principal.Permission != domain.ADMIN {
+		return domain.NewNotAuthorizedErr("not authorized to create roles")
+	}
 
+	err := rs.rr.Create(ctx, role)
+	if err != nil {
+		return err
+	}
+
+	users, err := rs.ur.GetAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	userroles := make([]domain.UserRole, len(*users))
+	for idx, user := range *users {
+		userroles[idx] = domain.UserRole{
+			UserID: user.ID,
+			RoleID: role.ID,
+		}
+	}
+
+	err = rs.urr.CreateBatch(ctx, &userroles)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (rs roleService) Store(ctx context.Context, domain *domain.Role, principal *domain.User) error {
+func (rs roleService) Remove(ctx context.Context, rid int64, principal *domain.User) error {
+	if principal.Permission != domain.ADMIN {
+		return domain.NewNotAuthorizedErr("not authorized to create roles")
+	}
+
+	err := rs.rr.Delete(ctx, rid)
+	if err != nil {
+		return err
+	}
+
+	err = rs.urr.DeleteByRID(ctx, rid)
+	if err != nil {
+		return err
+	}
+
 	return nil
-
-}
-
-func (rs roleService) Remove(ctx context.Context, id int64, principal *domain.User) error {
-	return nil
-
 }

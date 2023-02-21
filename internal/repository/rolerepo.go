@@ -81,7 +81,7 @@ func (rr gormRoleRepository) Update(ctx context.Context, role *domain.Role) erro
 	return nil
 }
 
-func (rr gormRoleRepository) Deleter(ctx context.Context, rid int64) error {
+func (rr gormRoleRepository) Delete(ctx context.Context, rid int64) error {
 	res := rr.db.Delete(&domain.Role{}, rid)
 	if err := res.Error; err != nil {
 		return domain.NewInternalErr()

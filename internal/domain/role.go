@@ -19,5 +19,5 @@ type RoleRepository interface {
 	Create(ctx context.Context, role *Role) error
 	Getter[Role]
 	Update(ctx context.Context, role *Role) error
-	Deleter(ctx context.Context, rid int64) error
+	Delete(ctx context.Context, rid int64) error
 }

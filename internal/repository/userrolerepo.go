@@ -134,3 +134,12 @@ func (urr gormUserRoleRepository) DeleteBatch(ctx context.Context, rids []int64)
 
 	return nil
 }
+
+func (urr gormUserRoleRepository) DeleteByRID(ctx context.Context, rid int64) error {
+	res := urr.db.Where("role_id = ?", rid).Delete(&domain.UserRole{})
+	if err := res.Error; err != nil {
+		return domain.NewInternalErr()
+	}
+
+	return nil
+}

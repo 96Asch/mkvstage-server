@@ -108,3 +108,14 @@ func (m MockUserRoleRepository) DeleteBatch(ctx context.Context, ids []int64) er
 
 	return r0
 }
+
+func (m MockUserRoleRepository) DeleteByRID(ctx context.Context, rid int64) error {
+	ret := m.Called(ctx, rid)
+
+	var r0 error
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(error)
+	}
+
+	return r0
+}

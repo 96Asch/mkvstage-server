@@ -65,7 +65,7 @@ func (m MockRoleRepository) Update(ctx context.Context, role *domain.Role) error
 	return r0
 }
 
-func (m MockRoleRepository) Deleter(ctx context.Context, rid int64) error {
+func (m MockRoleRepository) Delete(ctx context.Context, rid int64) error {
 	ret := m.Called(ctx, rid)
 
 	var r0 error

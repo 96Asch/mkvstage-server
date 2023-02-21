@@ -65,6 +65,8 @@ func setupMigrations(db *gorm.DB) {
 		&domain.User{},
 		&domain.Bundle{},
 		&domain.Song{},
+		&domain.Role{},
+		&domain.UserRole{},
 	}
 
 	for _, domain := range domains {

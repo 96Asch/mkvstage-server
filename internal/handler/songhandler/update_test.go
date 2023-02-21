@@ -3,6 +3,7 @@ package songhandler
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,13 +16,15 @@ import (
 	"gorm.io/datatypes"
 )
 
-func TestCreateCorrect(t *testing.T) {
+func TestUpdateByIDCorrect(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
 	}
 
+	sid := int64(1)
 	mockSong := &domain.Song{
+		ID:         sid,
 		CreatorID:  mockUser.ID,
 		BundleID:   1,
 		Title:      "Foo",
@@ -30,7 +33,6 @@ func TestCreateCorrect(t *testing.T) {
 		Bpm:        120,
 		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
-
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
@@ -39,12 +41,8 @@ func TestCreateCorrect(t *testing.T) {
 	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 	mockSS := &mocks.MockSongService{}
 	mockSS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
-		Return(nil).
-		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.Song)
-			arg.ID = 1
-		})
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
+		Return(nil)
 
 	byteBody, err := json.Marshal(gin.H{
 		"title":       "Foo",
@@ -62,13 +60,13 @@ func TestCreateCorrect(t *testing.T) {
 	router := gin.New()
 	reqBody := bytes.NewReader(byteBody)
 	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", reqBody)
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/songs/%d/update", sid), reqBody)
 	assert.NoError(t, err)
 
 	Initialize(&router.RouterGroup, mockSS, mockMWH)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	mockSong.ID = 1
 
 	expectedBytes, err := json.Marshal(gin.H{"song": mockSong})
@@ -78,8 +76,8 @@ func TestCreateCorrect(t *testing.T) {
 	mockMWH.AssertExpectations(t)
 }
 
-func TestCreateNoContext(t *testing.T) {
-
+func TestUpdateByIDNoContext(t *testing.T) {
+	sid := int64(1)
 	mockSS := &mocks.MockSongService{}
 
 	gin.SetMode(gin.TestMode)
@@ -107,7 +105,7 @@ func TestCreateNoContext(t *testing.T) {
 
 	bodyReader := bytes.NewReader(byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", bodyReader)
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/songs/%d/update", sid), bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
@@ -117,7 +115,48 @@ func TestCreateNoContext(t *testing.T) {
 	mockMWH.AssertExpectations(t)
 }
 
-func TestCreateBindErr(t *testing.T) {
+func TestUpdateByIDInvalidParam(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.MEMBER,
+	}
+
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
+	mockSS := &mocks.MockSongService{}
+
+	byteBody, err := json.Marshal(gin.H{
+		"title":       "Foo",
+		"subtitle":    "Bar",
+		"key":         "A",
+		"bpm":         120,
+		"bundle_id":   1,
+		"creator_id":  mockUser.ID,
+		"chord_sheet": `{"Verse" : "Foobar"}`,
+	})
+	assert.NoError(t, err)
+
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	reqBody := bytes.NewReader(byteBody)
+	w := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodPut, "/songs/a/update", reqBody)
+	assert.NoError(t, err)
+
+	Initialize(&router.RouterGroup, mockSS, mockMWH)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockSS.AssertExpectations(t)
+	mockMWH.AssertExpectations(t)
+}
+
+func TestUpdateByIDBindErr(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
 		FirstName:  "Foo",
@@ -125,7 +164,7 @@ func TestCreateBindErr(t *testing.T) {
 		Email:      "Foo@Bar.com",
 		Permission: domain.GUEST,
 	}
-
+	sid := int64(1)
 	mockSS := new(mocks.MockSongService)
 
 	gin.SetMode(gin.TestMode)
@@ -152,17 +191,16 @@ func TestCreateBindErr(t *testing.T) {
 
 	bodyReader := bytes.NewReader(byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", bodyReader)
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/songs/%d/update", sid), bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	mockSS.AssertExpectations(t)
-	mockMWH.AssertExpectations(t)
 }
 
-func TestCreateStoreErr(t *testing.T) {
+func TestUpdateByIDUpdateErr(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
 		FirstName:  "Foo",
@@ -170,7 +208,9 @@ func TestCreateStoreErr(t *testing.T) {
 		Email:      "Foo@Bar.com",
 		Permission: domain.GUEST,
 	}
+	sid := int64(1)
 	mockSong := &domain.Song{
+		ID:         sid,
 		CreatorID:  mockUser.ID,
 		BundleID:   1,
 		Title:      "Foo",
@@ -179,11 +219,10 @@ func TestCreateStoreErr(t *testing.T) {
 		Bpm:        120,
 		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
-
 	mockErr := domain.NewBadRequestErr("")
 	mockSS := new(mocks.MockSongService)
 	mockSS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
 		Return(mockErr)
 
 	gin.SetMode(gin.TestMode)
@@ -211,7 +250,7 @@ func TestCreateStoreErr(t *testing.T) {
 
 	bodyReader := bytes.NewReader(byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", bodyReader)
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/songs/%d/update", sid), bodyReader)
 	assert.NoError(t, err)
 
 	router.ServeHTTP(w, req)

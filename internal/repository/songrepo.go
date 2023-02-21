@@ -79,7 +79,7 @@ func (sr gormSongRepository) Delete(ctx context.Context, sid int64) error {
 }
 
 func (sr gormSongRepository) Update(ctx context.Context, song *domain.Song) error {
-	res := sr.db.Save(song)
+	res := sr.db.Updates(song)
 
 	if err := res.Error; err != nil {
 		var mysqlErr *mysql.MySQLError

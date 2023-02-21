@@ -49,7 +49,8 @@ func (ss songService) Update(ctx context.Context, song *domain.Song, principal *
 		return domain.NewBadRequestErr(err.Error())
 	}
 
-	if _, err := ss.ur.GetByID(ctx, song.CreatorID); err != nil {
+	_, err := ss.ur.GetByID(ctx, song.CreatorID)
+	if err != nil {
 		return err
 	}
 

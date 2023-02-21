@@ -63,7 +63,7 @@ func (us userService) Remove(ctx context.Context, user *domain.User, id int64) (
 		deleteId = user.ID
 	}
 
-	if user.ID != deleteId && !user.HasClearance() {
+	if user.ID != deleteId && !user.HasClearance(domain.ADMIN) {
 		return 0, domain.NewNotAuthorizedErr("cannot delete given id")
 	}
 

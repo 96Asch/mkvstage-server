@@ -19,6 +19,8 @@ type Config struct {
 	MH     domain.MiddlewareHandler
 	B      domain.BundleService
 	S      domain.SongService
+	R      domain.RoleService
+	UR     domain.UserRoleService
 }
 
 func (cfg *Config) New() *Config {

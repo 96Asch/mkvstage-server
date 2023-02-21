@@ -124,6 +124,12 @@ func main() {
 	sr := repository.NewGormSongRepository(db)
 	ss := service.NewSongService(ur, sr)
 
+	urr := repository.NewGormUserRoleRepository(db)
+	rr := repository.NewGormRoleRepository(db)
+
+	urs := service.NewUserRoleService(urr, rr)
+	rs := service.NewRoleService(rr, ur, urr)
+
 	config := handler.Config{
 		Router: router,
 		U:      us,
@@ -131,6 +137,8 @@ func main() {
 		MH:     mhw,
 		B:      bs,
 		S:      ss,
+		R:      rs,
+		UR:     urs,
 	}
 
 	run(&config)

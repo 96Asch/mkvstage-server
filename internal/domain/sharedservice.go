@@ -11,6 +11,15 @@ type AuthSingleUpdater[T any] interface {
 	Update(ctx context.Context, domain *T, principal *User) error
 }
 
+type AuthMultiUpdater[T any] interface {
+	UpdateBatch(ctx context.Context, domain *[]T, principal *User) error
+}
+
+type AuthUpdater[T any] interface {
+	AuthSingleUpdater[T]
+	AuthMultiUpdater[T]
+}
+
 type AuthSingleStorer[T any] interface {
 	Store(ctx context.Context, domain *T, principal *User) error
 }

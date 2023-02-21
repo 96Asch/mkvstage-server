@@ -19,5 +19,6 @@ func Initialize(group *gin.RouterGroup, ss domain.SongService, mwh domain.Middle
 	songs.POST("create", mwh.AuthenticateUser(), sh.Create)
 	songs.GET("", sh.GetAll)
 	songs.GET(":id", sh.GetByID)
+	songs.DELETE(":id/delete", mwh.AuthenticateUser(), sh.DeleteByID)
 
 }

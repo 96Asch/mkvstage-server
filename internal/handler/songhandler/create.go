@@ -8,7 +8,7 @@ import (
 	"gorm.io/datatypes"
 )
 
-type songReq struct {
+type songCreateReq struct {
 	BundleID   int64  `json:"bundle_id" binding:"required"`
 	CreatorID  int64  `json:"creator_id" binding:"required"`
 	Title      string `json:"title" binding:"required,lte=255"`
@@ -26,7 +26,7 @@ func (sh songHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	var sReq songReq
+	var sReq songCreateReq
 	if err := ctx.BindJSON(&sReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})

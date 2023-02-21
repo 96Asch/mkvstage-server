@@ -8,7 +8,7 @@ import (
 )
 
 type bundleReq struct {
-	Name     string `json:"name" binding:"required;lte=255"`
+	Name     string `json:"name" binding:"required,lte=255"`
 	ParentID int64  `json:"parent_id"`
 }
 

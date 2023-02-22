@@ -9,12 +9,14 @@ import (
 
 type userService struct {
 	ur  domain.UserRepository
+	rr  domain.RoleRepository
 	urr domain.UserRoleRepository
 }
 
-func NewUserService(ur domain.UserRepository, urr domain.UserRoleRepository) domain.UserService {
+func NewUserService(ur domain.UserRepository, rr domain.RoleRepository, urr domain.UserRoleRepository) domain.UserService {
 	return &userService{
 		ur:  ur,
+		rr:  rr,
 		urr: urr,
 	}
 }
@@ -46,7 +48,30 @@ func (us userService) Store(ctx context.Context, user *domain.User) error {
 		user.Password = hash
 	}
 
-	return us.ur.Create(ctx, user)
+	err := us.ur.Create(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	currentRoles, err := us.rr.GetAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	userroles := make([]domain.UserRole, len(*currentRoles))
+	for idx, role := range *currentRoles {
+		userroles[idx] = domain.UserRole{
+			UserID: user.ID,
+			RoleID: role.ID,
+		}
+	}
+
+	err = us.urr.CreateBatch(ctx, &userroles)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (us userService) Update(ctx context.Context, user *domain.User) error {

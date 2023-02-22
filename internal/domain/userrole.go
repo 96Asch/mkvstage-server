@@ -4,14 +4,16 @@ import "context"
 
 type UserRole struct {
 	ID     int64 `json:"id"`
-	UserID int64 `json:"uid" gorm:"uniqueIndex:user_role"`
-	RoleID int64 `json:"rid" gorm:"uniqueIndex:user_role"`
+	UserID int64 `json:"-" gorm:"uniqueIndex:user_role"`
+	User   *User `json:"user"`
+	RoleID int64 `json:"-" gorm:"uniqueIndex:user_role"`
+	Role   *Role `json:"role"`
 	Active bool  `json:"active"`
 }
 
 type UserRoleService interface {
-	GetAll(ctx context.Context) (*[]UserRole, error)
-	GetByUser(ctx context.Context, user *User) (*[]UserRole, error)
+	FetchAll(ctx context.Context) (*[]UserRole, error)
+	FetchByUser(ctx context.Context, user *User) (*[]UserRole, error)
 	SetActiveBatch(ctx context.Context, urids []int64, principal *User) (*[]UserRole, error)
 }
 

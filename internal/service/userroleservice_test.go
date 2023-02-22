@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestUserRoleUpdateBatchCorrect(t *testing.T) {
+func TestUserRoleSetActiveBatchCorrect(t *testing.T) {
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -26,7 +26,13 @@ func TestUserRoleUpdateBatchCorrect(t *testing.T) {
 			ID:     2,
 			UserID: 1,
 			RoleID: 2,
-			Active: false,
+			Active: true,
+		},
+		{
+			ID:     3,
+			UserID: 1,
+			RoleID: 2,
+			Active: true,
 		},
 	}
 
@@ -41,10 +47,10 @@ func TestUserRoleUpdateBatchCorrect(t *testing.T) {
 			ID:     2,
 			UserID: 1,
 			RoleID: 2,
-			Active: true,
+			Active: false,
 		},
 	}
-	mockUserRoleIDs := []int64{1, 2}
+	mockUserRoleIDs := []int64{1, 3}
 
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockURR.
@@ -62,7 +68,7 @@ func TestUserRoleUpdateBatchCorrect(t *testing.T) {
 	mockURR.AssertExpectations(t)
 }
 
-func TestUserRoleUpdateBatchGetByUIDErr(t *testing.T) {
+func TestUserRoleSetActiveBatchGetByUIDErr(t *testing.T) {
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -87,7 +93,7 @@ func TestUserRoleUpdateBatchGetByUIDErr(t *testing.T) {
 
 }
 
-func TestUserRoleUpdateBatchInvalidUserRole(t *testing.T) {
+func TestUserRoleSetActiveBatchInvalidUserRole(t *testing.T) {
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -122,7 +128,7 @@ func TestUserRoleUpdateBatchInvalidUserRole(t *testing.T) {
 	mockURR.AssertExpectations(t)
 }
 
-func TestUserRoleUpdateBatchErr(t *testing.T) {
+func TestUserRoleSetActiveBatchErr(t *testing.T) {
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -165,6 +171,41 @@ func TestUserRoleUpdateBatchErr(t *testing.T) {
 	mockURR.
 		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
 		Return(mockErr)
+
+	URS := NewUserRoleService(mockURR)
+
+	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
+	assert.Nil(t, userroles)
+	mockURR.AssertExpectations(t)
+}
+
+func TestUserRoleSetActiveBatchNoChange(t *testing.T) {
+	mockUser := &domain.User{
+		ID: 1,
+	}
+
+	currentUserRoles := &[]domain.UserRole{
+		{
+			ID:     1,
+			UserID: 1,
+			RoleID: 1,
+			Active: false,
+		},
+		{
+			ID:     2,
+			UserID: 1,
+			RoleID: 2,
+			Active: true,
+		},
+	}
+
+	mockUserRoleIDs := []int64{2}
+	mockErr := domain.NewBadRequestErr("")
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockURR.
+		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(currentUserRoles, nil)
 
 	URS := NewUserRoleService(mockURR)
 

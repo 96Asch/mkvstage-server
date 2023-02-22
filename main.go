@@ -119,7 +119,7 @@ func main() {
 	urr := repository.NewGormUserRoleRepository(db)
 	rr := repository.NewGormRoleRepository(db)
 
-	us := service.NewUserService(ur, urr)
+	us := service.NewUserService(ur, rr, urr)
 	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
 	mhw := middleware.NewGinMiddlewareHandler(ts)
 	bs := service.NewBundleService(br)

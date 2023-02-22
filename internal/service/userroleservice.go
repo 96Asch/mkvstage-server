@@ -16,21 +16,30 @@ func NewUserRoleService(urr domain.UserRoleRepository) *userRoleService {
 	}
 }
 
-func (urs userRoleService) GetAll(ctx context.Context) (*[]domain.UserRole, error) {
+func (urs userRoleService) FetchAll(ctx context.Context) (*[]domain.UserRole, error) {
 	return urs.urr.GetAll(ctx)
 }
 
-func (urs userRoleService) GetByUser(ctx context.Context, user *domain.User) (*[]domain.UserRole, error) {
+func (urs userRoleService) FetchByUser(ctx context.Context, user *domain.User) (*[]domain.UserRole, error) {
 	return urs.urr.GetByUID(ctx, user.ID)
 }
 
-func containsUserRole(userRoles *[]domain.UserRole, urid int64) (int, bool) {
-	for idx, userRole := range *userRoles {
+func containsUserRole(userRoles *[]domain.UserRole, urid int64) bool {
+	for _, userRole := range *userRoles {
 		if userRole.ID == urid {
-			return idx, true
+			return true
 		}
 	}
-	return 0, false
+	return false
+}
+
+func containsID(ids []int64, id int64) bool {
+	for _, _id := range ids {
+		if _id == id {
+			return true
+		}
+	}
+	return false
 }
 
 func (urs userRoleService) SetActiveBatch(ctx context.Context, urids []int64, principal *domain.User) (*[]domain.UserRole, error) {
@@ -39,15 +48,38 @@ func (urs userRoleService) SetActiveBatch(ctx context.Context, urids []int64, pr
 		return nil, err
 	}
 
-	toUpdateUserRoles := make([]domain.UserRole, len(urids))
-	for idx, urid := range urids {
-		currentUserRoleIdx, exists := containsUserRole(userRoles, urid)
-		if !exists {
+	for _, urid := range urids {
+		if !containsUserRole(userRoles, urid) {
 			return nil, domain.NewBadRequestErr("invalid id given")
 		}
+	}
 
-		(*userRoles)[currentUserRoleIdx].Active = true
-		toUpdateUserRoles[idx] = (*userRoles)[currentUserRoleIdx]
+	toUpdateUserRoles := make([]domain.UserRole, 0)
+	for _, userrole := range *userRoles {
+
+		if !userrole.Active && containsID(urids, userrole.ID) {
+			toUpdateUserRoles = append(toUpdateUserRoles, domain.UserRole{
+				ID:     userrole.ID,
+				UserID: userrole.UserID,
+				User:   userrole.User,
+				RoleID: userrole.RoleID,
+				Role:   userrole.Role,
+				Active: true,
+			})
+		} else if userrole.Active && !containsID(urids, userrole.ID) {
+			toUpdateUserRoles = append(toUpdateUserRoles, domain.UserRole{
+				ID:     userrole.ID,
+				UserID: userrole.UserID,
+				User:   userrole.User,
+				RoleID: userrole.RoleID,
+				Role:   userrole.Role,
+				Active: false,
+			})
+		}
+	}
+
+	if len(toUpdateUserRoles) == 0 {
+		return nil, domain.NewBadRequestErr("no changes were made")
 	}
 
 	err = urs.urr.UpdateBatch(ctx, &toUpdateUserRoles)

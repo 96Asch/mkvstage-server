@@ -11,7 +11,7 @@ type MockUserRoleService struct {
 	mock.Mock
 }
 
-func (m MockUserRoleService) GetAll(ctx context.Context) (*[]domain.UserRole, error) {
+func (m MockUserRoleService) FetchAll(ctx context.Context) (*[]domain.UserRole, error) {
 	ret := m.Called(ctx)
 
 	var r0 *[]domain.UserRole
@@ -27,7 +27,7 @@ func (m MockUserRoleService) GetAll(ctx context.Context) (*[]domain.UserRole, er
 	return r0, r1
 }
 
-func (m MockUserRoleService) GetByUser(ctx context.Context, user *domain.User) (*[]domain.UserRole, error) {
+func (m MockUserRoleService) FetchByUser(ctx context.Context, user *domain.User) (*[]domain.UserRole, error) {
 	ret := m.Called(ctx, user)
 
 	var r0 *[]domain.UserRole

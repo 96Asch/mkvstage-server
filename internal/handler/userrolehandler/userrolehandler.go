@@ -17,4 +17,6 @@ func Initialize(group *gin.RouterGroup, urs domain.UserRoleService, mwh domain.M
 
 	userroles := group.Group("userroles")
 	userroles.PATCH("update", mwh.AuthenticateUser(), urh.UpdateBatch)
+	userroles.GET("me", mwh.AuthenticateUser(), urh.Me)
+	userroles.GET("", urh.GetAll)
 }

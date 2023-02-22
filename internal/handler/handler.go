@@ -10,6 +10,7 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
 	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
+	"github.com/96Asch/mkvstage-server/internal/handler/userrolehandler"
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,4 +43,5 @@ func Initialize(config *Config) {
 	bundlehandler.Initialize(v1, config.B, config.MH)
 	songhandler.Initialize(v1, config.S, config.MH)
 	rolehandler.Initialize(v1, config.R, config.MH)
+	userrolehandler.Initialize(v1, config.UR, config.MH)
 }

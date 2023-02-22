@@ -22,7 +22,7 @@ func NewGormUserRoleRepository(db *gorm.DB) *gormUserRoleRepository {
 
 func (urr gormUserRoleRepository) GetByID(ctx context.Context, urid int64) (*domain.UserRole, error) {
 	var role domain.UserRole
-	res := urr.db.First(&role, urid)
+	res := urr.db.Preload("User").Preload("Role").First(&role, urid)
 	if err := res.Error; err != nil {
 		switch {
 		case errors.Is(gorm.ErrRecordNotFound, err):
@@ -37,7 +37,7 @@ func (urr gormUserRoleRepository) GetByID(ctx context.Context, urid int64) (*dom
 
 func (urr gormUserRoleRepository) GetAll(ctx context.Context) (*[]domain.UserRole, error) {
 	var userroles []domain.UserRole
-	res := urr.db.Find(&userroles)
+	res := urr.db.Preload("User").Preload("Role").Find(&userroles)
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
 	}
@@ -47,7 +47,7 @@ func (urr gormUserRoleRepository) GetAll(ctx context.Context) (*[]domain.UserRol
 
 func (urr gormUserRoleRepository) GetByUID(ctx context.Context, uid int64) (*[]domain.UserRole, error) {
 	var userroles []domain.UserRole
-	res := urr.db.Where("user_id = ?", uid).Find(&userroles)
+	res := urr.db.Preload("User").Preload("Role").Where("user_id = ?", uid).Find(&userroles)
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
 	}
@@ -56,7 +56,7 @@ func (urr gormUserRoleRepository) GetByUID(ctx context.Context, uid int64) (*[]d
 }
 
 func (urr gormUserRoleRepository) Create(ctx context.Context, userrole *domain.UserRole) error {
-	res := urr.db.Create(userrole)
+	res := urr.db.Preload("User").Preload("Role").Create(userrole)
 	if err := res.Error; err != nil {
 		var mysqlErr *mysql.MySQLError
 
@@ -74,7 +74,7 @@ func (urr gormUserRoleRepository) Create(ctx context.Context, userrole *domain.U
 }
 
 func (urr gormUserRoleRepository) CreateBatch(ctx context.Context, userroles *[]domain.UserRole) error {
-	res := urr.db.Create(userroles)
+	res := urr.db.Preload("User").Preload("Role").Create(userroles)
 	if err := res.Error; err != nil {
 		var mysqlErr *mysql.MySQLError
 
@@ -92,7 +92,7 @@ func (urr gormUserRoleRepository) CreateBatch(ctx context.Context, userroles *[]
 }
 
 func (urr gormUserRoleRepository) Update(ctx context.Context, userrole *domain.UserRole) error {
-	res := urr.db.Updates(userrole)
+	res := urr.db.Preload("User").Preload("Role").Updates(userrole)
 	if err := res.Error; err != nil {
 		var mysqlErr *mysql.MySQLError
 
@@ -110,7 +110,7 @@ func (urr gormUserRoleRepository) Update(ctx context.Context, userrole *domain.U
 }
 
 func (urr gormUserRoleRepository) UpdateBatch(ctx context.Context, userroles *[]domain.UserRole) error {
-	res := urr.db.Updates(userroles)
+	res := urr.db.Preload("User").Preload("Role").Save(userroles)
 	if err := res.Error; err != nil {
 		var mysqlErr *mysql.MySQLError
 

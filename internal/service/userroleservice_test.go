@@ -44,19 +44,7 @@ func TestUserRoleUpdateBatchCorrect(t *testing.T) {
 			Active: true,
 		},
 	}
-
-	mockRoles := &[]domain.Role{
-		{
-			ID:          1,
-			Name:        "Foo",
-			Description: "Foo",
-		},
-		{
-			ID:          2,
-			Name:        "Bar",
-			Description: "Bar",
-		},
-	}
+	mockUserRoleIDs := []int64{1, 2}
 
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockURR.
@@ -66,18 +54,12 @@ func TestUserRoleUpdateBatchCorrect(t *testing.T) {
 		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
 		Return(nil)
 
-	mockRR := &mocks.MockRoleRepository{}
-	mockRR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
-		Return(mockRoles, nil)
+	URS := NewUserRoleService(mockURR)
 
-	URS := NewUserRoleService(mockURR, mockRR)
-
-	err := URS.UpdateBatch(context.TODO(), mockUserRoles, mockUser)
+	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.NoError(t, err)
-	mockRR.AssertExpectations(t)
+	assert.ElementsMatch(t, *mockUserRoles, *userroles)
 	mockURR.AssertExpectations(t)
-
 }
 
 func TestUserRoleUpdateBatchGetByUIDErr(t *testing.T) {
@@ -85,20 +67,7 @@ func TestUserRoleUpdateBatchGetByUIDErr(t *testing.T) {
 		ID: 1,
 	}
 
-	mockUserRoles := &[]domain.UserRole{
-		{
-			ID:     1,
-			UserID: 1,
-			RoleID: 1,
-			Active: true,
-		},
-		{
-			ID:     2,
-			UserID: 1,
-			RoleID: 2,
-			Active: true,
-		},
-	}
+	mockUserRoleIDs := []int64{1, 2}
 
 	mockErr := domain.NewInternalErr()
 	mockURR := &mocks.MockUserRoleRepository{}
@@ -108,133 +77,11 @@ func TestUserRoleUpdateBatchGetByUIDErr(t *testing.T) {
 
 	mockRR := &mocks.MockRoleRepository{}
 
-	URS := NewUserRoleService(mockURR, mockRR)
+	URS := NewUserRoleService(mockURR)
 
-	err := URS.UpdateBatch(context.TODO(), mockUserRoles, mockUser)
+	userRoles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
-	mockRR.AssertExpectations(t)
-	mockURR.AssertExpectations(t)
-
-}
-
-func TestUserRoleUpdateBatchGetAllErr(t *testing.T) {
-	mockUser := &domain.User{
-		ID: 1,
-	}
-
-	currentUserRoles := &[]domain.UserRole{
-		{
-			ID:     1,
-			UserID: 1,
-			RoleID: 1,
-			Active: false,
-		},
-		{
-			ID:     2,
-			UserID: 1,
-			RoleID: 2,
-			Active: false,
-		},
-	}
-
-	mockUserRoles := &[]domain.UserRole{
-		{
-			ID:     1,
-			UserID: 1,
-			RoleID: 1,
-			Active: true,
-		},
-		{
-			ID:     2,
-			UserID: 1,
-			RoleID: 2,
-			Active: true,
-		},
-	}
-
-	mockErr := domain.NewInternalErr()
-	mockURR := &mocks.MockUserRoleRepository{}
-	mockURR.
-		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
-		Return(currentUserRoles, nil)
-
-	mockRR := &mocks.MockRoleRepository{}
-	mockRR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
-		Return(nil, mockErr)
-
-	URS := NewUserRoleService(mockURR, mockRR)
-
-	err := URS.UpdateBatch(context.TODO(), mockUserRoles, mockUser)
-	assert.ErrorAs(t, err, &mockErr)
-	mockRR.AssertExpectations(t)
-	mockURR.AssertExpectations(t)
-
-}
-
-func TestUserRoleUpdateBatchNotAuth(t *testing.T) {
-	mockUser := &domain.User{
-		ID: 1,
-	}
-
-	currentUserRoles := &[]domain.UserRole{
-		{
-			ID:     1,
-			UserID: 1,
-			RoleID: 1,
-			Active: false,
-		},
-		{
-			ID:     2,
-			UserID: 1,
-			RoleID: 2,
-			Active: false,
-		},
-	}
-
-	mockUserRoles := &[]domain.UserRole{
-		{
-			ID:     1,
-			UserID: 2,
-			RoleID: 1,
-			Active: true,
-		},
-		{
-			ID:     2,
-			UserID: 1,
-			RoleID: 2,
-			Active: true,
-		},
-	}
-
-	mockRoles := &[]domain.Role{
-		{
-			ID:          1,
-			Name:        "Foo",
-			Description: "Foo",
-		},
-		{
-			ID:          2,
-			Name:        "Bar",
-			Description: "Bar",
-		},
-	}
-
-	mockErr := domain.NewNotAuthorizedErr("")
-	mockURR := &mocks.MockUserRoleRepository{}
-	mockURR.
-		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
-		Return(currentUserRoles, nil)
-
-	mockRR := &mocks.MockRoleRepository{}
-	mockRR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
-		Return(mockRoles, nil)
-
-	URS := NewUserRoleService(mockURR, mockRR)
-
-	err := URS.UpdateBatch(context.TODO(), mockUserRoles, mockUser)
-	assert.ErrorAs(t, err, &mockErr)
+	assert.Nil(t, userRoles)
 	mockRR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
 
@@ -260,55 +107,22 @@ func TestUserRoleUpdateBatchInvalidUserRole(t *testing.T) {
 		},
 	}
 
-	mockUserRoles := &[]domain.UserRole{
-		{
-			ID:     3,
-			UserID: 1,
-			RoleID: 1,
-			Active: true,
-		},
-		{
-			ID:     2,
-			UserID: 1,
-			RoleID: 2,
-			Active: true,
-		},
-	}
-
-	mockRoles := &[]domain.Role{
-		{
-			ID:          1,
-			Name:        "Foo",
-			Description: "Foo",
-		},
-		{
-			ID:          2,
-			Name:        "Bar",
-			Description: "Bar",
-		},
-	}
-
+	mockUserRoleIDs := []int64{1, 3}
 	mockErr := domain.NewBadRequestErr("")
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockURR.
 		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
 		Return(currentUserRoles, nil)
 
-	mockRR := &mocks.MockRoleRepository{}
-	mockRR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
-		Return(mockRoles, nil)
+	URS := NewUserRoleService(mockURR)
 
-	URS := NewUserRoleService(mockURR, mockRR)
-
-	err := URS.UpdateBatch(context.TODO(), mockUserRoles, mockUser)
+	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
-	mockRR.AssertExpectations(t)
+	assert.Nil(t, userroles)
 	mockURR.AssertExpectations(t)
-
 }
 
-func TestUserRoleUpdateBatchInvalidRole(t *testing.T) {
+func TestUserRoleUpdateBatchErr(t *testing.T) {
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -323,7 +137,7 @@ func TestUserRoleUpdateBatchInvalidRole(t *testing.T) {
 		{
 			ID:     2,
 			UserID: 1,
-			RoleID: 3,
+			RoleID: 2,
 			Active: false,
 		},
 	}
@@ -338,40 +152,24 @@ func TestUserRoleUpdateBatchInvalidRole(t *testing.T) {
 		{
 			ID:     2,
 			UserID: 1,
-			RoleID: 3,
+			RoleID: 2,
 			Active: true,
 		},
 	}
-
-	mockRoles := &[]domain.Role{
-		{
-			ID:          1,
-			Name:        "Foo",
-			Description: "Foo",
-		},
-		{
-			ID:          2,
-			Name:        "Bar",
-			Description: "Bar",
-		},
-	}
-
-	mockErr := domain.NewBadRequestErr("")
+	mockUserRoleIDs := []int64{1, 2}
+	mockErr := domain.NewInternalErr()
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockURR.
 		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
 		Return(currentUserRoles, nil)
+	mockURR.
+		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
+		Return(mockErr)
 
-	mockRR := &mocks.MockRoleRepository{}
-	mockRR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
-		Return(mockRoles, nil)
+	URS := NewUserRoleService(mockURR)
 
-	URS := NewUserRoleService(mockURR, mockRR)
-
-	err := URS.UpdateBatch(context.TODO(), mockUserRoles, mockUser)
+	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
-	mockRR.AssertExpectations(t)
+	assert.Nil(t, userroles)
 	mockURR.AssertExpectations(t)
-
 }

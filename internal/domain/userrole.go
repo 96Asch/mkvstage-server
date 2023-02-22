@@ -10,7 +10,9 @@ type UserRole struct {
 }
 
 type UserRoleService interface {
-	AuthMultiUpdater[UserRole]
+	GetAll(ctx context.Context) (*[]UserRole, error)
+	GetByUser(ctx context.Context, user *User) (*[]UserRole, error)
+	SetActiveBatch(ctx context.Context, urids []int64, principal *User) (*[]UserRole, error)
 }
 
 type UserRoleRepository interface {

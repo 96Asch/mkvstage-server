@@ -11,13 +11,50 @@ type MockUserRoleService struct {
 	mock.Mock
 }
 
-func (m MockUserRoleService) UpdateBatch(ctx context.Context, urs *[]domain.UserRole, principal *domain.User) error {
-	ret := m.Called(ctx, urs, principal)
+func (m MockUserRoleService) GetAll(ctx context.Context) (*[]domain.UserRole, error) {
+	ret := m.Called(ctx)
 
-	var r0 error
+	var r0 *[]domain.UserRole
 	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(error)
+		r0 = ret.Get(0).(*[]domain.UserRole)
 	}
 
-	return r0
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
+}
+
+func (m MockUserRoleService) GetByUser(ctx context.Context, user *domain.User) (*[]domain.UserRole, error) {
+	ret := m.Called(ctx, user)
+
+	var r0 *[]domain.UserRole
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*[]domain.UserRole)
+	}
+
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
+}
+
+func (m MockUserRoleService) SetActiveBatch(ctx context.Context, urids []int64, principal *domain.User) (*[]domain.UserRole, error) {
+	ret := m.Called(ctx, urids, principal)
+
+	var r0 *[]domain.UserRole
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*[]domain.UserRole)
+	}
+
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
 }

@@ -8,58 +8,52 @@ import (
 
 type userRoleService struct {
 	urr domain.UserRoleRepository
-	rr  domain.RoleRepository
 }
 
-func NewUserRoleService(urr domain.UserRoleRepository, rr domain.RoleRepository) *userRoleService {
+func NewUserRoleService(urr domain.UserRoleRepository) *userRoleService {
 	return &userRoleService{
 		urr: urr,
-		rr:  rr,
 	}
 }
 
-func containsUserRole(userRoles *[]domain.UserRole, urid int64) bool {
-	for _, userRole := range *userRoles {
+func (urs userRoleService) GetAll(ctx context.Context) (*[]domain.UserRole, error) {
+	return urs.urr.GetAll(ctx)
+}
+
+func (urs userRoleService) GetByUser(ctx context.Context, user *domain.User) (*[]domain.UserRole, error) {
+	return urs.urr.GetByUID(ctx, user.ID)
+}
+
+func containsUserRole(userRoles *[]domain.UserRole, urid int64) (int, bool) {
+	for idx, userRole := range *userRoles {
 		if userRole.ID == urid {
-			return true
+			return idx, true
 		}
 	}
-	return false
+	return 0, false
 }
 
-func containsRole(roles *[]domain.Role, rid int64) bool {
-	for _, role := range *roles {
-		if role.ID == rid {
-			return true
-		}
-	}
-	return false
-}
-
-func (urs userRoleService) UpdateBatch(ctx context.Context, userRoles *[]domain.UserRole, principal *domain.User) error {
-	currentUserRoles, err := urs.urr.GetByUID(ctx, principal.ID)
+func (urs userRoleService) SetActiveBatch(ctx context.Context, urids []int64, principal *domain.User) (*[]domain.UserRole, error) {
+	userRoles, err := urs.urr.GetByUID(ctx, principal.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	currentRoles, err := urs.rr.GetAll(ctx)
+	toUpdateUserRoles := make([]domain.UserRole, len(urids))
+	for idx, urid := range urids {
+		currentUserRoleIdx, exists := containsUserRole(userRoles, urid)
+		if !exists {
+			return nil, domain.NewBadRequestErr("invalid id given")
+		}
+
+		(*userRoles)[currentUserRoleIdx].Active = true
+		toUpdateUserRoles[idx] = (*userRoles)[currentUserRoleIdx]
+	}
+
+	err = urs.urr.UpdateBatch(ctx, &toUpdateUserRoles)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, userrole := range *userRoles {
-		if userrole.UserID != principal.ID {
-			return domain.NewNotAuthorizedErr("cannot change other user's user roles")
-		}
-
-		if !containsUserRole(currentUserRoles, userrole.ID) {
-			return domain.NewBadRequestErr("id is not valid")
-		}
-
-		if !containsRole(currentRoles, userrole.RoleID) {
-			return domain.NewBadRequestErr("role_id is not valid")
-		}
-	}
-
-	return urs.urr.UpdateBatch(ctx, userRoles)
+	return &toUpdateUserRoles, nil
 }

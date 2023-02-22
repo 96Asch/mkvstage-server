@@ -125,7 +125,7 @@ func main() {
 	bs := service.NewBundleService(br)
 	ss := service.NewSongService(ur, sr)
 
-	urs := service.NewUserRoleService(urr, rr)
+	urs := service.NewUserRoleService(urr)
 	rs := service.NewRoleService(rr, ur, urr)
 
 	config := handler.Config{

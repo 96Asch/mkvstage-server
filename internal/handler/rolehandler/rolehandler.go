@@ -18,4 +18,5 @@ func Initialize(group *gin.RouterGroup, rs domain.RoleService, mwh domain.Middle
 	roles.POST("create", mwh.AuthenticateUser(), rh.Create)
 	roles.GET("", rh.GetAll)
 	roles.PUT(":id/update", mwh.AuthenticateUser(), rh.UpdateByID)
+	roles.DELETE(":id/delete", mwh.AuthenticateUser(), rh.DeleteByID)
 }

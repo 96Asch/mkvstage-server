@@ -65,6 +65,8 @@ func setupMigrations(db *gorm.DB) {
 		&domain.User{},
 		&domain.Bundle{},
 		&domain.Song{},
+		&domain.Role{},
+		&domain.UserRole{},
 	}
 
 	for _, domain := range domains {
@@ -111,18 +113,20 @@ func main() {
 	refreshSecret := os.Getenv("REFRESH_SECRET")
 
 	ur := repository.NewGormUserRepository(db)
-	us := service.NewUserService(ur)
-
 	tr := repository.NewRedisTokenRepository(rdb)
-	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
-
-	mhw := middleware.NewGinMiddlewareHandler(ts)
-
 	br := repository.NewGormBundleRepository(db)
-	bs := service.NewBundleService(br)
-
 	sr := repository.NewGormSongRepository(db)
+	urr := repository.NewGormUserRoleRepository(db)
+	rr := repository.NewGormRoleRepository(db)
+
+	us := service.NewUserService(ur, rr, urr)
+	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
+	mhw := middleware.NewGinMiddlewareHandler(ts)
+	bs := service.NewBundleService(br)
 	ss := service.NewSongService(ur, sr)
+
+	urs := service.NewUserRoleService(urr)
+	rs := service.NewRoleService(rr, ur, urr)
 
 	config := handler.Config{
 		Router: router,
@@ -131,6 +135,8 @@ func main() {
 		MH:     mhw,
 		B:      bs,
 		S:      ss,
+		R:      rs,
+		UR:     urs,
 	}
 
 	run(&config)

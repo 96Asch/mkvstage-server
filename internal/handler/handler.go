@@ -6,9 +6,11 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/handler/bundlehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/mehandler"
+	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
 	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
+	"github.com/96Asch/mkvstage-server/internal/handler/userrolehandler"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +21,8 @@ type Config struct {
 	MH     domain.MiddlewareHandler
 	B      domain.BundleService
 	S      domain.SongService
+	R      domain.RoleService
+	UR     domain.UserRoleService
 }
 
 func (cfg *Config) New() *Config {
@@ -38,4 +42,6 @@ func Initialize(config *Config) {
 	mehandler.Initialize(ug, config.U, config.T, config.MH)
 	bundlehandler.Initialize(v1, config.B, config.MH)
 	songhandler.Initialize(v1, config.S, config.MH)
+	rolehandler.Initialize(v1, config.R, config.MH)
+	userrolehandler.Initialize(v1, config.UR, config.MH)
 }

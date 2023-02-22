@@ -1,14 +1,19 @@
 package domain
 
-import "context"
+import (
+	"context"
+
+	"gorm.io/gorm"
+)
 
 type UserRole struct {
-	ID     int64 `json:"id"`
-	UserID int64 `json:"-" gorm:"uniqueIndex:user_role"`
-	User   *User `json:"user"`
-	RoleID int64 `json:"-" gorm:"uniqueIndex:user_role"`
-	Role   *Role `json:"role"`
-	Active bool  `json:"active"`
+	ID        int64          `json:"id"`
+	UserID    int64          `json:"-" gorm:"uniqueIndex:user_role"`
+	User      *User          `json:"user"`
+	RoleID    int64          `json:"-" gorm:"uniqueIndex:user_role"`
+	Role      *Role          `json:"role"`
+	Active    bool           `json:"active"`
+	DeletedAt gorm.DeletedAt `json:"-"`
 }
 
 type UserRoleService interface {

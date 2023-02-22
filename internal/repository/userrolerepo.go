@@ -45,6 +45,16 @@ func (urr gormUserRoleRepository) GetAll(ctx context.Context) (*[]domain.UserRol
 	return &userroles, nil
 }
 
+func (urr gormUserRoleRepository) GetByUID(ctx context.Context, uid int64) (*[]domain.UserRole, error) {
+	var userroles []domain.UserRole
+	res := urr.db.Where("user_id = ?", uid).Find(&userroles)
+	if err := res.Error; err != nil {
+		return nil, domain.NewInternalErr()
+	}
+
+	return &userroles, nil
+}
+
 func (urr gormUserRoleRepository) Create(ctx context.Context, userrole *domain.UserRole) error {
 	res := urr.db.Create(userrole)
 	if err := res.Error; err != nil {

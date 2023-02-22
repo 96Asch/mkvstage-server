@@ -16,4 +16,5 @@ func Initialize(group *gin.RouterGroup, rs domain.RoleService, mwh domain.Middle
 
 	roles := group.Group("roles")
 	roles.POST("create", mwh.AuthenticateUser(), rh.Create)
+	roles.PUT(":id/update", mwh.AuthenticateUser(), rh.UpdateByID)
 }

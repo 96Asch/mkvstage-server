@@ -135,3 +135,14 @@ func (m MockUserRoleRepository) DeleteByRID(ctx context.Context, rid int64) erro
 
 	return r0
 }
+
+func (m MockUserRoleRepository) DeleteByUID(ctx context.Context, uid int64) error {
+	ret := m.Called(ctx, uid)
+
+	var r0 error
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(error)
+	}
+
+	return r0
+}

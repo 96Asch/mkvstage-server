@@ -113,21 +113,17 @@ func main() {
 	refreshSecret := os.Getenv("REFRESH_SECRET")
 
 	ur := repository.NewGormUserRepository(db)
-	us := service.NewUserService(ur)
-
 	tr := repository.NewRedisTokenRepository(rdb)
-	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
-
-	mhw := middleware.NewGinMiddlewareHandler(ts)
-
 	br := repository.NewGormBundleRepository(db)
-	bs := service.NewBundleService(br)
-
 	sr := repository.NewGormSongRepository(db)
-	ss := service.NewSongService(ur, sr)
-
 	urr := repository.NewGormUserRoleRepository(db)
 	rr := repository.NewGormRoleRepository(db)
+
+	us := service.NewUserService(ur, urr)
+	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
+	mhw := middleware.NewGinMiddlewareHandler(ts)
+	bs := service.NewBundleService(br)
+	ss := service.NewSongService(ur, sr)
 
 	urs := service.NewUserRoleService(urr, rr)
 	rs := service.NewRoleService(rr, ur, urr)

@@ -20,4 +20,5 @@ type UserRoleRepository interface {
 	Updater[UserRole]
 	Deleter[UserRole]
 	DeleteByRID(ctx context.Context, rid int64) error
+	DeleteByUID(ctx context.Context, uid int64) error
 }

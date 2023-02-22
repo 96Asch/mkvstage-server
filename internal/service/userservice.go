@@ -8,22 +8,24 @@ import (
 )
 
 type userService struct {
-	userRepo domain.UserRepository
+	ur  domain.UserRepository
+	urr domain.UserRoleRepository
 }
 
-func NewUserService(ur domain.UserRepository) domain.UserService {
+func NewUserService(ur domain.UserRepository, urr domain.UserRoleRepository) domain.UserService {
 	return &userService{
-		userRepo: ur,
+		ur:  ur,
+		urr: urr,
 	}
 }
 
 func (us *userService) FetchByID(ctx context.Context, id int64) (*domain.User, error) {
-	return us.userRepo.GetByID(ctx, id)
+	return us.ur.GetByID(ctx, id)
 }
 
 func (us *userService) FetchAll(ctx context.Context) (*[]domain.User, error) {
 
-	users, err := us.userRepo.GetAll(ctx)
+	users, err := us.ur.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,7 @@ func (us userService) Store(ctx context.Context, user *domain.User) error {
 		user.Password = hash
 	}
 
-	return us.userRepo.Create(ctx, user)
+	return us.ur.Create(ctx, user)
 }
 
 func (us userService) Update(ctx context.Context, user *domain.User) error {
@@ -53,7 +55,7 @@ func (us userService) Update(ctx context.Context, user *domain.User) error {
 		return domain.NewRecordNotFoundErr("user_id", "0")
 	}
 
-	return us.userRepo.Update(ctx, user)
+	return us.ur.Update(ctx, user)
 }
 
 func (us userService) Remove(ctx context.Context, user *domain.User, id int64) (int64, error) {
@@ -67,11 +69,15 @@ func (us userService) Remove(ctx context.Context, user *domain.User, id int64) (
 		return 0, domain.NewNotAuthorizedErr("cannot delete given id")
 	}
 
-	if _, err := us.userRepo.GetByID(ctx, deleteId); err != nil {
+	if _, err := us.ur.GetByID(ctx, deleteId); err != nil {
 		return 0, err
 	}
 
-	if err := us.userRepo.Delete(ctx, deleteId); err != nil {
+	if err := us.ur.Delete(ctx, deleteId); err != nil {
+		return 0, err
+	}
+
+	if err := us.urr.DeleteByUID(ctx, deleteId); err != nil {
 		return 0, err
 	}
 
@@ -79,7 +85,7 @@ func (us userService) Remove(ctx context.Context, user *domain.User, id int64) (
 }
 
 func (us userService) Authorize(ctx context.Context, email, password string) (*domain.User, error) {
-	user, err := us.userRepo.GetByEmail(ctx, email)
+	user, err := us.ur.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}

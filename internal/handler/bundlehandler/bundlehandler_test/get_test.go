@@ -1,6 +1,7 @@
-package bundlehandler
+package bundlehandler_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,13 +9,44 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/bundlehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-func TestGetCorrect(t *testing.T) {
+func prepareAndServeGet(
+	t *testing.T,
+	param string,
+	mockBS domain.BundleService,
+	mockMWH domain.MiddlewareHandler,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	bundlehandler.Initialize(&router.RouterGroup, mockBS, mockMWH)
+
+	req, err := http.NewRequestWithContext(
+		context.TODO(),
+		http.MethodGet,
+		fmt.Sprintf("/bundles%s", param),
+		nil,
+	)
+
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
+func TestGetByIDCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.GUEST,
@@ -26,111 +58,100 @@ func TestGetCorrect(t *testing.T) {
 		ParentID: 0,
 	}
 
-	mockMWH := new(mocks.MockMiddlewareHandler)
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	mockBS := new(mocks.MockBundleService)
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockBS := &mocks.MockBundleService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 	mockBS.
 		On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(mockBundle, nil)
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockBS, mockMWH)
-
-	w := httptest.NewRecorder()
-
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/bundles/%d", mockBundle.ID), nil)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
+	writer := prepareAndServeGet(t, "/1", mockBS, mockMWH)
 
 	expectedBody, err := json.Marshal(gin.H{"bundle": mockBundle})
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, expectedBody, w.Body.Bytes())
+	assert.Equal(t, http.StatusOK, writer.Code)
+	assert.Equal(t, expectedBody, writer.Body.Bytes())
 
 	mockMWH.AssertExpectations(t)
 	mockBS.AssertExpectations(t)
 }
 
 func TestGetInvalidParam(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.GUEST,
 	}
 
-	mockMWH := new(mocks.MockMiddlewareHandler)
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	mockBS := new(mocks.MockBundleService)
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockBS := &mocks.MockBundleService{}
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockBS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 
-	w := httptest.NewRecorder()
+	writer := prepareAndServeGet(t, "/a", mockBS, mockMWH)
 
-	req, err := http.NewRequest(http.MethodGet, "/bundles/a", nil)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
 
 	mockMWH.AssertExpectations(t)
 	mockBS.AssertExpectations(t)
 }
 
 func TestGetNoRecord(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.GUEST,
 	}
 
-	mockMWH := new(mocks.MockMiddlewareHandler)
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
+	mockBS := &mocks.MockBundleService{}
+	mockMWH := &mocks.MockMiddlewareHandler{}
 
-	mockBS := new(mocks.MockBundleService)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 	mockBS.
 		On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), int64(-1)).
 		Return(nil, mockErr)
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockBS, mockMWH)
+	writer := prepareAndServeGet(t, "/-1", mockBS, mockMWH)
 
-	w := httptest.NewRecorder()
-
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/bundles/%d", -1), nil)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Equal(t, http.StatusNotFound, writer.Code)
 
 	mockMWH.AssertExpectations(t)
 	mockBS.AssertExpectations(t)
 }
 
 func TestGetAllCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.GUEST,
 	}
-
 	mockBundles := &[]domain.Bundle{
 		{
 			ID:       1,
@@ -144,69 +165,60 @@ func TestGetAllCorrect(t *testing.T) {
 		},
 	}
 
-	mockMWH := new(mocks.MockMiddlewareHandler)
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	mockBS := new(mocks.MockBundleService)
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockBS := &mocks.MockBundleService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 	mockBS.
 		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(mockBundles, nil)
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockBS, mockMWH)
-
-	w := httptest.NewRecorder()
-
-	req, err := http.NewRequest(http.MethodGet, "/bundles", nil)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
+	writer := prepareAndServeGet(t, "", mockBS, mockMWH)
 
 	expectedBody, err := json.Marshal(gin.H{"bundles": mockBundles})
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, expectedBody, w.Body.Bytes())
+	assert.Equal(t, http.StatusOK, writer.Code)
+	assert.Equal(t, expectedBody, writer.Body.Bytes())
 
 	mockMWH.AssertExpectations(t)
 	mockBS.AssertExpectations(t)
 }
 
 func TestGetAllFetchErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.GUEST,
 	}
 
-	mockMWH := new(mocks.MockMiddlewareHandler)
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	mockErr := domain.NewInternalErr()
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockBS := &mocks.MockBundleService{}
 
-	mockBS := new(mocks.MockBundleService)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 	mockBS.
 		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(nil, mockErr)
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockBS, mockMWH)
+	writer := prepareAndServeGet(t, "", mockBS, mockMWH)
 
-	w := httptest.NewRecorder()
-
-	req, err := http.NewRequest(http.MethodGet, "/bundles", nil)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusInternalServerError, writer.Code)
 
 	mockMWH.AssertExpectations(t)
 	mockBS.AssertExpectations(t)

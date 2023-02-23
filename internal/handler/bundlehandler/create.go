@@ -13,11 +13,11 @@ type bundleReq struct {
 }
 
 func (bh bundleHandler) Create(ctx *gin.Context) {
-
 	val, exists := ctx.Get("user")
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -25,6 +25,7 @@ func (bh bundleHandler) Create(ctx *gin.Context) {
 	if err := ctx.BindJSON(&bReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -34,12 +35,20 @@ func (bh bundleHandler) Create(ctx *gin.Context) {
 	}
 
 	context := ctx.Request.Context()
-	principal := val.(*domain.User)
+
+	principal, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
+
 	if err := bh.bs.Store(context, bundle, principal); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"bundle": bundle})
-
 }

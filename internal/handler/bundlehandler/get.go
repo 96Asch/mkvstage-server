@@ -10,17 +10,21 @@ import (
 
 func (bh bundleHandler) GetByID(ctx *gin.Context) {
 	idField := ctx.Params.ByName("id")
-	id, err := strconv.Atoi(idField)
+
+	bundleID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	context := ctx.Request.Context()
-	bundles, err := bh.bs.FetchByID(context, int64(id))
+
+	bundles, err := bh.bs.FetchByID(context, int64(bundleID))
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 
@@ -29,9 +33,11 @@ func (bh bundleHandler) GetByID(ctx *gin.Context) {
 
 func (bh bundleHandler) GetAll(ctx *gin.Context) {
 	context := ctx.Request.Context()
+
 	bundles, err := bh.bs.FetchAll(context)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

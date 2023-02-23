@@ -20,15 +20,25 @@ func (bh bundleHandler) UpdateByID(ctx *gin.Context) {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
 		log.Println(newErr)
+
 		return
 	}
-	principal := val.(*domain.User)
+
+	principal, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
 
 	idField := ctx.Params.ByName("id")
-	id, err := strconv.Atoi(idField)
+
+	bundleID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -36,19 +46,22 @@ func (bh bundleHandler) UpdateByID(ctx *gin.Context) {
 	if err := ctx.BindJSON(&req); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	bundle := &domain.Bundle{
-		ID:       int64(id),
+		ID:       int64(bundleID),
 		Name:     req.Name,
 		ParentID: req.ParentID,
 	}
 
 	context := ctx.Request.Context()
+
 	err = bh.bs.Update(context, bundle, principal)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

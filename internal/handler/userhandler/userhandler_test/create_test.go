@@ -1,20 +1,48 @@
-package userhandler
+package userhandler_test
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/userhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
+func prepareAndServeCreate(
+	t *testing.T,
+	mockUS domain.UserService,
+	mockTS domain.TokenService,
+	body *[]byte,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS)
+
+	requestBody := bytes.NewReader(*body)
+
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, "/users/create", requestBody)
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
 func TestCreateCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -24,23 +52,19 @@ func TestCreateCorrect(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	mockTS := new(mocks.MockTokenService)
-	mockUS := new(mocks.MockUserService)
-	mockUS.On("Store", mock.AnythingOfType("*context.emptyCtx"), mockUser).
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
+
+	mockUS.
+		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.User)
+			arg, ok := args.Get(1).(*domain.User)
+			assert.True(t, ok)
 			arg.ID = 1
 		})
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"first_name":    "Foo",
 		"last_name":     "Bar",
 		"email":         "Foo@Bar.com",
@@ -49,12 +73,7 @@ func TestCreateCorrect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
-
-	req, err := http.NewRequest(http.MethodPost, "/test/users/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
+	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
 
 	expectedUser, err := json.Marshal(gin.H{
 		"user": &domain.User{
@@ -68,24 +87,18 @@ func TestCreateCorrect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
-	assert.Equal(t, expectedUser, w.Body.Bytes())
+	assert.Equal(t, http.StatusCreated, writer.Code)
+	assert.Equal(t, expectedUser, writer.Body.Bytes())
 	mockUS.AssertExpectations(t)
 }
 
 func TestCreateInvalidEmail(t *testing.T) {
-	mockTS := new(mocks.MockTokenService)
-	mockUS := new(mocks.MockUserService)
+	t.Parallel()
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
 
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"first_name":    "Foo",
 		"last_name":     "Bar",
 		"email":         "Foocom",
@@ -94,30 +107,19 @@ func TestCreateInvalidEmail(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
+	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/test/users/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
 	mockUS.AssertNotCalled(t, "Store")
 }
 
 func TestCreateInvalidBind(t *testing.T) {
-	mockUS := new(mocks.MockUserService)
-	mockTS := new(mocks.MockTokenService)
+	t.Parallel()
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
+	mockUS := &mocks.MockUserService{}
+	mockTS := &mocks.MockTokenService{}
 
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"first_name":   "Foo",
 		"last_name":    "Bar",
 		"emails":       "Foo@bar.com",
@@ -126,18 +128,15 @@ func TestCreateInvalidBind(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
+	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/test/users/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
 	mockUS.AssertNotCalled(t, "Create")
 }
 
 func TestCreateServerError(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -148,21 +147,13 @@ func TestCreateServerError(t *testing.T) {
 	}
 
 	expectedErr := domain.NewInternalErr()
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
 
-	mockTS := new(mocks.MockTokenService)
-	mockUS := new(mocks.MockUserService)
 	mockUS.On("Store", mock.Anything, mockUser).
 		Return(expectedErr)
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"first_name":    "Foo",
 		"last_name":     "Bar",
 		"email":         "Foo@Bar.com",
@@ -172,20 +163,14 @@ func TestCreateServerError(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
-
-	req, err := http.NewRequest(http.MethodPost, "/test/users/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-	assert.NoError(t, err)
+	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
 
 	expectedRes, err := json.Marshal(gin.H{
 		"error": expectedErr,
 	})
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Equal(t, expectedRes, w.Body.Bytes())
+	assert.Equal(t, http.StatusInternalServerError, writer.Code)
+	assert.Equal(t, expectedRes, writer.Body.Bytes())
 	mockUS.AssertExpectations(t)
 }

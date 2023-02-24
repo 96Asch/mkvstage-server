@@ -1,7 +1,8 @@
-package userhandler
+package userhandler_test
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/userhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -16,7 +18,33 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+func prepareAndServeLogin(
+	t *testing.T,
+	mockUS domain.UserService,
+	mockTS domain.TokenService,
+	body *[]byte,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS)
+
+	requestBody := bytes.NewReader(*body)
+
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, "/users/login", requestBody)
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
 func TestLoginCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -37,54 +65,44 @@ func TestLoginCorrect(t *testing.T) {
 		Access: "access-token",
 	}
 
-	mockTS := new(mocks.MockTokenService)
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
+
 	mockTS.
 		On("CreateRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, "").
 		Return(mockRefresh, nil)
-
 	mockTS.
 		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
 		Return(mockAccess, nil)
-
-	mockUS := new(mocks.MockUserService)
 	mockUS.
 		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
 		Return(mockUser, nil)
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"email":    mockUser.Email,
 		"password": mockUser.Password,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
-
-	req, err := http.NewRequest(http.MethodPost, "/test/users/login", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
+	writer := prepareAndServeLogin(t, mockUS, mockTS, &byteBody)
 
 	expectedRes, err := json.Marshal(gin.H{
-		"tokens": tokenPair{
-			Access:  mockAccess.Access,
-			Refresh: mockRefresh.Refresh,
+		"tokens": gin.H{
+			"access_token":  mockAccess.Access,
+			"refresh_token": mockRefresh.Refresh,
 		},
 	})
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, expectedRes, w.Body.Bytes())
+	assert.Equal(t, http.StatusOK, writer.Code)
+	assert.Equal(t, expectedRes, writer.Body.Bytes())
+	mockTS.AssertExpectations(t)
 	mockUS.AssertExpectations(t)
 }
 
 func TestLoginBindErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -94,33 +112,24 @@ func TestLoginBindErr(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	mockTS := new(mocks.MockTokenService)
-	mockUS := new(mocks.MockUserService)
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"password": mockUser.Password,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
+	writer := prepareAndServeLogin(t, mockUS, mockTS, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/test/users/login", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
+	mockTS.AssertExpectations(t)
 	mockUS.AssertExpectations(t)
 }
 
 func TestLoginNotAuth(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -131,39 +140,29 @@ func TestLoginNotAuth(t *testing.T) {
 	}
 
 	mockErr := domain.NewNotAuthorizedErr("invalid email/password")
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
 
-	mockTS := new(mocks.MockTokenService)
-
-	mockUS := new(mocks.MockUserService)
 	mockUS.
 		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
 		Return(nil, mockErr)
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"email":    mockUser.Email,
 		"password": mockUser.Password,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
+	writer := prepareAndServeLogin(t, mockUS, mockTS, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/test/users/login", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, writer.Code)
+	mockTS.AssertExpectations(t)
 	mockUS.AssertExpectations(t)
 }
 
 func TestLoginRefreshErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -174,42 +173,31 @@ func TestLoginRefreshErr(t *testing.T) {
 	}
 
 	mockErr := domain.NewInternalErr()
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
 
-	mockTS := new(mocks.MockTokenService)
 	mockTS.
 		On("CreateRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, "").
 		Return(nil, mockErr)
-
-	mockUS := new(mocks.MockUserService)
 	mockUS.
 		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
 		Return(mockUser, nil)
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"email":    mockUser.Email,
 		"password": mockUser.Password,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
+	writer := prepareAndServeLogin(t, mockUS, mockTS, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/test/users/login", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusInternalServerError, writer.Code)
 	mockUS.AssertExpectations(t)
 }
 
 func TestLoginAccessErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -227,41 +215,27 @@ func TestLoginAccessErr(t *testing.T) {
 	}
 
 	mockErr := domain.NewInternalErr()
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
 
-	mockTS := new(mocks.MockTokenService)
 	mockTS.
 		On("CreateRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, "").
 		Return(mockRefresh, nil)
-
 	mockTS.
 		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
 		Return(nil, mockErr)
-
-	mockUS := new(mocks.MockUserService)
 	mockUS.
 		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
 		Return(mockUser, nil)
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockUS, mockTS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"email":    mockUser.Email,
 		"password": mockUser.Password,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
+	writer := prepareAndServeLogin(t, mockUS, mockTS, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/test/users/login", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusInternalServerError, writer.Code)
 	mockUS.AssertExpectations(t)
 }

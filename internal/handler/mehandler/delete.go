@@ -12,13 +12,13 @@ type deleteID struct {
 	ID int64 `json:"id" binding:"required"`
 }
 
-func (uh *meHandler) Delete(ctx *gin.Context) {
-
+func (mh meHandler) Delete(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
 		log.Println(newErr)
+
 		return
 	}
 
@@ -27,22 +27,25 @@ func (uh *meHandler) Delete(ctx *gin.Context) {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
 		log.Println(newErr)
+
 		return
 	}
 
 	user := val.(*domain.User)
 	context := ctx.Request.Context()
 
-	id, err := uh.userService.Remove(context, user, dID.ID)
+	id, err := mh.userService.Remove(context, user, dID.ID)
 	if err != nil {
 		log.Println(err)
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 
-	if err := uh.tokenService.RemoveAllRefresh(context, id); err != nil {
+	if err := mh.tokenService.RemoveAllRefresh(context, id); err != nil {
 		log.Println(err)
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

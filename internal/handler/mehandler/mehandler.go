@@ -12,16 +12,22 @@ type meHandler struct {
 	tokenService domain.TokenService
 }
 
-func Initialize(rg *gin.RouterGroup, us domain.UserService, ts domain.TokenService, mwh domain.MiddlewareHandler) {
+func Initialize(
+	group *gin.RouterGroup,
+	userService domain.UserService,
+	tokenService domain.TokenService,
+	middleWare domain.MiddlewareHandler,
+) {
 	log.Println("Setting up me handlers")
-	mh := &meHandler{
-		userService:  us,
-		tokenService: ts,
+
+	mehandler := &meHandler{
+		userService:  userService,
+		tokenService: tokenService,
 	}
 
-	me := rg.Group("me", mwh.AuthenticateUser())
-	me.GET("", mh.Me)
-	me.PATCH("/update", mh.Update)
-	me.DELETE("/delete", mh.Delete)
-	me.DELETE("/logout", mh.Logout)
+	me := group.Group("me", middleWare.AuthenticateUser())
+	me.GET("", mehandler.Me)
+	me.PUT("/update", mehandler.Update)
+	me.DELETE("/delete", mehandler.Delete)
+	me.DELETE("/logout", mehandler.Logout)
 }

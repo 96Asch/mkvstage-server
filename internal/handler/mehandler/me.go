@@ -7,20 +7,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (u *meHandler) Me(ctx *gin.Context) {
+func (mh meHandler) Me(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		err := domain.NewInternalErr()
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
+		return
+	}
+
+	tokenUser, ok := val.(*domain.User)
+	if !ok {
+		err := domain.NewInternalErr()
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 
 	context := ctx.Request.Context()
-	id := val.(*domain.User).ID
 
-	user, err := u.userService.FetchByID(context, id)
+	user, err := mh.userService.FetchByID(context, tokenUser.ID)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

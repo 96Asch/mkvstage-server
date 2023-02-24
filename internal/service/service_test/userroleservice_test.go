@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -6,11 +6,14 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestUserRoleSetActiveBatchCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -50,9 +53,10 @@ func TestUserRoleSetActiveBatchCorrect(t *testing.T) {
 			Active: false,
 		},
 	}
-	mockUserRoleIDs := []int64{1, 3}
 
+	mockUserRoleIDs := []int64{1, 3}
 	mockURR := &mocks.MockUserRoleRepository{}
+
 	mockURR.
 		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
 		Return(currentUserRoles, nil)
@@ -60,7 +64,7 @@ func TestUserRoleSetActiveBatchCorrect(t *testing.T) {
 		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
 		Return(nil)
 
-	URS := NewUserRoleService(mockURR)
+	URS := service.NewUserRoleService(mockURR)
 
 	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.NoError(t, err)
@@ -69,6 +73,8 @@ func TestUserRoleSetActiveBatchCorrect(t *testing.T) {
 }
 
 func TestUserRoleSetActiveBatchGetByUIDErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -77,23 +83,22 @@ func TestUserRoleSetActiveBatchGetByUIDErr(t *testing.T) {
 
 	mockErr := domain.NewInternalErr()
 	mockURR := &mocks.MockUserRoleRepository{}
+
 	mockURR.
 		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
 		Return(nil, mockErr)
 
-	mockRR := &mocks.MockRoleRepository{}
-
-	URS := NewUserRoleService(mockURR)
+	URS := service.NewUserRoleService(mockURR)
 
 	userRoles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
 	assert.Nil(t, userRoles)
-	mockRR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
-
 }
 
 func TestUserRoleSetActiveBatchInvalidUserRole(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -116,11 +121,12 @@ func TestUserRoleSetActiveBatchInvalidUserRole(t *testing.T) {
 	mockUserRoleIDs := []int64{1, 3}
 	mockErr := domain.NewBadRequestErr("")
 	mockURR := &mocks.MockUserRoleRepository{}
+
 	mockURR.
 		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
 		Return(currentUserRoles, nil)
 
-	URS := NewUserRoleService(mockURR)
+	URS := service.NewUserRoleService(mockURR)
 
 	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
@@ -129,6 +135,8 @@ func TestUserRoleSetActiveBatchInvalidUserRole(t *testing.T) {
 }
 
 func TestUserRoleSetActiveBatchErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -165,6 +173,7 @@ func TestUserRoleSetActiveBatchErr(t *testing.T) {
 	mockUserRoleIDs := []int64{1, 2}
 	mockErr := domain.NewInternalErr()
 	mockURR := &mocks.MockUserRoleRepository{}
+
 	mockURR.
 		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
 		Return(currentUserRoles, nil)
@@ -172,7 +181,7 @@ func TestUserRoleSetActiveBatchErr(t *testing.T) {
 		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
 		Return(mockErr)
 
-	URS := NewUserRoleService(mockURR)
+	URS := service.NewUserRoleService(mockURR)
 
 	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
@@ -181,6 +190,8 @@ func TestUserRoleSetActiveBatchErr(t *testing.T) {
 }
 
 func TestUserRoleSetActiveBatchNoChange(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID: 1,
 	}
@@ -203,11 +214,12 @@ func TestUserRoleSetActiveBatchNoChange(t *testing.T) {
 	mockUserRoleIDs := []int64{2}
 	mockErr := domain.NewBadRequestErr("")
 	mockURR := &mocks.MockUserRoleRepository{}
+
 	mockURR.
 		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
 		Return(currentUserRoles, nil)
 
-	URS := NewUserRoleService(mockURR)
+	URS := service.NewUserRoleService(mockURR)
 
 	userroles, err := URS.SetActiveBatch(context.TODO(), mockUserRoleIDs, mockUser)
 	assert.ErrorAs(t, err, &mockErr)

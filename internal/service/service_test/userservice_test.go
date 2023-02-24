@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -7,12 +7,14 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/96Asch/mkvstage-server/internal/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestFetchByIDUserCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:           1,
@@ -24,16 +26,17 @@ func TestFetchByIDUserCorrect(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	ctx := context.TODO()
-
-	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("GetByID", ctx, mockUser.ID).Return(mockUser, nil)
-
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	user, err := US.FetchByID(ctx, mockUser.ID)
 
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(mockUser, nil)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	user, err := US.FetchByID(context.TODO(), mockUser.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, user, mockUser)
 	mockUR.AssertExpectations(t)
@@ -41,6 +44,8 @@ func TestFetchByIDUserCorrect(t *testing.T) {
 }
 
 func TestFetchAllUserCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUsers := &[]domain.User{
 		{
 			ID:           1,
@@ -79,16 +84,17 @@ func TestFetchAllUserCorrect(t *testing.T) {
 		},
 	}
 
-	ctx := context.TODO()
-
-	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("GetAll", ctx).Return(mockUsers, nil)
-
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
 
-	US := NewUserService(mockUR, mockRR, mockURR)
-	users, err := US.FetchAll(ctx)
+	mockUR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		Return(mockUsers, nil)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	users, err := US.FetchAll(context.TODO())
 	assert.NoError(t, err)
 	assert.Equal(t, users, mockPublicUsers)
 	mockUR.AssertExpectations(t)
@@ -96,17 +102,20 @@ func TestFetchAllUserCorrect(t *testing.T) {
 }
 
 func TestFetchAllUserInternalErr(t *testing.T) {
-
-	ctx := context.TODO()
+	t.Parallel()
 
 	expectedErr := domain.NewInternalErr()
 	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("GetAll", ctx).Return(nil, expectedErr)
-
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	users, err := US.FetchAll(ctx)
+
+	mockUR.
+		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		Return(nil, expectedErr)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	users, err := US.FetchAll(context.TODO())
 	assert.ErrorIs(t, expectedErr, err)
 	assert.Nil(t, users)
 	mockUR.AssertExpectations(t)
@@ -114,6 +123,7 @@ func TestFetchAllUserInternalErr(t *testing.T) {
 }
 
 func TestStoreUserCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		FirstName:    "Foo",
@@ -148,27 +158,29 @@ func TestStoreUserCorrect(t *testing.T) {
 		},
 	}
 
-	mockUR := new(mocks.MockUserRepository)
+	mockUR := &mocks.MockUserRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+
 	mockUR.
 		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.User)
+			arg, ok := args.Get(1).(*domain.User)
+			assert.True(t, ok)
 			arg.ID = 1
 		})
-
-	mockURR := &mocks.MockUserRoleRepository{}
 	mockURR.
 		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
 		Return(nil)
-
-	mockRR := &mocks.MockRoleRepository{}
 	mockRR.
 		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(mockRoles, nil)
 
-	US := NewUserService(mockUR, mockRR, mockURR)
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
 	err := US.Store(context.TODO(), mockUser)
+	assert.NoError(t, err)
 
 	expectedUser := &domain.User{
 		ID:           1,
@@ -179,8 +191,6 @@ func TestStoreUserCorrect(t *testing.T) {
 		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
-
-	assert.NoError(t, err)
 	assert.NotEqual(t, expectedUser.Password, mockUser.Password)
 
 	mockUser.Password = ""
@@ -192,6 +202,7 @@ func TestStoreUserCorrect(t *testing.T) {
 }
 
 func TestStoreUserCreateErr(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		FirstName:    "Foo",
@@ -203,26 +214,25 @@ func TestStoreUserCreateErr(t *testing.T) {
 	}
 
 	mockErr := domain.NewInternalErr()
-	mockUR := new(mocks.MockUserRepository)
+	mockUR := &mocks.MockUserRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+
 	mockUR.
 		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(mockErr)
 
-	mockURR := &mocks.MockUserRoleRepository{}
+	US := service.NewUserService(mockUR, mockRR, mockURR)
 
-	mockRR := &mocks.MockRoleRepository{}
-
-	US := NewUserService(mockUR, mockRR, mockURR)
 	err := US.Store(context.TODO(), mockUser)
-
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockUR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
 	mockRR.AssertExpectations(t)
 }
 
 func TestStoreUserGetAllRoleErr(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		FirstName:    "Foo",
@@ -233,34 +243,34 @@ func TestStoreUserGetAllRoleErr(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	mockUR := new(mocks.MockUserRepository)
+	mockErr := domain.NewInternalErr()
+	mockUR := &mocks.MockUserRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+
 	mockUR.
 		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.User)
+			arg, ok := args.Get(1).(*domain.User)
+			assert.True(t, ok)
 			arg.ID = 1
 		})
-
-	mockURR := &mocks.MockUserRoleRepository{}
-
-	mockErr := domain.NewInternalErr()
-	mockRR := &mocks.MockRoleRepository{}
 	mockRR.
 		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(nil, mockErr)
 
-	US := NewUserService(mockUR, mockRR, mockURR)
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
 	err := US.Store(context.TODO(), mockUser)
-
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockUR.AssertExpectations(t)
 	mockRR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
 }
 
 func TestStoreUserCreateBatchURErr(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		FirstName:    "Foo",
@@ -295,36 +305,39 @@ func TestStoreUserCreateBatchURErr(t *testing.T) {
 		},
 	}
 
-	mockUR := new(mocks.MockUserRepository)
+	mockErr := domain.NewInternalErr()
+	mockUR := &mocks.MockUserRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+
 	mockUR.
 		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.User)
+			arg, ok := args.Get(1).(*domain.User)
+			assert.True(t, ok)
 			arg.ID = 1
 		})
-
-	mockErr := domain.NewInternalErr()
-	mockURR := &mocks.MockUserRoleRepository{}
 	mockURR.
 		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
 		Return(mockErr)
-
-	mockRR := &mocks.MockRoleRepository{}
 	mockRR.
 		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(mockRoles, nil)
 
-	US := NewUserService(mockUR, mockRR, mockURR)
-	err := US.Store(context.TODO(), mockUser)
+	US := service.NewUserService(mockUR, mockRR, mockURR)
 
+	err := US.Store(context.TODO(), mockUser)
 	assert.ErrorAs(t, err, &mockErr)
 	mockUR.AssertExpectations(t)
 	mockRR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
 }
 
 func TestUpdateUserCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:           1,
 		FirstName:    "Foo",
@@ -335,15 +348,18 @@ func TestUpdateUserCorrect(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	ctx := context.TODO()
-
-	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("Update", ctx, mockUser).Return(nil)
-
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	err := US.Update(ctx, mockUser)
+
+	mockUR.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockUser).
+		Return(nil)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	err := US.Update(context.TODO(), mockUser)
+	assert.NoError(t, err)
 
 	expectedUser := &domain.User{
 		ID:           1,
@@ -355,13 +371,15 @@ func TestUpdateUserCorrect(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	assert.NoError(t, err)
 	assert.Equal(t, expectedUser, mockUser)
 	mockUR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
 }
 
 func TestUpdateUserZeroID(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:           0,
 		FirstName:    "Foo",
@@ -372,140 +390,171 @@ func TestUpdateUserZeroID(t *testing.T) {
 		ProfileColor: "FFFFFF",
 	}
 
-	ctx := context.TODO()
-
-	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("Update", ctx, mockUser).Return(nil)
-
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	err := US.Update(ctx, mockUser)
 
+	mockUR.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockUser).
+		Return(nil)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	err := US.Update(context.TODO(), mockUser)
 	expectedErr := domain.NewBadRequestErr("")
 	assert.ErrorAs(t, err, &expectedErr)
 	mockUR.AssertNotCalled(t, "Update")
+	mockURR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
 }
 
 func TestDeleteUserCorrectOnlyUser(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
 	}
 
-	ctx := context.TODO()
-
 	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).Return(nil)
-	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).Return(nil, nil)
-
 	mockURR := &mocks.MockUserRoleRepository{}
-	mockURR.On("DeleteByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).Return(nil)
-
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	_, err := US.Remove(ctx, mockUser, 0)
 
+	mockUR.
+		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(nil)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(nil, nil)
+	mockURR.
+		On("DeleteByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		Return(nil)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	deletedID, err := US.Remove(context.TODO(), mockUser, 0)
 	assert.NoError(t, err)
+	assert.Equal(t, mockUser.ID, deletedID)
 	mockUR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
 }
 
 func TestDeleteUserCorrectOtherUser(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.ADMIN,
 	}
-	var otherID int64 = 2
 
-	ctx := context.TODO()
-
-	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("Delete", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil)
-	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, nil)
-
+	otherID := int64(2)
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
-	mockURR.On("DeleteByUID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil)
-
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	_, err := US.Remove(ctx, mockUser, otherID)
 
+	mockUR.
+		On("Delete", mock.AnythingOfType("*context.emptyCtx"), otherID).
+		Return(nil)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).
+		Return(nil, nil)
+	mockURR.
+		On("DeleteByUID", mock.AnythingOfType("*context.emptyCtx"), otherID).
+		Return(nil)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	deletedID, err := US.Remove(context.TODO(), mockUser, otherID)
 	assert.NoError(t, err)
+	assert.Equal(t, otherID, deletedID)
 	mockUR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
 }
 
 func TestDeleteUserNotAuthorized(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
 	}
-	var otherID int64 = 2
 
-	ctx := context.TODO()
-
-	mockUR := new(mocks.MockUserRepository)
-
+	otherID := int64(2)
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	_, err := US.Remove(ctx, mockUser, otherID)
 
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	_, err := US.Remove(context.TODO(), mockUser, otherID)
 	expectedErr := domain.NewNotAuthorizedErr("")
 	assert.ErrorAs(t, err, &expectedErr)
 	mockUR.AssertNotCalled(t, "Delete")
 	mockUR.AssertNotCalled(t, "GetByID")
+	mockRR.AssertExpectations(t)
 }
 
 func TestDeleteUserNoRecord(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.ADMIN,
 	}
-	var otherID int64 = 2
 
-	ctx := context.TODO()
-
+	otherID := int64(2)
 	expectedErr := domain.NewRecordNotFoundErr("id", fmt.Sprint(otherID))
-	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, expectedErr)
-
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	_, err := US.Remove(ctx, mockUser, otherID)
 
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).
+		Return(nil, expectedErr)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	_, err := US.Remove(context.TODO(), mockUser, otherID)
 	assert.ErrorAs(t, err, &expectedErr)
-	mockUR.AssertCalled(t, "GetByID", ctx, otherID)
+	mockUR.AssertCalled(t, "GetByID", context.TODO(), otherID)
 	mockUR.AssertNotCalled(t, "Delete")
+	mockRR.AssertExpectations(t)
 }
 
 func TestDeleteUserInternalErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.ADMIN,
 	}
-	var otherID int64 = 2
-
-	ctx := context.TODO()
-
-	expectedErr := domain.NewInternalErr()
-	mockUR := new(mocks.MockUserRepository)
-	mockUR.On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(nil, nil)
-	mockUR.On("Delete", mock.AnythingOfType("*context.emptyCtx"), otherID).Return(expectedErr)
-
+	otherID := int64(2)
+	mockUR := &mocks.MockUserRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	_, err := US.Remove(ctx, mockUser, otherID)
+	expectedErr := domain.NewInternalErr()
 
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), otherID).
+		Return(nil, nil)
+	mockUR.
+		On("Delete", mock.AnythingOfType("*context.emptyCtx"), otherID).
+		Return(expectedErr)
+
+	US := service.NewUserService(mockUR, mockRR, mockURR)
+
+	_, err := US.Remove(context.TODO(), mockUser, otherID)
 	assert.ErrorAs(t, err, &expectedErr)
 	mockUR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
 }
 
 func TestDeleteUserDeleteUserRoleErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
@@ -522,7 +571,7 @@ func TestDeleteUserDeleteUserRoleErr(t *testing.T) {
 	mockURR.On("DeleteByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).Return(mockErr)
 
 	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
+	US := service.NewUserService(mockUR, mockRR, mockURR)
 	_, err := US.Remove(ctx, mockUser, 0)
 
 	assert.ErrorAs(t, err, &mockErr)
@@ -531,11 +580,15 @@ func TestDeleteUserDeleteUserRoleErr(t *testing.T) {
 }
 
 func TestAuthorizeCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		Email:    "Foo@Bar.com",
 		Password: "FooBar",
 	}
+
+	hashPass, err := util.Encrypt(mockUser.Password)
+	assert.NoError(t, err)
 
 	expectedUser := &domain.User{
 		ID:           1,
@@ -544,23 +597,20 @@ func TestAuthorizeCorrect(t *testing.T) {
 		Email:        "Foo@Bar.com",
 		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
+		Password:     hashPass,
 	}
 
-	hashPass, err := util.Encrypt(mockUser.Password)
-	assert.NoError(t, err)
-	expectedUser.Password = hashPass
+	mockUR := &mocks.MockUserRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockRR := &mocks.MockRoleRepository{}
 
-	mockUR := new(mocks.MockUserRepository)
 	mockUR.
 		On("GetByEmail", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email).
 		Return(expectedUser, nil)
 
-	ctx := context.TODO()
+	US := service.NewUserService(mockUR, mockRR, mockURR)
 
-	mockURR := &mocks.MockUserRoleRepository{}
-	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	user, err := US.Authorize(ctx, mockUser.Email, mockUser.Password)
+	user, err := US.Authorize(context.TODO(), mockUser.Email, mockUser.Password)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedUser, user)
 	mockUR.AssertExpectations(t)
@@ -568,25 +618,25 @@ func TestAuthorizeCorrect(t *testing.T) {
 }
 
 func TestAuthorizeNoUserFound(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		Email:    "Foobar@foo.com",
 		Password: "Foobar",
 	}
 
 	expectedErr := domain.NewRecordNotFoundErr("email", mockUser.Email)
-
 	mockUR := new(mocks.MockUserRepository)
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+
 	mockUR.
 		On("GetByEmail", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email).
 		Return(nil, expectedErr)
 
-	ctx := context.TODO()
+	US := service.NewUserService(mockUR, mockRR, mockURR)
 
-	mockURR := &mocks.MockUserRoleRepository{}
-	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	user, err := US.Authorize(ctx, mockUser.Email, mockUser.Password)
-
+	user, err := US.Authorize(context.TODO(), mockUser.Email, mockUser.Password)
 	assert.ErrorAs(t, err, &expectedErr)
 	assert.Nil(t, user)
 	mockUR.AssertExpectations(t)
@@ -595,10 +645,15 @@ func TestAuthorizeNoUserFound(t *testing.T) {
 }
 
 func TestAuthorizeNotAuthorized(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		Email:    "Foo@Bar.com",
 		Password: "FooBar",
 	}
+
+	hashPass, err := util.Encrypt("FooBar2")
+	assert.NoError(t, err)
 
 	expectedUser := &domain.User{
 		ID:           1,
@@ -607,25 +662,21 @@ func TestAuthorizeNotAuthorized(t *testing.T) {
 		Email:        "Foo@Bar.com",
 		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
+		Password:     hashPass,
 	}
 
 	expectedErr := domain.NewNotAuthorizedErr("email and/or password does not exist")
+	mockUR := &mocks.MockUserRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+	mockRR := &mocks.MockRoleRepository{}
 
-	hashPass, err := util.Encrypt("FooBar2")
-	assert.NoError(t, err)
-	expectedUser.Password = hashPass
-
-	mockUR := new(mocks.MockUserRepository)
 	mockUR.
 		On("GetByEmail", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email).
 		Return(expectedUser, nil)
 
-	ctx := context.TODO()
+	US := service.NewUserService(mockUR, mockRR, mockURR)
 
-	mockURR := &mocks.MockUserRoleRepository{}
-	mockRR := &mocks.MockRoleRepository{}
-	US := NewUserService(mockUR, mockRR, mockURR)
-	user, err := US.Authorize(ctx, mockUser.Email, mockUser.Password)
+	user, err := US.Authorize(context.TODO(), mockUser.Email, mockUser.Password)
 	assert.ErrorAs(t, err, &expectedErr)
 	assert.Nil(t, user)
 	mockUR.AssertExpectations(t)

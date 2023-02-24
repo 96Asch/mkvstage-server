@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -6,11 +6,13 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestStoreCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockBundle := &domain.Bundle{
 		Name:     "Foo",
@@ -22,26 +24,28 @@ func TestStoreCorrect(t *testing.T) {
 		Permission: domain.ADMIN,
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
 		Return(nil).
 		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.Bundle)
+			arg, ok := args.Get(1).(*domain.Bundle)
+			assert.True(t, ok)
 			arg.ID = 1
 		})
 
-	BS := NewBundleService(mockBR)
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
-	err := BS.Store(ctx, mockBundle, mockUser)
 
+	err := BS.Store(ctx, mockBundle, mockUser)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, mockBundle.ID)
 	mockBR.AssertExpectations(t)
-
 }
 
 func TestStoreNoClearance(t *testing.T) {
+	t.Parallel()
 
 	mockBundle := &domain.Bundle{
 		Name:     "Foo",
@@ -53,17 +57,19 @@ func TestStoreNoClearance(t *testing.T) {
 		Permission: domain.GUEST,
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
 	mockErr := domain.NewNotAuthorizedErr("")
-	BS := NewBundleService(mockBR)
-	ctx := context.TODO()
-	err := BS.Store(ctx, mockBundle, mockUser)
+	mockBR := &mocks.MockBundleRepository{}
 
+	BS := service.NewBundleService(mockBR)
+	ctx := context.TODO()
+
+	err := BS.Store(ctx, mockBundle, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
 	mockBR.AssertExpectations(t)
 }
 
 func TestStoreNegativeParentID(t *testing.T) {
+	t.Parallel()
 
 	mockBundle := &domain.Bundle{
 		Name:     "Foo",
@@ -75,17 +81,19 @@ func TestStoreNegativeParentID(t *testing.T) {
 		Permission: domain.ADMIN,
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
 	mockErr := domain.NewBadRequestErr("")
-	BS := NewBundleService(mockBR)
-	ctx := context.TODO()
-	err := BS.Store(ctx, mockBundle, mockUser)
+	mockBR := &mocks.MockBundleRepository{}
 
+	BS := service.NewBundleService(mockBR)
+	ctx := context.TODO()
+
+	err := BS.Store(ctx, mockBundle, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
 	mockBR.AssertExpectations(t)
 }
 
 func TestStoreParentNotExist(t *testing.T) {
+	t.Parallel()
 
 	mockBundle := &domain.Bundle{
 		Name:     "Foo",
@@ -97,43 +105,47 @@ func TestStoreParentNotExist(t *testing.T) {
 		Permission: domain.ADMIN,
 	}
 
-	mockErr := domain.NewRecordNotFoundErr("", "")
-	mockBR := new(mocks.MockBundleRepository)
+	mockErr := domain.NewBadRequestErr("")
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ParentID).
 		Return(nil, mockErr)
 
-	BS := NewBundleService(mockBR)
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
-	err := BS.Store(ctx, mockBundle, mockUser)
 
+	err := BS.Store(ctx, mockBundle, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
 	mockBR.AssertExpectations(t)
 }
 
 func TestFetchByID(t *testing.T) {
+	t.Parallel()
+
 	mockBundle := &domain.Bundle{
 		ID:       1,
 		Name:     "Foo",
 		ParentID: 1,
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(mockBundle, nil)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	bundle, err := BS.FetchByID(ctx, mockBundle.ID)
 	assert.NoError(t, err)
-
 	assert.Equal(t, mockBundle, bundle)
 	mockBR.AssertExpectations(t)
 }
 
 func TestFetchAll(t *testing.T) {
+	t.Parallel()
 
 	mockBundles := &[]domain.Bundle{
 		{
@@ -148,22 +160,23 @@ func TestFetchAll(t *testing.T) {
 		},
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(mockBundles, nil)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	bundles, err := BS.FetchAll(ctx)
 	assert.NoError(t, err)
-
 	assert.ElementsMatch(t, *mockBundles, *bundles)
 	mockBR.AssertExpectations(t)
 }
 
 func TestRemoveCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -185,7 +198,8 @@ func TestRemoveCorrect(t *testing.T) {
 		},
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(nil)
@@ -196,16 +210,16 @@ func TestRemoveCorrect(t *testing.T) {
 		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
 		Return(mockBundles, nil)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Remove(ctx, mockBundle.ID, mockUser)
 	assert.NoError(t, err)
-
 	mockBR.AssertExpectations(t)
 }
 
 func TestRemoveNotLeaf(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -226,7 +240,8 @@ func TestRemoveNotLeaf(t *testing.T) {
 		},
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(mockBundle, nil)
@@ -234,17 +249,17 @@ func TestRemoveNotLeaf(t *testing.T) {
 		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
 		Return(mockBundles, nil)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Remove(ctx, mockBundle.ID, mockUser)
 	mockErr := domain.NewBadRequestErr("")
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockBR.AssertExpectations(t)
 }
 
 func TestRemoveGetLeavesErr(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -258,8 +273,8 @@ func TestRemoveGetLeavesErr(t *testing.T) {
 	}
 
 	mockErr := domain.NewInternalErr()
+	mockBR := &mocks.MockBundleRepository{}
 
-	mockBR := new(mocks.MockBundleRepository)
 	mockBR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(mockBundle, nil)
@@ -267,16 +282,16 @@ func TestRemoveGetLeavesErr(t *testing.T) {
 		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
 		Return(nil, mockErr)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Remove(ctx, mockBundle.ID, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockBR.AssertExpectations(t)
 }
 
 func TestRemoveNoClearance(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -289,19 +304,19 @@ func TestRemoveNoClearance(t *testing.T) {
 		ParentID: 1,
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Remove(ctx, mockBundle.ID, mockUser)
 	mockErr := domain.NewNotAuthorizedErr("")
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockBR.AssertExpectations(t)
 }
 
 func TestDeleteNoRecord(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -315,21 +330,22 @@ func TestDeleteNoRecord(t *testing.T) {
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(nil, mockErr)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Remove(ctx, mockBundle.ID, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockBR.AssertExpectations(t)
 }
 
 func TestUpdateCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -342,7 +358,8 @@ func TestUpdateCorrect(t *testing.T) {
 		ParentID: 1,
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
 		Return(nil)
@@ -350,16 +367,16 @@ func TestUpdateCorrect(t *testing.T) {
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(mockBundle, nil)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Update(ctx, mockBundle, mockUser)
 	assert.NoError(t, err)
-
 	mockBR.AssertExpectations(t)
 }
 
 func TestUpdateNoRecord(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -373,21 +390,22 @@ func TestUpdateNoRecord(t *testing.T) {
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
-	mockBR := new(mocks.MockBundleRepository)
+	mockBR := &mocks.MockBundleRepository{}
+
 	mockBR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
 		Return(nil, mockErr)
 
-	BS := NewBundleService(mockBR)
-
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Update(ctx, mockBundle, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockBR.AssertExpectations(t)
 }
 
 func TestUpdateNoClearance(t *testing.T) {
+	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
@@ -400,14 +418,12 @@ func TestUpdateNoClearance(t *testing.T) {
 		ParentID: 1,
 	}
 
-	mockBR := new(mocks.MockBundleRepository)
-
-	BS := NewBundleService(mockBR)
-
+	mockBR := &mocks.MockBundleRepository{}
+	BS := service.NewBundleService(mockBR)
 	ctx := context.TODO()
+
 	err := BS.Update(ctx, mockBundle, mockUser)
 	mockErr := domain.NewNotAuthorizedErr("")
 	assert.ErrorAs(t, err, &mockErr)
-
 	mockBR.AssertExpectations(t)
 }

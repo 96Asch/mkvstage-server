@@ -1,15 +1,22 @@
-package util
+package util_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/util"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	secret = "secret"
+)
+
 func TestGenerateAccess(t *testing.T) {
+	t.Parallel()
+
 	user := &domain.User{
 		ID:        1,
 		FirstName: "Foo",
@@ -18,35 +25,35 @@ func TestGenerateAccess(t *testing.T) {
 	}
 
 	now := time.Now()
-	secret := "secret"
 
-	at, err := GenerateAccessToken(user, &domain.TokenConfig{
+	accessToken, err := util.GenerateAccessToken(user, &domain.TokenConfig{
 		IAT:         now,
 		ExpDuration: time.Second * time.Duration(15),
 		Secret:      secret,
 	})
 
 	assert.NoError(t, err)
-	assert.NotEmpty(t, at.Access)
+	assert.NotEmpty(t, accessToken.Access)
 }
 
 func TestGenerateRefresh(t *testing.T) {
-	var ID int64 = 1
+	t.Parallel()
 
+	ID := int64(1)
 	now := time.Now()
-	secret := "secret"
-
-	at, err := GenerateRefreshToken(ID, &domain.TokenConfig{
+	refreshToken, err := util.GenerateRefreshToken(ID, &domain.TokenConfig{
 		IAT:         now,
 		ExpDuration: time.Second * time.Duration(15),
 		Secret:      secret,
 	})
 
 	assert.NoError(t, err)
-	assert.NotEmpty(t, at.Refresh)
+	assert.NotEmpty(t, refreshToken.Refresh)
 }
 
 func TestVerifyAccessTokenCorrect(t *testing.T) {
+	t.Parallel()
+
 	user := &domain.User{
 		ID:        1,
 		FirstName: "Foo",
@@ -55,18 +62,16 @@ func TestVerifyAccessTokenCorrect(t *testing.T) {
 	}
 
 	now := time.Now()
-	secret := "secret"
-
-	at, err := GenerateAccessToken(user, &domain.TokenConfig{
+	accessToken, err := util.GenerateAccessToken(user, &domain.TokenConfig{
 		IAT:         now,
 		ExpDuration: time.Second * time.Duration(15),
 		Secret:      secret,
 	})
 
 	assert.NoError(t, err)
-	assert.NotEmpty(t, at.Access)
+	assert.NotEmpty(t, accessToken.Access)
 
-	claims, err := VerifyAccessToken(at.Access, secret)
+	claims, err := util.VerifyAccessToken(accessToken.Access, secret)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, claims.User)
@@ -75,9 +80,11 @@ func TestVerifyAccessTokenCorrect(t *testing.T) {
 }
 
 func TestVerifyAccessInvalidToken(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now()
 	secret := []byte("secret")
-	claims := refreshTokenClaims{
+	claims := util.RefreshTokenClaims{
 		UID: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -90,12 +97,14 @@ func TestVerifyAccessInvalidToken(t *testing.T) {
 	ss, err := token.SignedString(secret)
 	assert.NoError(t, err)
 
-	retClaims, err := VerifyAccessToken(ss, string(secret))
+	retClaims, err := util.VerifyAccessToken(ss, string(secret))
 	assert.Error(t, err)
 	assert.Nil(t, retClaims)
 }
 
 func TestVerifyRefreshTokenCorrect(t *testing.T) {
+	t.Parallel()
+
 	user := &domain.User{
 		ID:        1,
 		FirstName: "Foo",
@@ -104,18 +113,17 @@ func TestVerifyRefreshTokenCorrect(t *testing.T) {
 	}
 
 	now := time.Now()
-	secret := "secret"
 
-	at, err := GenerateRefreshToken(user.ID, &domain.TokenConfig{
+	refreshToken, err := util.GenerateRefreshToken(user.ID, &domain.TokenConfig{
 		IAT:         now,
 		ExpDuration: time.Second * time.Duration(15),
 		Secret:      secret,
 	})
 
 	assert.NoError(t, err)
-	assert.NotEmpty(t, at.Refresh)
+	assert.NotEmpty(t, refreshToken.Refresh)
 
-	claims, err := VerifyRefreshToken(at.Refresh, secret)
+	claims, err := util.VerifyRefreshToken(refreshToken.Refresh, secret)
 	assert.NoError(t, err)
 
 	assert.NotEmpty(t, claims.UID)
@@ -124,9 +132,11 @@ func TestVerifyRefreshTokenCorrect(t *testing.T) {
 }
 
 func TestVerifyRefreshInvalidToken(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now()
 	secret := []byte("secret")
-	claims := refreshTokenClaims{
+	claims := util.RefreshTokenClaims{
 		UID: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -139,7 +149,7 @@ func TestVerifyRefreshInvalidToken(t *testing.T) {
 	ss, err := token.SignedString(secret)
 	assert.NoError(t, err)
 
-	retClaims, err := VerifyRefreshToken(ss, string(secret))
+	retClaims, err := util.VerifyRefreshToken(ss, string(secret))
 	assert.Error(t, err)
 	assert.Nil(t, retClaims)
 }

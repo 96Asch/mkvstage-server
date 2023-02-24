@@ -9,10 +9,11 @@ import (
 type ErrType string
 
 const (
-	NotFound      ErrType = "ResourceNotFound"
-	BadRequest    ErrType = "BadRequest"
-	NotAuthorized ErrType = "NotAuthorized"
-	Internal      ErrType = "Internal"
+	NotFound       ErrType = "ResourceNotFound"
+	BadRequest     ErrType = "BadRequest"
+	NotAuthorized  ErrType = "NotAuthorized"
+	Internal       ErrType = "Internal"
+	Initialization ErrType = "Initialization"
 )
 
 type Error struct {
@@ -50,6 +51,7 @@ func Status(err error) int {
 	if errors.As(err, &e) {
 		return e.Status()
 	}
+
 	return http.StatusInternalServerError
 }
 
@@ -84,6 +86,13 @@ func NewNotAuthorizedErr(message string) *Error {
 func NewBadRequestErr(message string) *Error {
 	return &Error{
 		Type:    BadRequest,
+		Message: message,
+	}
+}
+
+func NewInitializationErr(message string) *Error {
+	return &Error{
+		Type:    Initialization,
 		Message: message,
 	}
 }

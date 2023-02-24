@@ -31,10 +31,18 @@ func (mh meHandler) Delete(ctx *gin.Context) {
 		return
 	}
 
-	user := val.(*domain.User)
+	tokenUser, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+		log.Println(newErr)
+
+		return
+	}
+
 	context := ctx.Request.Context()
 
-	id, err := mh.userService.Remove(context, user, dID.ID)
+	deletedUID, err := mh.userService.Remove(context, tokenUser, dID.ID)
 	if err != nil {
 		log.Println(err)
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
@@ -42,7 +50,7 @@ func (mh meHandler) Delete(ctx *gin.Context) {
 		return
 	}
 
-	if err := mh.tokenService.RemoveAllRefresh(context, id); err != nil {
+	if err := mh.tokenService.RemoveAllRefresh(context, deletedUID); err != nil {
 		log.Println(err)
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 

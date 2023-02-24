@@ -11,6 +11,7 @@ type bundleService struct {
 	br domain.BundleRepository
 }
 
+//revive:disable:unexported-return
 func NewBundleService(br domain.BundleRepository) *bundleService {
 	return &bundleService{
 		br: br,
@@ -18,11 +19,21 @@ func NewBundleService(br domain.BundleRepository) *bundleService {
 }
 
 func (bs bundleService) FetchByID(ctx context.Context, bid int64) (*domain.Bundle, error) {
-	return bs.br.GetByID(ctx, bid)
+	bundle, err := bs.br.GetByID(ctx, bid)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return bundle, nil
 }
 
 func (bs bundleService) FetchAll(ctx context.Context) (*[]domain.Bundle, error) {
-	return bs.br.GetAll(ctx)
+	bundles, err := bs.br.GetAll(ctx)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return bundles, nil
 }
 
 func (bs bundleService) Store(ctx context.Context, bundle *domain.Bundle, principal *domain.User) error {
@@ -37,11 +48,16 @@ func (bs bundleService) Store(ctx context.Context, bundle *domain.Bundle, princi
 	if bundle.ParentID > 0 {
 		_, err := bs.br.GetByID(ctx, bundle.ParentID)
 		if err != nil {
-			return err
+			return domain.FromError(err)
 		}
 	}
 
-	return bs.br.Create(ctx, bundle)
+	err := bs.br.Create(ctx, bundle)
+	if err != nil {
+		return domain.FromError(err)
+	}
+
+	return nil
 }
 
 func contains(bundles *[]domain.Bundle, bid int64) bool {
@@ -60,12 +76,12 @@ func (bs bundleService) Remove(ctx context.Context, bid int64, principal *domain
 	}
 
 	if _, err := bs.br.GetByID(ctx, bid); err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	leaves, err := bs.br.GetLeaves(ctx)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	log.Println(leaves)
@@ -74,7 +90,12 @@ func (bs bundleService) Remove(ctx context.Context, bid int64, principal *domain
 		return domain.NewBadRequestErr("given id is not a leaf bundle")
 	}
 
-	return bs.br.Delete(ctx, bid)
+	err = bs.br.Delete(ctx, bid)
+	if err != nil {
+		return domain.FromError(err)
+	}
+
+	return nil
 }
 
 func (bs bundleService) Update(ctx context.Context, bundle *domain.Bundle, principal *domain.User) error {
@@ -83,8 +104,13 @@ func (bs bundleService) Update(ctx context.Context, bundle *domain.Bundle, princ
 	}
 
 	if _, err := bs.br.GetByID(ctx, bundle.ID); err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
-	return bs.br.Update(ctx, bundle)
+	err := bs.br.Update(ctx, bundle)
+	if err != nil {
+		return domain.FromError(err)
+	}
+
+	return nil
 }

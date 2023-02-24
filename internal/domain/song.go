@@ -21,21 +21,22 @@ type Song struct {
 	DeletedAt  gorm.DeletedAt `json:"-"`
 }
 
-var validKeys = []string{
-	"C", "D", "E", "F", "G", "A", "B",
-	"Cm", "Dm", "Em", "Fm", "Gm", "Am", "Bm",
-	"C#", "D#", "F#", "G#", "A#",
-	"C#m", "D#m", "F#m", "G#m", "A#m",
-	"Db", "Eb", "Gb", "Ab", "Bb",
-	"Dbm", "Ebm", "Gbm", "Abm", "Bbm",
-}
-
 func (song Song) IsValidKey() bool {
+	validKeys := [...]string{
+		"C", "D", "E", "F", "G", "A", "B",
+		"Cm", "Dm", "Em", "Fm", "Gm", "Am", "Bm",
+		"C#", "D#", "F#", "G#", "A#",
+		"C#m", "D#m", "F#m", "G#m", "A#m",
+		"Db", "Eb", "Gb", "Ab", "Bb",
+		"Dbm", "Ebm", "Gbm", "Abm", "Bbm",
+	}
+
 	for _, val := range validKeys {
 		if song.Key == val {
 			return true
 		}
 	}
+
 	return false
 }
 

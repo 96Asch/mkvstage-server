@@ -12,6 +12,7 @@ type roleService struct {
 	urr domain.UserRoleRepository
 }
 
+//revive:disable:unexported-return
 func NewRoleService(rr domain.RoleRepository, ur domain.UserRepository, urr domain.UserRoleRepository) *roleService {
 	return &roleService{
 		rr:  rr,
@@ -23,7 +24,7 @@ func NewRoleService(rr domain.RoleRepository, ur domain.UserRepository, urr doma
 func (rs roleService) FetchByID(ctx context.Context, rid int64) (*domain.Role, error) {
 	role, err := rs.rr.GetByID(ctx, rid)
 	if err != nil {
-		return nil, err
+		return nil, domain.FromError(err)
 	}
 
 	return role, nil
@@ -32,11 +33,10 @@ func (rs roleService) FetchByID(ctx context.Context, rid int64) (*domain.Role, e
 func (rs roleService) FetchAll(ctx context.Context) (*[]domain.Role, error) {
 	role, err := rs.rr.GetAll(ctx)
 	if err != nil {
-		return nil, err
+		return nil, domain.FromError(err)
 	}
 
 	return role, nil
-
 }
 
 func (rs roleService) Update(ctx context.Context, role *domain.Role, principal *domain.User) error {
@@ -50,16 +50,15 @@ func (rs roleService) Update(ctx context.Context, role *domain.Role, principal *
 
 	_, err := rs.rr.GetByID(ctx, role.ID)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	err = rs.rr.Update(ctx, role)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	return nil
-
 }
 
 func (rs roleService) Store(ctx context.Context, role *domain.Role, principal *domain.User) error {
@@ -69,12 +68,12 @@ func (rs roleService) Store(ctx context.Context, role *domain.Role, principal *d
 
 	err := rs.rr.Create(ctx, role)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	users, err := rs.ur.GetAll(ctx)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	userroles := make([]domain.UserRole, len(*users))
@@ -87,7 +86,7 @@ func (rs roleService) Store(ctx context.Context, role *domain.Role, principal *d
 
 	err = rs.urr.CreateBatch(ctx, &userroles)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	return nil
@@ -100,12 +99,12 @@ func (rs roleService) Remove(ctx context.Context, rid int64, principal *domain.U
 
 	err := rs.rr.Delete(ctx, rid)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	err = rs.urr.DeleteByRID(ctx, rid)
 	if err != nil {
-		return err
+		return domain.FromError(err)
 	}
 
 	return nil

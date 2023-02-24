@@ -6,6 +6,7 @@ type ginMiddlewareHandler struct {
 	TS domain.TokenService
 }
 
+//revive:disable:unexported-return
 func NewGinMiddlewareHandler(ts domain.TokenService) *ginMiddlewareHandler {
 	return &ginMiddlewareHandler{
 		TS: ts,

@@ -10,6 +10,7 @@ type userRoleService struct {
 	urr domain.UserRoleRepository
 }
 
+//revive:disable:unexported-return
 func NewUserRoleService(urr domain.UserRoleRepository) *userRoleService {
 	return &userRoleService{
 		urr: urr,
@@ -17,11 +18,21 @@ func NewUserRoleService(urr domain.UserRoleRepository) *userRoleService {
 }
 
 func (urs userRoleService) FetchAll(ctx context.Context) (*[]domain.UserRole, error) {
-	return urs.urr.GetAll(ctx)
+	userrole, err := urs.urr.GetAll(ctx)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return userrole, nil
 }
 
 func (urs userRoleService) FetchByUser(ctx context.Context, user *domain.User) (*[]domain.UserRole, error) {
-	return urs.urr.GetByUID(ctx, user.ID)
+	userroles, err := urs.urr.GetByUID(ctx, user.ID)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return userroles, nil
 }
 
 func containsUserRole(userRoles *[]domain.UserRole, urid int64) bool {
@@ -30,6 +41,7 @@ func containsUserRole(userRoles *[]domain.UserRole, urid int64) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -39,13 +51,14 @@ func containsID(ids []int64, id int64) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 func (urs userRoleService) SetActiveBatch(ctx context.Context, urids []int64, principal *domain.User) (*[]domain.UserRole, error) {
 	userRoles, err := urs.urr.GetByUID(ctx, principal.ID)
 	if err != nil {
-		return nil, err
+		return nil, domain.FromError(err)
 	}
 
 	for _, urid := range urids {
@@ -55,8 +68,8 @@ func (urs userRoleService) SetActiveBatch(ctx context.Context, urids []int64, pr
 	}
 
 	toUpdateUserRoles := make([]domain.UserRole, 0)
-	for _, userrole := range *userRoles {
 
+	for _, userrole := range *userRoles {
 		if !userrole.Active && containsID(urids, userrole.ID) {
 			toUpdateUserRoles = append(toUpdateUserRoles, domain.UserRole{
 				ID:     userrole.ID,
@@ -84,7 +97,7 @@ func (urs userRoleService) SetActiveBatch(ctx context.Context, urids []int64, pr
 
 	err = urs.urr.UpdateBatch(ctx, &toUpdateUserRoles)
 	if err != nil {
-		return nil, err
+		return nil, domain.FromError(err)
 	}
 
 	return &toUpdateUserRoles, nil

@@ -24,6 +24,7 @@ func NewGormBundleRepository(db *gorm.DB) *gormBundleRepository {
 func (br gormBundleRepository) GetByID(ctx context.Context, bid int64) (*domain.Bundle, error) {
 	var bundle domain.Bundle
 	res := br.db.First(&bundle, bid)
+
 	if err := res.Error; err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -35,9 +36,11 @@ func (br gormBundleRepository) GetByID(ctx context.Context, bid int64) (*domain.
 
 	return &bundle, nil
 }
+
 func (br gormBundleRepository) GetAll(ctx context.Context) (*[]domain.Bundle, error) {
 	var bundles []domain.Bundle
 	res := br.db.Find(&bundles)
+
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
 	}
@@ -46,7 +49,6 @@ func (br gormBundleRepository) GetAll(ctx context.Context) (*[]domain.Bundle, er
 }
 
 func (br gormBundleRepository) GetLeaves(ctx context.Context) (*[]domain.Bundle, error) {
-
 	var bundles []domain.Bundle
 
 	res := br.db.Unscoped().
@@ -60,6 +62,7 @@ func (br gormBundleRepository) GetLeaves(ctx context.Context) (*[]domain.Bundle,
 
 	if err := res.Error; err != nil {
 		log.Println(err)
+
 		return nil, domain.NewInternalErr()
 	}
 
@@ -73,12 +76,13 @@ func (br gormBundleRepository) Create(ctx context.Context, bundle *domain.Bundle
 
 		if errors.As(err, &mysqlErr) {
 			switch mysqlErr.Number {
-			case 1062:
+			case domain.MySQLUniqueErr:
 				return domain.NewBadRequestErr(mysqlErr.Message)
 			default:
 				return domain.NewInternalErr()
 			}
 		}
+
 		return domain.NewInternalErr()
 	}
 
@@ -88,12 +92,14 @@ func (br gormBundleRepository) Create(ctx context.Context, bundle *domain.Bundle
 func (br gormBundleRepository) Delete(ctx context.Context, bid int64) error {
 	bundle := domain.Bundle{ID: bid}
 	res := br.db.Delete(&bundle)
+
 	if err := res.Error; err != nil {
 		return domain.NewInternalErr()
 	}
 
 	return nil
 }
+
 func (br gormBundleRepository) Update(ctx context.Context, bundle *domain.Bundle) error {
 	res := br.db.Save(bundle)
 	if err := res.Error; err != nil {

@@ -21,6 +21,15 @@ type Error struct {
 	Message string  `json:"message"`
 }
 
+func FromError(err error) *Error {
+	var e *Error
+	if errors.As(err, &e) {
+		return e
+	}
+
+	return NewInternalErr()
+}
+
 func (e *Error) Error() string {
 	return e.Message
 }

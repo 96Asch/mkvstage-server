@@ -1,19 +1,45 @@
-package userrolehandler
+package userrolehandler_test
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/userrolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
+func prepareAndServeGet(
+	t *testing.T,
+	mockURS domain.UserRoleService,
+	mockMWH domain.MiddlewareHandler,
+	param string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	userrolehandler.Initialize(&router.RouterGroup, mockURS, mockMWH)
+
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, fmt.Sprintf("/userroles%s", param), nil)
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
 func TestMeCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockUserRoles := &[]domain.UserRole{
 		{
@@ -34,91 +60,86 @@ func TestMeCorrect(t *testing.T) {
 	}
 
 	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockURS := &mocks.MockUserRoleService{}
+
 	var mockAuth gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuth)
 
-	mockURS := &mocks.MockUserRoleService{}
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuth)
 	mockURS.
 		On("FetchByUser", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(mockUserRoles, nil)
 
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodGet, "/userroles/me", nil)
-	assert.NoError(t, err)
-
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockURS, mockMWH)
-	gin.SetMode(gin.TestMode)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
+	writer := prepareAndServeGet(t, mockURS, mockMWH, "/me")
 
 	bytebody, err := json.Marshal(gin.H{"user_roles": mockUserRoles})
 	assert.NoError(t, err)
-	assert.Equal(t, bytebody, w.Body.Bytes())
+
+	assert.Equal(t, http.StatusOK, writer.Code)
+	assert.Equal(t, bytebody, writer.Body.Bytes())
+	mockMWH.AssertExpectations(t)
 	mockURS.AssertExpectations(t)
 }
 
 func TestMeNoContext(t *testing.T) {
+	t.Parallel()
+
+	mockErr := domain.NewInternalErr()
 	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockURS := &mocks.MockUserRoleService{}
+
 	var mockAuth gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuth)
 
-	mockURS := &mocks.MockUserRoleService{}
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuth)
 
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodGet, "/userroles/me", nil)
-	assert.NoError(t, err)
+	writer := prepareAndServeGet(t, mockURS, mockMWH, "/me")
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockURS, mockMWH)
-	gin.SetMode(gin.TestMode)
-	router.ServeHTTP(w, req)
-
-	mockErr := domain.NewInternalErr()
-	assert.Equal(t, domain.Status(mockErr), w.Code)
+	assert.Equal(t, domain.Status(mockErr), writer.Code)
+	mockMWH.AssertExpectations(t)
 	mockURS.AssertExpectations(t)
 }
 
 func TestMeFetchErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.ADMIN,
 	}
 
 	mockErr := domain.NewInternalErr()
-
 	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockURS := &mocks.MockUserRoleService{}
+
 	var mockAuth gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH.On("AuthenticateUser").Return(mockAuth)
 
-	mockURS := &mocks.MockUserRoleService{}
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuth)
 	mockURS.
 		On("FetchByUser", mock.AnythingOfType("*context.emptyCtx"), mockUser).
 		Return(nil, mockErr)
 
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodGet, "/userroles/me", nil)
-	assert.NoError(t, err)
+	writer := prepareAndServeGet(t, mockURS, mockMWH, "/me")
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockURS, mockMWH)
-	gin.SetMode(gin.TestMode)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, domain.Status(mockErr), w.Code)
+	assert.Equal(t, domain.Status(mockErr), writer.Code)
 	mockURS.AssertExpectations(t)
+	mockMWH.AssertExpectations(t)
 }
 
 func TestGetAllCorrect(t *testing.T) {
+	t.Parallel()
 
 	mockUserRoles := &[]domain.UserRole{
 		{
@@ -144,49 +165,42 @@ func TestGetAllCorrect(t *testing.T) {
 	}
 
 	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockMWH.On("AuthenticateUser").Return(nil)
 	mockURS := &mocks.MockUserRoleService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(nil)
 	mockURS.
 		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(mockUserRoles, nil)
 
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodGet, "/userroles", nil)
+	writer := prepareAndServeGet(t, mockURS, mockMWH, "")
+
+	expBody, err := json.Marshal(gin.H{"user_roles": mockUserRoles})
 	assert.NoError(t, err)
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockURS, mockMWH)
-	gin.SetMode(gin.TestMode)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-
-	bytebody, err := json.Marshal(gin.H{"user_roles": mockUserRoles})
-	assert.NoError(t, err)
-	assert.Equal(t, bytebody, w.Body.Bytes())
+	assert.Equal(t, expBody, writer.Body.Bytes())
+	assert.Equal(t, http.StatusOK, writer.Code)
+	mockMWH.AssertExpectations(t)
 	mockURS.AssertExpectations(t)
 }
 
 func TestGetAllFetchErr(t *testing.T) {
+	t.Parallel()
+
 	mockErr := domain.NewInternalErr()
-
 	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockMWH.On("AuthenticateUser").Return(nil)
-
 	mockURS := &mocks.MockUserRoleService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(nil)
 	mockURS.
 		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
 		Return(nil, mockErr)
 
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodGet, "/userroles", nil)
-	assert.NoError(t, err)
+	writer := prepareAndServeGet(t, mockURS, mockMWH, "")
 
-	router := gin.New()
-	Initialize(&router.RouterGroup, mockURS, mockMWH)
-	gin.SetMode(gin.TestMode)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, domain.Status(mockErr), w.Code)
+	assert.Equal(t, domain.Status(mockErr), writer.Code)
 	mockURS.AssertExpectations(t)
 }

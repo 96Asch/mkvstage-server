@@ -10,13 +10,12 @@ type userRoleHandler struct {
 }
 
 func Initialize(group *gin.RouterGroup, urs domain.UserRoleService, mwh domain.MiddlewareHandler) {
-
-	urh := &userRoleHandler{
+	userrolehandler := &userRoleHandler{
 		urs: urs,
 	}
 
 	userroles := group.Group("userroles")
-	userroles.PATCH("update", mwh.AuthenticateUser(), urh.UpdateBatch)
-	userroles.GET("me", mwh.AuthenticateUser(), urh.Me)
-	userroles.GET("", urh.GetAll)
+	userroles.PATCH("update", mwh.AuthenticateUser(), userrolehandler.UpdateBatch)
+	userroles.GET("me", mwh.AuthenticateUser(), userrolehandler.Me)
+	userroles.GET("", userrolehandler.GetAll)
 }

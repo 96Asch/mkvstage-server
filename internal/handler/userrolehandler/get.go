@@ -12,12 +12,20 @@ func (urh userRoleHandler) Me(ctx *gin.Context) {
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
-	user := val.(*domain.User)
+	user, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
 
 	context := ctx.Request.Context()
+
 	userroles, err := urh.urs.FetchByUser(context, user)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
@@ -29,6 +37,7 @@ func (urh userRoleHandler) Me(ctx *gin.Context) {
 
 func (urh userRoleHandler) GetAll(ctx *gin.Context) {
 	context := ctx.Request.Context()
+
 	userroles, err := urh.urs.FetchAll(context)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})

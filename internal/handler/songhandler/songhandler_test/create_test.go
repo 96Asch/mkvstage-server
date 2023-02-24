@@ -1,7 +1,8 @@
-package songhandler
+package songhandler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,13 +10,45 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/datatypes"
 )
 
+func prepareAndServeCreate(
+	t *testing.T,
+	mockSS domain.SongService,
+	mockMWH domain.MiddlewareHandler,
+	body *[]byte,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	songhandler.Initialize(&router.RouterGroup, mockSS, mockMWH)
+
+	requestBody := bytes.NewReader(*body)
+
+	req, err := http.NewRequestWithContext(
+		context.TODO(),
+		http.MethodPost,
+		"/songs/create",
+		requestBody,
+	)
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
 func TestCreateCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
@@ -31,18 +64,23 @@ func TestCreateCorrect(t *testing.T) {
 		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockSS := &mocks.MockSongService{}
+
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
-	mockSS := &mocks.MockSongService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 	mockSS.
 		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.Song)
+			arg, ok := args.Get(1).(*domain.Song)
+			assert.True(t, ok)
 			arg.ID = 1
 		})
 
@@ -57,42 +95,31 @@ func TestCreateCorrect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	gin.SetMode(gin.TestMode)
-
-	router := gin.New()
-	reqBody := bytes.NewReader(byteBody)
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", reqBody)
-	assert.NoError(t, err)
-
-	Initialize(&router.RouterGroup, mockSS, mockMWH)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusCreated, w.Code)
+	writer := prepareAndServeCreate(t, mockSS, mockMWH, &byteBody)
 	mockSong.ID = 1
 
 	expectedBytes, err := json.Marshal(gin.H{"song": mockSong})
 	assert.NoError(t, err)
-	assert.Equal(t, expectedBytes, w.Body.Bytes())
+
+	assert.Equal(t, http.StatusCreated, writer.Code)
+	assert.Equal(t, expectedBytes, writer.Body.Bytes())
 	mockSS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestCreateNoContext(t *testing.T) {
+	t.Parallel()
 
+	mockMWH := &mocks.MockMiddlewareHandler{}
 	mockSS := &mocks.MockSongService{}
-
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockSS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 
 	byteBody, err := json.Marshal(gin.H{
 		"title":       "Foo",
@@ -105,19 +132,16 @@ func TestCreateNoContext(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
+	writer := prepareAndServeCreate(t, mockSS, mockMWH, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusInternalServerError, writer.Code)
 	mockSS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestCreateBindErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		FirstName:  "Foo",
@@ -126,20 +150,18 @@ func TestCreateBindErr(t *testing.T) {
 		Permission: domain.GUEST,
 	}
 
-	mockSS := new(mocks.MockSongService)
-
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockSS := &mocks.MockSongService{}
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockSS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
 	byteBody, err := json.Marshal(gin.H{
 		"title":       "Foo",
 		"subtitle":    "Bar",
@@ -150,19 +172,15 @@ func TestCreateBindErr(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
-
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	writer := prepareAndServeCreate(t, mockSS, mockMWH, &byteBody)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
 	mockSS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestCreateStoreErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		FirstName:  "Foo",
@@ -181,23 +199,21 @@ func TestCreateStoreErr(t *testing.T) {
 	}
 
 	mockErr := domain.NewBadRequestErr("")
+	mockMWH := new(mocks.MockMiddlewareHandler)
 	mockSS := new(mocks.MockSongService)
-	mockSS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
-		Return(mockErr)
-
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockSS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+	mockSS.
+		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
+		Return(mockErr)
+
 	byteBody, err := json.Marshal(gin.H{
 		"title":       "Foo",
 		"subtitle":    "Bar",
@@ -209,14 +225,8 @@ func TestCreateStoreErr(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
-
-	req, err := http.NewRequest(http.MethodPost, "/songs/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, domain.Status(mockErr), w.Code)
+	writer := prepareAndServeCreate(t, mockSS, mockMWH, &byteBody)
+	assert.Equal(t, domain.Status(mockErr), writer.Code)
 	mockSS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }

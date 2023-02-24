@@ -12,18 +12,19 @@ type userHandler struct {
 	tokenService domain.TokenService
 }
 
-func Initialize(rg *gin.RouterGroup, us domain.UserService, ts domain.TokenService) *gin.RouterGroup {
+func Initialize(group *gin.RouterGroup, us domain.UserService, ts domain.TokenService) *gin.RouterGroup {
 	log.Println("Setting up user handlers")
-	uh := &userHandler{
+
+	userhandler := &userHandler{
 		userService:  us,
 		tokenService: ts,
 	}
 
-	users := rg.Group("users")
+	users := group.Group("users")
 
-	users.GET("", uh.GetAll)
-	users.POST("/create", uh.Create)
-	users.POST("/login", uh.Login)
+	users.GET("", userhandler.GetAll)
+	users.POST("/create", userhandler.Create)
+	users.POST("/login", userhandler.Login)
 
 	return users
 }

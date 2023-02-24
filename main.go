@@ -52,6 +52,7 @@ func run(config *handler.Config) {
 	// the request it is currently handling
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown: ", err)
 	}
@@ -59,17 +60,25 @@ func run(config *handler.Config) {
 	log.Println("Server exiting")
 }
 
-func setupMigrations(db *gorm.DB) {
-
-	domains := [...]any{
+func setupMigrations(gormDatabase *gorm.DB) error {
+	models := [...]any{
 		&domain.User{},
+		&domain.Bundle{},
+		&domain.Song{},
+		&domain.Role{},
+		&domain.UserRole{},
 	}
 
-	for _, domain := range domains {
-		log.Printf("Inserting table %s", reflect.TypeOf(domain))
-		db.AutoMigrate(domain)
+	for _, model := range models {
+		log.Printf("Inserting table %s", reflect.TypeOf(model))
+
+		err := gormDatabase.AutoMigrate(model)
+		if err != nil {
+			return domain.NewInitializationErr(err.Error())
+		}
 	}
 
+	return nil
 }
 
 func setupStore() (*gorm.DB, *redis.Client) {
@@ -79,48 +88,62 @@ func setupStore() (*gorm.DB, *redis.Client) {
 	dbUser := os.Getenv("MYSQL_USER")
 	dbPass := os.Getenv("MYSQL_PASS")
 
-	var db *gorm.DB
+	var gormDatabase *gorm.DB
+
 	var err error
-	db, err = store.GetDB(dbUser, dbPass, dbHost, dbPort, dbName)
+
+	gormDatabase, err = store.GetDB(dbUser, dbPass, dbHost, dbPort, dbName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	setupMigrations(db)
+	err = setupMigrations(gormDatabase)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 
-	var rdb *redis.Client
-	rdb, err = store.GetRedis(redisHost, redisPort)
+	rdb, err := store.GetRedis(redisHost, redisPort)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return db, rdb
+	return gormDatabase, rdb
 }
 
 func main() {
-
 	router := gin.Default()
-	db, rdb := setupStore()
+	database, tokenDatabase := setupStore()
 
 	accessSecret := os.Getenv("ACCESS_SECRET")
 	refreshSecret := os.Getenv("REFRESH_SECRET")
 
-	ur := repository.NewGormUserRepository(db)
-	us := service.NewUserService(ur)
+	userRepo := repository.NewGormUserRepository(database)
+	tokenRepo := repository.NewRedisTokenRepository(tokenDatabase)
+	bundleRepo := repository.NewGormBundleRepository(database)
+	songRepo := repository.NewGormSongRepository(database)
+	userroleRepo := repository.NewGormUserRoleRepository(database)
+	roleRepo := repository.NewGormRoleRepository(database)
 
-	tr := repository.NewRedisTokenRepository(rdb)
-	ts := service.NewTokenService(tr, ur, accessSecret, refreshSecret)
-
-	mhw := middleware.NewGinMiddlewareHandler(ts)
+	userService := service.NewUserService(userRepo, roleRepo, userroleRepo)
+	tokenService := service.NewTokenService(tokenRepo, userRepo, accessSecret, refreshSecret)
+	mhw := middleware.NewGinMiddlewareHandler(tokenService)
+	bundleService := service.NewBundleService(bundleRepo)
+	songService := service.NewSongService(userRepo, songRepo)
+	userroleService := service.NewUserRoleService(userroleRepo)
+	roleService := service.NewRoleService(roleRepo, userRepo, userroleRepo)
 
 	config := handler.Config{
 		Router: router,
-		U:      us,
-		T:      ts,
+		U:      userService,
+		T:      tokenService,
 		MH:     mhw,
+		B:      bundleService,
+		S:      songService,
+		R:      roleService,
+		UR:     userroleService,
 	}
 
 	run(&config)

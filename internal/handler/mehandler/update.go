@@ -14,11 +14,12 @@ type updateUser struct {
 	ProfileColor string `json:"profile_color" binding:"required"`
 }
 
-func (uh *meHandler) Update(ctx *gin.Context) {
+func (mh meHandler) Update(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
 		err := domain.NewInternalErr()
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 
@@ -26,21 +27,31 @@ func (uh *meHandler) Update(ctx *gin.Context) {
 	if err := ctx.BindJSON(&uUser); err != nil {
 		newError := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newError), gin.H{"error": newError})
+
+		return
+	}
+
+	tokenUser, ok := val.(*domain.User)
+	if !ok {
+		err := domain.NewInternalErr()
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 
 	user := domain.User{
-		ID:           val.(*domain.User).ID,
+		ID:           tokenUser.ID,
 		Password:     uUser.Password,
 		FirstName:    uUser.FirstName,
 		LastName:     uUser.LastName,
-		Permission:   val.(*domain.User).Permission,
+		Permission:   tokenUser.Permission,
 		ProfileColor: uUser.ProfileColor,
 	}
 
 	context := ctx.Request.Context()
-	if err := uh.userService.Update(context, &user); err != nil {
+	if err := mh.userService.Update(context, &user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

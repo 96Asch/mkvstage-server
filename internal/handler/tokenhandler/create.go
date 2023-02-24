@@ -16,6 +16,7 @@ func (th tokenHandler) CreateAccess(ctx *gin.Context) {
 	if err := ctx.BindJSON(&req); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 

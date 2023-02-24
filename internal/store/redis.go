@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -18,8 +19,10 @@ func GetRedis(host, port string) (*redis.Client, error) {
 
 	_, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
-		return nil, err
+		return nil, domain.NewInitializationErr(err.Error())
 	}
+
 	log.Println("Connection to Redis succeeded!")
+
 	return rdb, nil
 }

@@ -15,12 +15,12 @@ type newUser struct {
 	ProfileColor string `json:"profile_color" binding:"required"`
 }
 
-func (u *userHandler) Create(ctx *gin.Context) {
-
+func (uh userHandler) Create(ctx *gin.Context) {
 	var nUser newUser
 	if err := ctx.BindJSON(&nUser); err != nil {
 		newError := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newError), gin.H{"error": newError})
+
 		return
 	}
 
@@ -34,7 +34,7 @@ func (u *userHandler) Create(ctx *gin.Context) {
 	}
 
 	context := ctx.Request.Context()
-	if err := u.userService.Store(context, &user); err != nil {
+	if err := uh.userService.Store(context, &user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}

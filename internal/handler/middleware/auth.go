@@ -9,18 +9,7 @@ type tokenHeader struct {
 	Access string `header:"Authorization"`
 }
 
-type GinMiddlewareHandler struct {
-	TS domain.TokenService
-}
-
-func NewGinMiddlewareHandler(ts domain.TokenService) *GinMiddlewareHandler {
-	return &GinMiddlewareHandler{
-		TS: ts,
-	}
-}
-
-func (gmh GinMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
-
+func (gmh ginMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		header := tokenHeader{}
 
@@ -28,19 +17,21 @@ func (gmh GinMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
 			newErr := domain.NewBadRequestErr(err.Error())
 			ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
 			ctx.Abort()
+
 			return
 		}
 
 		context := ctx.Request.Context()
+
 		user, err := gmh.TS.ExtractUser(context, header.Access)
 		if err != nil {
 			ctx.JSON(domain.Status(err), gin.H{"error": err})
 			ctx.Abort()
+
 			return
 		}
 
 		ctx.Set("user", user)
 		ctx.Next()
 	}
-
 }

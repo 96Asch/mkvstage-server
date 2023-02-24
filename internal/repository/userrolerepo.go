@@ -14,6 +14,7 @@ type gormUserRoleRepository struct {
 	db *gorm.DB
 }
 
+//revive:disable:unexported-return
 func NewGormUserRoleRepository(db *gorm.DB) *gormUserRoleRepository {
 	return &gormUserRoleRepository{
 		db: db,
@@ -22,6 +23,7 @@ func NewGormUserRoleRepository(db *gorm.DB) *gormUserRoleRepository {
 
 func (urr gormUserRoleRepository) GetByID(ctx context.Context, urid int64) (*domain.UserRole, error) {
 	var role domain.UserRole
+
 	res := urr.db.Preload("User").Preload("Role").First(&role, urid)
 	if err := res.Error; err != nil {
 		switch {
@@ -37,6 +39,7 @@ func (urr gormUserRoleRepository) GetByID(ctx context.Context, urid int64) (*dom
 
 func (urr gormUserRoleRepository) GetAll(ctx context.Context) (*[]domain.UserRole, error) {
 	var userroles []domain.UserRole
+
 	res := urr.db.Preload("User").Preload("Role").Find(&userroles)
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
@@ -47,6 +50,7 @@ func (urr gormUserRoleRepository) GetAll(ctx context.Context) (*[]domain.UserRol
 
 func (urr gormUserRoleRepository) GetByUID(ctx context.Context, uid int64) (*[]domain.UserRole, error) {
 	var userroles []domain.UserRole
+
 	res := urr.db.Preload("User").Preload("Role").Where("user_id = ?", uid).Find(&userroles)
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()

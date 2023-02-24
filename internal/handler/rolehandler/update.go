@@ -18,14 +18,17 @@ func (rh roleHandler) UpdateByID(ctx *gin.Context) {
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	idField := ctx.Params.ByName("id")
-	id, err := strconv.Atoi(idField)
+
+	roleID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -33,16 +36,24 @@ func (rh roleHandler) UpdateByID(ctx *gin.Context) {
 	if err := ctx.BindJSON(&rReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	role := &domain.Role{
-		ID:          int64(id),
+		ID:          int64(roleID),
 		Name:        rReq.Name,
 		Description: rReq.Description,
 	}
 
-	user := val.(*domain.User)
+	user, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
+
 	context := ctx.Request.Context()
 	if err := rh.rs.Update(context, role, user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})

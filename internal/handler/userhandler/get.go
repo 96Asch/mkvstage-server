@@ -7,9 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (us *userHandler) GetAll(ctx *gin.Context) {
+func (uh *userHandler) GetAll(ctx *gin.Context) {
 	context := ctx.Request.Context()
-	users, err := us.userService.FetchAll(context)
+
+	users, err := uh.userService.FetchAll(context)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return

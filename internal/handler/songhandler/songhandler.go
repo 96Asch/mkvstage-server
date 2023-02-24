@@ -10,15 +10,14 @@ type songHandler struct {
 }
 
 func Initialize(group *gin.RouterGroup, ss domain.SongService, mwh domain.MiddlewareHandler) {
-
-	sh := &songHandler{
+	songhandler := &songHandler{
 		ss: ss,
 	}
 
 	songs := group.Group("songs")
-	songs.POST("create", mwh.AuthenticateUser(), sh.Create)
-	songs.GET("", sh.GetAll)
-	songs.GET(":id", sh.GetByID)
-	songs.DELETE(":id/delete", mwh.AuthenticateUser(), sh.DeleteByID)
-	songs.PUT(":id/update", mwh.AuthenticateUser(), sh.UpdateByID)
+	songs.POST("create", mwh.AuthenticateUser(), songhandler.Create)
+	songs.GET("", songhandler.GetAll)
+	songs.GET(":id", songhandler.GetByID)
+	songs.DELETE(":id/delete", mwh.AuthenticateUser(), songhandler.DeleteByID)
+	songs.PUT(":id/update", mwh.AuthenticateUser(), songhandler.UpdateByID)
 }

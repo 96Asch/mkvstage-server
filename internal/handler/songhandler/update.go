@@ -24,14 +24,17 @@ func (sh songHandler) UpdateByID(ctx *gin.Context) {
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	idField := ctx.Params.ByName("id")
-	id, err := strconv.Atoi(idField)
+
+	songID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -39,13 +42,21 @@ func (sh songHandler) UpdateByID(ctx *gin.Context) {
 	if err := ctx.BindJSON(&sReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
-	user := val.(*domain.User)
+	user, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
+
 	context := ctx.Request.Context()
 	song := &domain.Song{
-		ID:         int64(id),
+		ID:         int64(songID),
 		BundleID:   sReq.BundleID,
 		CreatorID:  sReq.CreatorID,
 		Title:      sReq.Title,

@@ -23,6 +23,7 @@ func (sh songHandler) Create(ctx *gin.Context) {
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -30,10 +31,18 @@ func (sh songHandler) Create(ctx *gin.Context) {
 	if err := ctx.BindJSON(&sReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
-	user := val.(*domain.User)
+	user, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
+
 	context := ctx.Request.Context()
 	song := &domain.Song{
 		BundleID:   sReq.BundleID,

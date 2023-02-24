@@ -9,24 +9,23 @@ import (
 	"github.com/google/uuid"
 )
 
-type accessTokenClaims struct {
+type AccessTokenClaims struct {
 	User *domain.User `json:"user"`
 	jwt.RegisteredClaims
 }
 
-type refreshTokenClaims struct {
+type RefreshTokenClaims struct {
 	UID int64 `json:"uid"`
 	jwt.RegisteredClaims
 }
 
 func GenerateAccessToken(user *domain.User, config *domain.TokenConfig) (*domain.AccessToken, error) {
-
-	id, err := uuid.NewRandom()
+	accessUUID, err := uuid.NewRandom()
 	if err != nil {
 		return nil, errors.New("could not generate a uuid")
 	}
 
-	claims := accessTokenClaims{
+	claims := AccessTokenClaims{
 		User: &domain.User{
 			ID:           user.ID,
 			FirstName:    user.FirstName,
@@ -38,11 +37,12 @@ func GenerateAccessToken(user *domain.User, config *domain.TokenConfig) (*domain
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(config.IAT),
 			ExpiresAt: jwt.NewNumericDate(config.IAT.Add(config.ExpDuration)),
-			ID:        id.String(),
+			ID:        accessUUID.String(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
 	ss, err := token.SignedString([]byte(config.Secret))
 	if err != nil {
 		return nil, errors.New("could not sign token")
@@ -52,48 +52,48 @@ func GenerateAccessToken(user *domain.User, config *domain.TokenConfig) (*domain
 }
 
 func GenerateRefreshToken(uid int64, config *domain.TokenConfig) (*domain.RefreshToken, error) {
-
-	id, err := uuid.NewRandom()
+	refreshUUID, err := uuid.NewRandom()
 	if err != nil {
 		return nil, errors.New("could not generate a uuid")
 	}
 
-	claims := refreshTokenClaims{
+	claims := RefreshTokenClaims{
 		UID: uid,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(config.IAT),
 			ExpiresAt: jwt.NewNumericDate(config.IAT.Add(config.ExpDuration)),
-			ID:        id.String(),
+			ID:        refreshUUID.String(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := token.SignedString([]byte(config.Secret))
+
+	signedRefreshToken, err := token.SignedString([]byte(config.Secret))
 	if err != nil {
 		return nil, errors.New("could not sign token")
 	}
 
 	return &domain.RefreshToken{
 		UserID:             uid,
-		ID:                 id,
-		Refresh:            ss,
+		ID:                 refreshUUID,
+		Refresh:            signedRefreshToken,
 		ExpirationDuration: config.ExpDuration,
 	}, nil
 }
 
-func VerifyAccessToken(tokenString, secret string) (*accessTokenClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &accessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+func VerifyAccessToken(tokenString, secret string) (*AccessTokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	if !token.Valid {
 		return nil, errors.New("token is not valid")
 	}
 
-	claims, ok := token.Claims.(*accessTokenClaims)
+	claims, ok := token.Claims.(*AccessTokenClaims)
 	if !ok {
 		return nil, fmt.Errorf("could not cast claims to accesstokenclaims")
 	}
@@ -101,19 +101,19 @@ func VerifyAccessToken(tokenString, secret string) (*accessTokenClaims, error) {
 	return claims, nil
 }
 
-func VerifyRefreshToken(tokenString, secret string) (*refreshTokenClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &refreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+func VerifyRefreshToken(tokenString, secret string) (*RefreshTokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	if !token.Valid {
 		return nil, errors.New("token is not valid")
 	}
 
-	claims, ok := token.Claims.(*refreshTokenClaims)
+	claims, ok := token.Claims.(*RefreshTokenClaims)
 	if !ok {
 		return nil, fmt.Errorf("could not cast claims to accesstokenclaims")
 	}

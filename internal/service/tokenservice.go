@@ -15,6 +15,7 @@ type tokenService struct {
 	refreshSecret string
 }
 
+//revive:disable:unexported-return
 func NewTokenService(tr domain.TokenRepository, ur domain.UserRepository, accessSecret, refreshSecret string) *tokenService {
 	return &tokenService{
 		tokenRepo:     tr,
@@ -25,12 +26,13 @@ func NewTokenService(tr domain.TokenRepository, ur domain.UserRepository, access
 }
 
 func (ts tokenService) ExtractUser(ctx context.Context, access string) (*domain.User, error) {
-	at, err := util.VerifyAccessToken(access, ts.accessSecret)
+	accessToken, err := util.VerifyAccessToken(access, ts.accessSecret)
 
 	if err != nil {
 		return nil, domain.NewNotAuthorizedErr(err.Error())
 	}
-	return at.User, nil
+
+	return accessToken.User, nil
 }
 
 func containsRefreshToken(tokens *[]domain.RefreshToken, refresh string) bool {
@@ -39,11 +41,11 @@ func containsRefreshToken(tokens *[]domain.RefreshToken, refresh string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 func (ts tokenService) CreateAccess(ctx context.Context, currentRefresh string) (*domain.AccessToken, error) {
-
 	if currentRefresh == "" {
 		return nil, domain.NewBadRequestErr("no token provided")
 	}
@@ -55,7 +57,7 @@ func (ts tokenService) CreateAccess(ctx context.Context, currentRefresh string) 
 
 	refreshTokens, err := ts.tokenRepo.GetAll(ctx, claims.UID)
 	if err != nil {
-		return nil, err
+		return nil, domain.FromError(err)
 	}
 
 	if !containsRefreshToken(refreshTokens, currentRefresh) {
@@ -64,7 +66,7 @@ func (ts tokenService) CreateAccess(ctx context.Context, currentRefresh string) 
 
 	user, err := ts.userRepo.GetByID(ctx, claims.UID)
 	if err != nil {
-		return nil, err
+		return nil, domain.FromError(err)
 	}
 
 	config := domain.TokenConfig{
@@ -82,7 +84,6 @@ func (ts tokenService) CreateAccess(ctx context.Context, currentRefresh string) 
 }
 
 func (ts tokenService) CreateRefresh(ctx context.Context, uid int64, currentRefresh string) (*domain.RefreshToken, error) {
-
 	// if currentToken is provided, delete the token if the token is not valid,
 	// otherwise return the given token
 	if currentRefresh != "" {
@@ -117,9 +118,19 @@ func (ts tokenService) CreateRefresh(ctx context.Context, uid int64, currentRefr
 }
 
 func (ts tokenService) RemoveRefresh(ctx context.Context, uid int64, refresh string) error {
-	return ts.tokenRepo.Delete(ctx, uid, refresh)
+	err := ts.tokenRepo.Delete(ctx, uid, refresh)
+	if err != nil {
+		return domain.FromError(err)
+	}
+
+	return nil
 }
 
 func (ts tokenService) RemoveAllRefresh(ctx context.Context, uid int64) error {
-	return ts.tokenRepo.DeleteAll(ctx, uid)
+	err := ts.tokenRepo.DeleteAll(ctx, uid)
+	if err != nil {
+		return domain.FromError(err)
+	}
+
+	return nil
 }

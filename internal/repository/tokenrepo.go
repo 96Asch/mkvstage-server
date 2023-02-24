@@ -15,6 +15,7 @@ type redisTokenRepo struct {
 	R *redis.Client
 }
 
+//revive:disable:unexported-return
 func NewRedisTokenRepository(client *redis.Client) *redisTokenRepo {
 	return &redisTokenRepo{
 		R: client,
@@ -23,13 +24,15 @@ func NewRedisTokenRepository(client *redis.Client) *redisTokenRepo {
 
 func (tr redisTokenRepo) GetAll(ctx context.Context, uid int64) (*[]domain.RefreshToken, error) {
 	matcher := fmt.Sprintf("%d:*", uid)
+
 	scan := tr.R.Scan(ctx, 0, matcher, 10)
 	if err := scan.Err(); err != nil {
 		return nil, domain.NewInternalErr()
 	}
 
-	iterator := scan.Iterator()
 	tokens := make([]domain.RefreshToken, 0)
+
+	iterator := scan.Iterator()
 	for iterator.Next(ctx) {
 		split := strings.Split(iterator.Val(), ":")
 
@@ -37,13 +40,13 @@ func (tr redisTokenRepo) GetAll(ctx context.Context, uid int64) (*[]domain.Refre
 			return nil, domain.NewInternalErr()
 		}
 
-		id, err := strconv.Atoi(split[0])
+		userID, err := strconv.Atoi(split[0])
 		if err != nil {
 			return nil, domain.NewInternalErr()
 		}
 
 		tokens = append(tokens, domain.RefreshToken{
-			UserID:  int64(id),
+			UserID:  int64(userID),
 			Refresh: split[1],
 		})
 	}
@@ -54,6 +57,7 @@ func (tr redisTokenRepo) GetAll(ctx context.Context, uid int64) (*[]domain.Refre
 func (tr redisTokenRepo) Create(ctx context.Context, token *domain.RefreshToken) error {
 	key := fmt.Sprintf("%d:%s", token.UserID, token.Refresh)
 	log.Println(key)
+
 	cmd := tr.R.Set(ctx, key, 0, token.ExpirationDuration)
 	if err := cmd.Err(); err != nil {
 		return domain.NewInternalErr()
@@ -64,10 +68,12 @@ func (tr redisTokenRepo) Create(ctx context.Context, token *domain.RefreshToken)
 
 func (tr redisTokenRepo) Delete(ctx context.Context, uid int64, refresh string) error {
 	key := fmt.Sprintf("%d:%s", uid, refresh)
+
 	err := tr.R.Del(ctx, key).Err()
 	if err != nil {
 		return domain.NewInternalErr()
 	}
+
 	return nil
 }
 
@@ -80,6 +86,7 @@ func (tr redisTokenRepo) DeleteAll(ctx context.Context, uid int64) error {
 	for _, token := range *tokens {
 		key := fmt.Sprintf("%d:%s", token.UserID, token.Refresh)
 		err := tr.R.Del(ctx, key).Err()
+
 		if err != nil {
 			return domain.NewInternalErr()
 		}

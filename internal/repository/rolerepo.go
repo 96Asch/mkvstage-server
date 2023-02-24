@@ -14,6 +14,7 @@ type gormRoleRepository struct {
 	db *gorm.DB
 }
 
+//revive:disable:unexported-return
 func NewGormRoleRepository(db *gorm.DB) *gormRoleRepository {
 	return &gormRoleRepository{
 		db: db,
@@ -40,6 +41,7 @@ func (rr gormRoleRepository) Create(ctx context.Context, role *domain.Role) erro
 
 func (rr gormRoleRepository) GetByID(ctx context.Context, rid int64) (*domain.Role, error) {
 	var role domain.Role
+
 	res := rr.db.First(&role, rid)
 	if err := res.Error; err != nil {
 		switch {
@@ -55,6 +57,7 @@ func (rr gormRoleRepository) GetByID(ctx context.Context, rid int64) (*domain.Ro
 
 func (rr gormRoleRepository) GetAll(ctx context.Context) (*[]domain.Role, error) {
 	var roles []domain.Role
+
 	res := rr.db.Find(&roles)
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()

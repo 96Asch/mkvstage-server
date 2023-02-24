@@ -32,16 +32,16 @@ func (cfg *Config) New() *Config {
 }
 
 func Initialize(config *Config) {
-
 	log.Println("Initializing handlers...")
-	base := config.Router.Group("api")
-	v1 := base.Group("v1")
 
-	ug := userhandler.Initialize(v1, config.U, config.T)
-	tokenhandler.Initialize(v1, config.T, config.U)
+	base := config.Router.Group("api")
+	version1 := base.Group("v1")
+
+	ug := userhandler.Initialize(version1, config.U, config.T)
+	tokenhandler.Initialize(version1, config.T, config.U)
 	mehandler.Initialize(ug, config.U, config.T, config.MH)
-	bundlehandler.Initialize(v1, config.B, config.MH)
-	songhandler.Initialize(v1, config.S, config.MH)
-	rolehandler.Initialize(v1, config.R, config.MH)
-	userrolehandler.Initialize(v1, config.UR, config.MH)
+	bundlehandler.Initialize(version1, config.B, config.MH)
+	songhandler.Initialize(version1, config.S, config.MH)
+	rolehandler.Initialize(version1, config.R, config.MH)
+	userrolehandler.Initialize(version1, config.UR, config.MH)
 }

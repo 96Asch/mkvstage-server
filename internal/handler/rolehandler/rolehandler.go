@@ -9,14 +9,14 @@ type roleHandler struct {
 	rs domain.RoleService
 }
 
-func Initialize(group *gin.RouterGroup, rs domain.RoleService, mwh domain.MiddlewareHandler) {
-	rh := roleHandler{
-		rs: rs,
+func Initialize(group *gin.RouterGroup, roleservice domain.RoleService, middleware domain.MiddlewareHandler) {
+	rolehandler := roleHandler{
+		rs: roleservice,
 	}
 
 	roles := group.Group("roles")
-	roles.POST("create", mwh.AuthenticateUser(), rh.Create)
-	roles.GET("", rh.GetAll)
-	roles.PUT(":id/update", mwh.AuthenticateUser(), rh.UpdateByID)
-	roles.DELETE(":id/delete", mwh.AuthenticateUser(), rh.DeleteByID)
+	roles.POST("create", middleware.AuthenticateUser(), rolehandler.Create)
+	roles.GET("", rolehandler.GetAll)
+	roles.PUT(":id/update", middleware.AuthenticateUser(), rolehandler.UpdateByID)
+	roles.DELETE(":id/delete", middleware.AuthenticateUser(), rolehandler.DeleteByID)
 }

@@ -13,21 +13,31 @@ func (sh songHandler) DeleteByID(ctx *gin.Context) {
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	idField := ctx.Params.ByName("id")
-	id, err := strconv.Atoi(idField)
+
+	songID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	context := ctx.Request.Context()
-	user := val.(*domain.User)
 
-	err = sh.ss.Remove(context, int64(id), user)
+	user, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
+
+	err = sh.ss.Remove(context, int64(songID), user)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return

@@ -17,29 +17,30 @@ type tokenPair struct {
 	Refresh string `json:"refresh_token"`
 }
 
-func (us userHandler) Login(ctx *gin.Context) {
-
+func (uh userHandler) Login(ctx *gin.Context) {
 	var creds loginCredentials
 	if err := ctx.BindJSON(&creds); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	context := ctx.Request.Context()
-	user, err := us.userService.Authorize(context, creds.Email, creds.Password)
+
+	user, err := uh.userService.Authorize(context, creds.Email, creds.Password)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}
 
-	refresh, err := us.tokenService.CreateRefresh(context, user.ID, "")
+	refresh, err := uh.tokenService.CreateRefresh(context, user.ID, "")
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return
 	}
 
-	access, err := us.tokenService.CreateAccess(context, refresh.Refresh)
+	access, err := uh.tokenService.CreateAccess(context, refresh.Refresh)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 		return

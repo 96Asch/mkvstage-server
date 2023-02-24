@@ -20,11 +20,13 @@ func isValidTag(tag string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 func ValidateChordSheet(chordsheet datatypes.JSON) error {
 	csSchema := map[string]string{}
+
 	err := json.Unmarshal([]byte(chordsheet.String()), &csSchema)
 	if err != nil {
 		return fmt.Errorf("could not parse chordsheet: %s", err.Error())

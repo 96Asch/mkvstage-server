@@ -1,0 +1,27 @@
+run:
+  skip-dirs:
+    - internal/domain/mocks
+
+linters:
+  enable:
+    - staticcheck
+    - typecheck
+    - errcheck
+    - govet
+    - gosimple
+    - ineffassign
+    - unused
+    - testableexamples
+    - stylecheck
+    - wsl
+    - wrapcheck
+    - revive
+    - gofmt
+    - goimports
+    - goconst
+    - varnamelen
+    - forcetypeassert
+    - whitespace
+    # Testing
+    - testpackage
+    - paralleltest

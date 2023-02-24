@@ -15,22 +15,34 @@ func (bh *bundleHandler) Delete(ctx *gin.Context) {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
 		log.Println(newErr)
+
 		return
 	}
-	principal := val.(*domain.User)
 
 	idField := ctx.Params.ByName("id")
-	id, err := strconv.Atoi(idField)
+
+	bundleID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
+
+	principal, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	context := ctx.Request.Context()
-	err = bh.bs.Remove(context, int64(id), principal)
+
+	err = bh.bs.Remove(context, int64(bundleID), principal)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

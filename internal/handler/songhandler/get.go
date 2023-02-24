@@ -10,17 +10,21 @@ import (
 
 func (sh songHandler) GetByID(ctx *gin.Context) {
 	idField := ctx.Params.ByName("id")
-	id, err := strconv.Atoi(idField)
+
+	songID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
 	context := ctx.Request.Context()
-	song, err := sh.ss.FetchByID(context, int64(id))
+
+	song, err := sh.ss.FetchByID(context, int64(songID))
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 
@@ -29,9 +33,11 @@ func (sh songHandler) GetByID(ctx *gin.Context) {
 
 func (sh songHandler) GetAll(ctx *gin.Context) {
 	context := ctx.Request.Context()
+
 	songs, err := sh.ss.FetchAll(context)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

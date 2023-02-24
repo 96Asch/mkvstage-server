@@ -14,6 +14,7 @@ type gormSongRepository struct {
 	db *gorm.DB
 }
 
+//revive:disable:unexported-return
 func NewGormSongRepository(db *gorm.DB) *gormSongRepository {
 	return &gormSongRepository{
 		db: db,
@@ -61,6 +62,7 @@ func (sr gormSongRepository) Create(ctx context.Context, song *domain.Song) erro
 				return domain.NewInternalErr()
 			}
 		}
+
 		return domain.NewInternalErr()
 	}
 
@@ -92,6 +94,7 @@ func (sr gormSongRepository) Update(ctx context.Context, song *domain.Song) erro
 				return domain.NewInternalErr()
 			}
 		}
+
 		return domain.NewInternalErr()
 	}
 

@@ -1,7 +1,8 @@
-package tokenhandler
+package tokenhandler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -10,13 +11,40 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
+func prepareAndServeCreate(
+	t *testing.T,
+	mockTS domain.TokenService,
+	mockUS domain.UserService,
+	body *[]byte,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	tokenhandler.Initialize(&router.RouterGroup, mockTS, mockUS)
+
+	requestBody := bytes.NewReader(*body)
+
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, "/tokens/renew", requestBody)
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
 func TestCreateCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -37,43 +65,33 @@ func TestCreateCorrect(t *testing.T) {
 		Access: "access-token",
 	}
 
-	mockTS := new(mocks.MockTokenService)
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
+
 	mockTS.
 		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
 		Return(mockAccess, nil)
 
-	mockUS := new(mocks.MockUserService)
-
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockTS, mockUS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"refresh": mockRefresh.Refresh,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
-
-	req, err := http.NewRequest(http.MethodPost, "/test/tokens/renewaccess", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
+	writer := prepareAndServeCreate(t, mockTS, mockUS, &byteBody)
 
 	expectedRes, err := json.Marshal(gin.H{
 		"token": mockAccess,
 	})
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, expectedRes, w.Body.Bytes())
+	assert.Equal(t, http.StatusOK, writer.Code)
+	assert.Equal(t, expectedRes, writer.Body.Bytes())
 	mockUS.AssertExpectations(t)
 }
 
 func TestCreateBindErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -90,33 +108,23 @@ func TestCreateBindErr(t *testing.T) {
 		ExpirationDuration: time.Minute,
 	}
 
-	mockTS := new(mocks.MockTokenService)
-	mockUS := new(mocks.MockUserService)
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockTS, mockUS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"resfresh": mockRefresh.Refresh,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
+	writer := prepareAndServeCreate(t, mockTS, mockUS, &byteBody)
 
-	req, err := http.NewRequest(http.MethodPost, "/test/tokens/renewaccess", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
 	mockUS.AssertExpectations(t)
 }
 
 func TestCreateAccessErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
@@ -134,38 +142,26 @@ func TestCreateAccessErr(t *testing.T) {
 	}
 
 	mockErr := domain.NewNotAuthorizedErr("")
-	mockTS := new(mocks.MockTokenService)
+	mockTS := &mocks.MockTokenService{}
+	mockUS := &mocks.MockUserService{}
+
 	mockTS.
 		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
 		Return(nil, mockErr)
 
-	mockUS := new(mocks.MockUserService)
-
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
-
-	group := router.Group("test")
-	Initialize(group, mockTS, mockUS)
-
-	mockByte, err := json.Marshal(gin.H{
+	byteBody, err := json.Marshal(gin.H{
 		"refresh": mockRefresh.Refresh,
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(mockByte)
-
-	req, err := http.NewRequest(http.MethodPost, "/test/tokens/renewaccess", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
+	writer := prepareAndServeCreate(t, mockTS, mockUS, &byteBody)
 
 	expectedRes, err := json.Marshal(gin.H{
 		"error": mockErr,
 	})
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	assert.Equal(t, expectedRes, w.Body.Bytes())
+	assert.Equal(t, http.StatusUnauthorized, writer.Code)
+	assert.Equal(t, expectedRes, writer.Body.Bytes())
 	mockUS.AssertExpectations(t)
 }

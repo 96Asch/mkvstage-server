@@ -10,15 +10,13 @@ type tokenHandler struct {
 	userService  domain.UserService
 }
 
-func Initialize(rg *gin.RouterGroup, ts domain.TokenService, us domain.UserService) {
-
-	th := &tokenHandler{
+func Initialize(group *gin.RouterGroup, ts domain.TokenService, us domain.UserService) {
+	tokenhandler := &tokenHandler{
 		tokenService: ts,
 		userService:  us,
 	}
 
-	t := rg.Group("tokens")
+	t := group.Group("tokens")
 
-	t.POST("/renewaccess", th.CreateAccess)
-
+	t.POST("/renew", tokenhandler.CreateAccess)
 }

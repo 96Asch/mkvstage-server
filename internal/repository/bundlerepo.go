@@ -15,6 +15,7 @@ type gormBundleRepository struct {
 	db *gorm.DB
 }
 
+//revive:disable:unexported-return
 func NewGormBundleRepository(db *gorm.DB) *gormBundleRepository {
 	return &gormBundleRepository{
 		db: db,

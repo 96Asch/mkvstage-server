@@ -60,8 +60,7 @@ func run(config *handler.Config) {
 	log.Println("Server exiting")
 }
 
-func setupMigrations(db *gorm.DB) error {
-
+func setupMigrations(gormDatabase *gorm.DB) error {
 	models := [...]any{
 		&domain.User{},
 		&domain.Bundle{},
@@ -73,7 +72,7 @@ func setupMigrations(db *gorm.DB) error {
 	for _, model := range models {
 		log.Printf("Inserting table %s", reflect.TypeOf(model))
 
-		err := db.AutoMigrate(model)
+		err := gormDatabase.AutoMigrate(model)
 		if err != nil {
 			return domain.NewInitializationErr(err.Error())
 		}
@@ -106,8 +105,7 @@ func setupStore() (*gorm.DB, *redis.Client) {
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 
-	var rdb *redis.Client
-	rdb, err = store.GetRedis(redisHost, redisPort)
+	rdb, err := store.GetRedis(redisHost, redisPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,7 +114,6 @@ func setupStore() (*gorm.DB, *redis.Client) {
 }
 
 func main() {
-
 	router := gin.Default()
 	database, tokenDatabase := setupStore()
 

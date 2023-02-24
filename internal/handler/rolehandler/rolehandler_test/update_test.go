@@ -1,7 +1,8 @@
-package rolehandler
+package rolehandler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,31 +11,68 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
+func prepareAndServeUpdate(
+	t *testing.T,
+	mockRS domain.RoleService,
+	mockMWH domain.MiddlewareHandler,
+	body *[]byte,
+	param string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	rolehandler.Initialize(&router.RouterGroup, mockRS, mockMWH)
+
+	requestBody := bytes.NewReader(*body)
+
+	req, err := http.NewRequestWithContext(
+		context.TODO(),
+		http.MethodPut,
+		fmt.Sprintf("/roles/%s/update", param),
+		requestBody,
+	)
+
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
 func TestUpdateByIDCorrect(t *testing.T) {
+	t.Parallel()
+
+	rid := int64(1)
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
 	}
-
-	rid := int64(1)
 	mockRole := &domain.Role{
 		ID:          rid,
 		Name:        "Foo",
 		Description: "Bar",
 	}
 
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockRS := &mocks.MockRoleService{}
+
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
-	mockRS := &mocks.MockRoleService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 	mockRS.
 		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
 		Return(nil)
@@ -45,42 +83,32 @@ func TestUpdateByIDCorrect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	gin.SetMode(gin.TestMode)
-
-	router := gin.New()
-	reqBody := bytes.NewReader(byteBody)
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/roles/%d/update", rid), reqBody)
-	assert.NoError(t, err)
-
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
+	writer := prepareAndServeUpdate(t, mockRS, mockMWH, &byteBody, fmt.Sprint(rid))
 	mockRole.ID = 1
 
 	expectedBytes, err := json.Marshal(gin.H{"role": mockRole})
 	assert.NoError(t, err)
-	assert.Equal(t, expectedBytes, w.Body.Bytes())
+
+	assert.Equal(t, http.StatusOK, writer.Code)
+	assert.Equal(t, expectedBytes, writer.Body.Bytes())
 	mockRS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestUpdateByIDNoContext(t *testing.T) {
-	sid := int64(1)
-	mockRS := &mocks.MockRoleService{}
+	t.Parallel()
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
+	rid := int64(1)
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockRS := &mocks.MockRoleService{}
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 
 	byteBody, err := json.Marshal(gin.H{
 		"name":        "Foo",
@@ -88,19 +116,20 @@ func TestUpdateByIDNoContext(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
+	writer := prepareAndServeUpdate(t, mockRS, mockMWH, &byteBody, fmt.Sprint(rid))
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/roles/%d/update", sid), bodyReader)
+	expectedBytes, err := json.Marshal(gin.H{"error": domain.NewInternalErr()})
 	assert.NoError(t, err)
 
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	mockRS.AssertExpectations(t)
+	assert.Equal(t, http.StatusInternalServerError, writer.Code)
+	assert.Equal(t, expectedBytes, writer.Body.Bytes())
 	mockMWH.AssertExpectations(t)
+	mockRS.AssertExpectations(t)
 }
 
 func TestUpdateByIDInvalidParam(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
@@ -110,9 +139,13 @@ func TestUpdateByIDInvalidParam(t *testing.T) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
+
 	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 	mockRS := &mocks.MockRoleService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 
 	byteBody, err := json.Marshal(gin.H{
 		"name":        "Foo",
@@ -120,63 +153,50 @@ func TestUpdateByIDInvalidParam(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	gin.SetMode(gin.TestMode)
+	writer := prepareAndServeUpdate(t, mockRS, mockMWH, &byteBody, "a")
 
-	router := gin.New()
-	reqBody := bytes.NewReader(byteBody)
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodPut, "/roles/a/update", reqBody)
-	assert.NoError(t, err)
-
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
 	mockRS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestUpdateByIDBindErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
-		FirstName:  "Foo",
-		LastName:   "Bar",
-		Email:      "Foo@Bar.com",
 		Permission: domain.GUEST,
 	}
-	sid := int64(1)
-	mockRS := &mocks.MockRoleService{}
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
+	rid := int64(1)
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockRS := &mocks.MockRoleService{}
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
 	byteBody, err := json.Marshal(gin.H{
 		"name":         "Foo",
 		"descriptions": "Bar",
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
-
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/roles/%d/update", sid), bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	writer := prepareAndServeUpdate(t, mockRS, mockMWH, &byteBody, fmt.Sprint(rid))
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
+	mockMWH.AssertExpectations(t)
 	mockRS.AssertExpectations(t)
 }
 
 func TestUpdateByIDUpdateErr(t *testing.T) {
+	t.Parallel()
+
+	rid := int64(1)
 	mockUser := &domain.User{
 		ID:         1,
 		FirstName:  "Foo",
@@ -184,44 +204,36 @@ func TestUpdateByIDUpdateErr(t *testing.T) {
 		Email:      "Foo@Bar.com",
 		Permission: domain.GUEST,
 	}
-	rid := int64(1)
 	mockRole := &domain.Role{
 		ID:          rid,
 		Name:        "Foo",
 		Description: "Bar",
 	}
-	mockErr := domain.NewBadRequestErr("")
-	mockRS := &mocks.MockRoleService{}
-	mockRS.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
-		Return(mockErr)
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
+	mockErr := domain.NewBadRequestErr("")
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockRS := &mocks.MockRoleService{}
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
+	mockRS.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
+		Return(mockErr)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
 	byteBody, err := json.Marshal(gin.H{
 		"name":        "Foo",
 		"description": "Bar",
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
-
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/roles/%d/update", rid), bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, domain.Status(mockErr), w.Code)
+	writer := prepareAndServeUpdate(t, mockRS, mockMWH, &byteBody, fmt.Sprint(rid))
+	assert.Equal(t, domain.Status(mockErr), writer.Code)
 	mockRS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }

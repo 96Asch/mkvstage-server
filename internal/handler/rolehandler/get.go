@@ -9,6 +9,7 @@ import (
 
 func (rh roleHandler) GetAll(ctx *gin.Context) {
 	context := ctx.Request.Context()
+
 	roles, err := rh.rs.FetchAll(context)
 	if err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})

@@ -17,6 +17,7 @@ func (rh roleHandler) Create(ctx *gin.Context) {
 	if !exists {
 		newErr := domain.NewInternalErr()
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -24,6 +25,15 @@ func (rh roleHandler) Create(ctx *gin.Context) {
 	if err := ctx.BindJSON(&rReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
+		return
+	}
+
+	user, ok := val.(*domain.User)
+	if !ok {
+		newErr := domain.NewInternalErr()
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+
 		return
 	}
 
@@ -32,10 +42,10 @@ func (rh roleHandler) Create(ctx *gin.Context) {
 		Description: rReq.Description,
 	}
 
-	user := val.(*domain.User)
 	context := ctx.Request.Context()
 	if err := rh.rs.Store(context, role, user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
 		return
 	}
 

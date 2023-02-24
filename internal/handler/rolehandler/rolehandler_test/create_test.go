@@ -1,7 +1,8 @@
-package rolehandler
+package rolehandler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,12 +10,39 @@ import (
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
+func prepareAndServeCreate(
+	t *testing.T,
+	mockRS domain.RoleService,
+	mockMWH domain.MiddlewareHandler,
+	body *[]byte,
+) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	writer := httptest.NewRecorder()
+
+	rolehandler.Initialize(&router.RouterGroup, mockRS, mockMWH)
+
+	requestBody := bytes.NewReader(*body)
+
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, "/roles/create", requestBody)
+	assert.NoError(t, err)
+
+	router.ServeHTTP(writer, req)
+
+	return writer
+}
+
 func TestCreateCorrect(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.MEMBER,
@@ -25,18 +53,23 @@ func TestCreateCorrect(t *testing.T) {
 		Description: "Bar",
 	}
 
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockRS := &mocks.MockRoleService{}
+
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
-	mockRS := &mocks.MockRoleService{}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 	mockRS.
 		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*domain.Role)
+			arg, ok := args.Get(1).(*domain.Role)
+			assert.True(t, ok)
 			arg.ID = 1
 		})
 
@@ -46,66 +79,48 @@ func TestCreateCorrect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	gin.SetMode(gin.TestMode)
+	writer := prepareAndServeCreate(t, mockRS, mockMWH, &byteBody)
+	assert.Equal(t, http.StatusCreated, writer.Code)
 
-	router := gin.New()
-	reqBody := bytes.NewReader(byteBody)
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodPost, "/roles/create", reqBody)
-	assert.NoError(t, err)
-
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusCreated, w.Code)
 	mockRole.ID = 1
 
 	expectedBytes, err := json.Marshal(gin.H{"role": mockRole})
 	assert.NoError(t, err)
-	assert.Equal(t, expectedBytes, w.Body.Bytes())
+	assert.Equal(t, expectedBytes, writer.Body.Bytes())
+
 	mockRS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestCreateNoContext(t *testing.T) {
-	mockRS := &mocks.MockRoleService{}
+	t.Parallel()
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockRS := &mocks.MockRoleService{}
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
 
 	byteBody, err := json.Marshal(gin.H{
-		"title":       "Foo",
-		"subtitle":    "Bar",
-		"key":         "A",
-		"bpm":         120,
-		"bundle_id":   1,
-		"creator_id":  1,
-		"chord_sheet": `{"Verse" : "Foobar"}`,
+		"name":        "Foo",
+		"description": "Bar",
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
-
-	req, err := http.NewRequest(http.MethodPost, "/roles/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	writer := prepareAndServeCreate(t, mockRS, mockMWH, &byteBody)
+	assert.Equal(t, http.StatusInternalServerError, writer.Code)
 	mockRS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestCreateBindErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		FirstName:  "Foo",
@@ -114,43 +129,32 @@ func TestCreateBindErr(t *testing.T) {
 		Permission: domain.GUEST,
 	}
 
+	mockMWH := &mocks.MockMiddlewareHandler{}
 	mockRS := &mocks.MockRoleService{}
-
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
 	byteBody, err := json.Marshal(gin.H{
-		"title":       "Foo",
-		"subtitle":    "Bar",
-		"bpm":         120,
-		"bundle_id":   1,
-		"creator_id":  mockUser.ID,
-		"chord_sheet": `{"Verse" : "Foobar"}`,
+		"description": "Bar",
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
-
-	req, err := http.NewRequest(http.MethodPost, "/roles/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	writer := prepareAndServeCreate(t, mockRS, mockMWH, &byteBody)
+	assert.Equal(t, http.StatusBadRequest, writer.Code)
 	mockRS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }
 
 func TestCreateStoreErr(t *testing.T) {
+	t.Parallel()
+
 	mockUser := &domain.User{
 		ID:         1,
 		FirstName:  "Foo",
@@ -165,37 +169,30 @@ func TestCreateStoreErr(t *testing.T) {
 	}
 
 	mockErr := domain.NewBadRequestErr("")
+	mockMWH := &mocks.MockMiddlewareHandler{}
 	mockRS := &mocks.MockRoleService{}
+
 	mockRS.
 		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
 		Return(mockErr)
-
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	w := httptest.NewRecorder()
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
 		ctx.Set("user", mockUser)
 		ctx.Next()
 	}
-	mockMWH := new(mocks.MockMiddlewareHandler)
-	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
-	Initialize(&router.RouterGroup, mockRS, mockMWH)
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
 	byteBody, err := json.Marshal(gin.H{
 		"name":        "Foo",
 		"description": "Bar",
 	})
 	assert.NoError(t, err)
 
-	bodyReader := bytes.NewReader(byteBody)
-
-	req, err := http.NewRequest(http.MethodPost, "/roles/create", bodyReader)
-	assert.NoError(t, err)
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, domain.Status(mockErr), w.Code)
+	writer := prepareAndServeCreate(t, mockRS, mockMWH, &byteBody)
+	assert.Equal(t, domain.Status(mockErr), writer.Code)
 	mockRS.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }

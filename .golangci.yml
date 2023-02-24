@@ -17,6 +17,13 @@ linters:
     - wsl
     - wrapcheck
     - revive
+    - gofmt
+    - funlen
+    - goimports
+    - goconst
+    - varnamelen
+    - forcetypeassert
+    - whitespace
     # Testing
     - testpackage
     - paralleltest

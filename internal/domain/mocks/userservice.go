@@ -96,3 +96,23 @@ func (m *MockUserService) Authorize(ctx context.Context, email, password string)
 
 	return r0, r1
 }
+
+func (m *MockUserService) SetPermission(
+	ctx context.Context,
+	permission domain.Clearance,
+	recipient, principal *domain.User,
+) (*domain.User, error) {
+	ret := m.Called(ctx, permission, recipient, principal)
+
+	var r0 *domain.User
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*domain.User)
+	}
+
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
+}

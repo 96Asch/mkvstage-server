@@ -682,3 +682,173 @@ func TestAuthorizeNotAuthorized(t *testing.T) {
 	mockUR.AssertExpectations(t)
 	mockURR.AssertExpectations(t)
 }
+
+func TestSetPermissionCorrect(t *testing.T) {
+	t.Parallel()
+
+	permission := domain.EDITOR
+	recipient := &domain.User{
+		ID:         2,
+		Permission: domain.MEMBER,
+	}
+	principal := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+	updatedUser := &domain.User{
+		ID:         2,
+		Permission: permission,
+	}
+
+	mockUR := &mocks.MockUserRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+
+	mockUR.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
+			ID:         recipient.ID,
+			Permission: permission,
+		}).
+		Return(nil)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), recipient.ID).
+		Return(updatedUser, nil)
+
+	userService := service.NewUserService(mockUR, mockRR, mockURR)
+
+	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	assert.NoError(t, err)
+	assert.Equal(t, updatedUser, user)
+	mockUR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
+	mockURR.AssertExpectations(t)
+}
+
+func TestSetPermissionNotAdmin(t *testing.T) {
+	t.Parallel()
+
+	permission := domain.EDITOR
+	recipient := &domain.User{
+		ID:         2,
+		Permission: domain.MEMBER,
+	}
+	principal := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	expErr := domain.NewNotAuthorizedErr("")
+	mockUR := &mocks.MockUserRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+
+	userService := service.NewUserService(mockUR, mockRR, mockURR)
+
+	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	assert.ErrorAs(t, err, &expErr)
+	assert.Nil(t, user)
+	mockUR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
+	mockURR.AssertExpectations(t)
+}
+
+func TestSetPermissionRecIsAdmin(t *testing.T) {
+	t.Parallel()
+
+	permission := domain.EDITOR
+	recipient := &domain.User{
+		ID:         2,
+		Permission: domain.ADMIN,
+	}
+	principal := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	expErr := domain.NewNotAuthorizedErr("")
+	mockUR := &mocks.MockUserRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+
+	userService := service.NewUserService(mockUR, mockRR, mockURR)
+
+	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	assert.ErrorAs(t, err, &expErr)
+	assert.Nil(t, user)
+	mockUR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
+	mockURR.AssertExpectations(t)
+}
+
+func TestSetPermissionUpdateErr(t *testing.T) {
+	t.Parallel()
+
+	permission := domain.EDITOR
+	recipient := &domain.User{
+		ID:         2,
+		Permission: domain.MEMBER,
+	}
+	principal := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	expErr := domain.NewInternalErr()
+	mockUR := &mocks.MockUserRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+
+	mockUR.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
+			ID:         recipient.ID,
+			Permission: permission,
+		}).
+		Return(expErr)
+
+	userService := service.NewUserService(mockUR, mockRR, mockURR)
+
+	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	assert.ErrorAs(t, err, &expErr)
+	assert.Nil(t, user)
+	mockUR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
+	mockURR.AssertExpectations(t)
+}
+
+func TestSetPermissionCorrectGetErr(t *testing.T) {
+	t.Parallel()
+
+	permission := domain.EDITOR
+	recipient := &domain.User{
+		ID:         2,
+		Permission: domain.MEMBER,
+	}
+	principal := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	expErr := domain.NewInternalErr()
+	mockUR := &mocks.MockUserRepository{}
+	mockRR := &mocks.MockRoleRepository{}
+	mockURR := &mocks.MockUserRoleRepository{}
+
+	mockUR.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
+			ID:         recipient.ID,
+			Permission: permission,
+		}).
+		Return(nil)
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), recipient.ID).
+		Return(nil, expErr)
+
+	userService := service.NewUserService(mockUR, mockRR, mockURR)
+
+	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	assert.ErrorAs(t, err, &expErr)
+	assert.Nil(t, user)
+	mockUR.AssertExpectations(t)
+	mockRR.AssertExpectations(t)
+	mockURR.AssertExpectations(t)
+}

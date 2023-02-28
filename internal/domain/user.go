@@ -38,7 +38,7 @@ type UserService interface {
 	Update(ctx context.Context, user *User) error
 	Remove(ctx context.Context, user *User, id int64) (int64, error)
 	Authorize(ctx context.Context, email, password string) (*User, error)
-	SetPermission(ctx context.Context, permission Clearance, recipient, principal *User) (*User, error)
+	SetPermission(ctx context.Context, permission Clearance, recipientID int64, principal *User) (*User, error)
 }
 
 type UserRepository interface {

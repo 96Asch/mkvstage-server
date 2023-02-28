@@ -132,10 +132,16 @@ func (us userService) Authorize(ctx context.Context, email, password string) (*d
 func (us userService) SetPermission(
 	ctx context.Context,
 	permission domain.Clearance,
-	recipient, principal *domain.User,
+	recipientID int64,
+	principal *domain.User,
 ) (*domain.User, error) {
 	if principal.Permission != domain.ADMIN {
 		return nil, domain.NewNotAuthorizedErr("not authorized to change permissions")
+	}
+
+	recipient, err := us.ur.GetByID(ctx, recipientID)
+	if err != nil {
+		return nil, domain.FromError(err)
 	}
 
 	if recipient.Permission == domain.ADMIN {
@@ -147,15 +153,12 @@ func (us userService) SetPermission(
 		Permission: permission,
 	}
 
-	err := us.ur.Update(ctx, user)
+	err = us.ur.Update(ctx, user)
 	if err != nil {
 		return nil, domain.FromError(err)
 	}
 
-	updatedUser, err := us.ur.GetByID(ctx, recipient.ID)
-	if err != nil {
-		return nil, domain.FromError(err)
-	}
+	recipient.Permission = permission
 
-	return updatedUser, nil
+	return recipient, nil
 }

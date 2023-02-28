@@ -30,7 +30,12 @@ func prepareAndServeLogin(
 	router := gin.New()
 	writer := httptest.NewRecorder()
 
-	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS)
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockMWH.
+		On("AuthenticateUser").
+		Return(nil)
+
+	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS, mockMWH)
 
 	requestBody := bytes.NewReader(*body)
 

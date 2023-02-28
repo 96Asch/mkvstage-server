@@ -37,9 +37,9 @@ func Initialize(config *Config) {
 	base := config.Router.Group("api")
 	version1 := base.Group("v1")
 
-	ug := userhandler.Initialize(version1, config.U, config.T)
+	userGroup := userhandler.Initialize(version1, config.U, config.T, config.MH)
 	tokenhandler.Initialize(version1, config.T, config.U)
-	mehandler.Initialize(ug, config.U, config.T, config.MH)
+	mehandler.Initialize(userGroup, config.U, config.T, config.MH)
 	bundlehandler.Initialize(version1, config.B, config.MH)
 	songhandler.Initialize(version1, config.S, config.MH)
 	rolehandler.Initialize(version1, config.R, config.MH)

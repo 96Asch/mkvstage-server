@@ -28,7 +28,12 @@ func prepareAndServeGet(
 	router := gin.New()
 	writer := httptest.NewRecorder()
 
-	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS)
+	mockMWH := &mocks.MockMiddlewareHandler{}
+	mockMWH.
+		On("AuthenticateUser").
+		Return(nil)
+
+	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS, mockMWH)
 
 	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, fmt.Sprintf("/users%s", param), nil)
 	assert.NoError(t, err)

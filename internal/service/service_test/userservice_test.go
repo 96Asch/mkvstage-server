@@ -716,7 +716,7 @@ func TestSetPermissionCorrect(t *testing.T) {
 
 	userService := service.NewUserService(mockUR, mockRR, mockURR)
 
-	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	user, err := userService.SetPermission(context.TODO(), permission, recipient.ID, principal)
 	assert.NoError(t, err)
 	assert.Equal(t, updatedUser, user)
 	mockUR.AssertExpectations(t)
@@ -744,7 +744,7 @@ func TestSetPermissionNotAdmin(t *testing.T) {
 
 	userService := service.NewUserService(mockUR, mockRR, mockURR)
 
-	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	user, err := userService.SetPermission(context.TODO(), permission, recipient.ID, principal)
 	assert.ErrorAs(t, err, &expErr)
 	assert.Nil(t, user)
 	mockUR.AssertExpectations(t)
@@ -770,9 +770,13 @@ func TestSetPermissionRecIsAdmin(t *testing.T) {
 	mockRR := &mocks.MockRoleRepository{}
 	mockURR := &mocks.MockUserRoleRepository{}
 
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), recipient.ID).
+		Return(recipient, nil)
+
 	userService := service.NewUserService(mockUR, mockRR, mockURR)
 
-	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	user, err := userService.SetPermission(context.TODO(), permission, recipient.ID, principal)
 	assert.ErrorAs(t, err, &expErr)
 	assert.Nil(t, user)
 	mockUR.AssertExpectations(t)
@@ -799,6 +803,9 @@ func TestSetPermissionUpdateErr(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), recipient.ID).
+		Return(recipient, nil)
+	mockUR.
 		On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
 			ID:         recipient.ID,
 			Permission: permission,
@@ -807,7 +814,7 @@ func TestSetPermissionUpdateErr(t *testing.T) {
 
 	userService := service.NewUserService(mockUR, mockRR, mockURR)
 
-	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	user, err := userService.SetPermission(context.TODO(), permission, recipient.ID, principal)
 	assert.ErrorAs(t, err, &expErr)
 	assert.Nil(t, user)
 	mockUR.AssertExpectations(t)
@@ -834,18 +841,12 @@ func TestSetPermissionCorrectGetErr(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockUR.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
-			ID:         recipient.ID,
-			Permission: permission,
-		}).
-		Return(nil)
-	mockUR.
 		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), recipient.ID).
 		Return(nil, expErr)
 
 	userService := service.NewUserService(mockUR, mockRR, mockURR)
 
-	user, err := userService.SetPermission(context.TODO(), permission, recipient, principal)
+	user, err := userService.SetPermission(context.TODO(), permission, recipient.ID, principal)
 	assert.ErrorAs(t, err, &expErr)
 	assert.Nil(t, user)
 	mockUR.AssertExpectations(t)

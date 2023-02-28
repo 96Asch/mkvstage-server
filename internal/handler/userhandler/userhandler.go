@@ -12,7 +12,7 @@ type userHandler struct {
 	tokenService domain.TokenService
 }
 
-func Initialize(group *gin.RouterGroup, us domain.UserService, ts domain.TokenService) *gin.RouterGroup {
+func Initialize(group *gin.RouterGroup, us domain.UserService, ts domain.TokenService, mwh domain.MiddlewareHandler) *gin.RouterGroup {
 	log.Println("Setting up user handlers")
 
 	userhandler := &userHandler{
@@ -25,6 +25,7 @@ func Initialize(group *gin.RouterGroup, us domain.UserService, ts domain.TokenSe
 	users.GET("", userhandler.GetAll)
 	users.POST("/create", userhandler.Create)
 	users.POST("/login", userhandler.Login)
+	users.PUT("/setperm", mwh.AuthenticateUser(), userhandler.ChangePermissionByID)
 
 	return users
 }

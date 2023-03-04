@@ -23,6 +23,7 @@ type Config struct {
 	S      domain.SongService
 	R      domain.RoleService
 	UR     domain.UserRoleService
+	SL     domain.SetlistService
 }
 
 func (cfg *Config) New() *Config {

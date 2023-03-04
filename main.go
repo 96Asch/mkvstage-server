@@ -126,6 +126,7 @@ func main() {
 	songRepo := repository.NewGormSongRepository(database)
 	userroleRepo := repository.NewGormUserRoleRepository(database)
 	roleRepo := repository.NewGormRoleRepository(database)
+	setlistRepo := repository.NewGormSetlistRepository(database)
 
 	userService := service.NewUserService(userRepo, roleRepo, userroleRepo)
 	tokenService := service.NewTokenService(tokenRepo, userRepo, accessSecret, refreshSecret)
@@ -134,6 +135,7 @@ func main() {
 	songService := service.NewSongService(userRepo, songRepo)
 	userroleService := service.NewUserRoleService(userroleRepo)
 	roleService := service.NewRoleService(roleRepo, userRepo, userroleRepo)
+	setlistService := service.NewSetlistService(userRepo, setlistRepo)
 
 	config := handler.Config{
 		Router: router,
@@ -144,6 +146,7 @@ func main() {
 		S:      songService,
 		R:      roleService,
 		UR:     userroleService,
+		SL:     setlistService,
 	}
 
 	run(&config)

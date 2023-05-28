@@ -21,9 +21,9 @@ func NewGormSetlistRepository(db *gorm.DB) *gormSetlistRepository {
 	}
 }
 
-func (sr gormSetlistRepository) GetByID(ctx context.Context, sid int64) (*domain.Setlist, error) {
+func (slr gormSetlistRepository) GetByID(ctx context.Context, sid int64) (*domain.Setlist, error) {
 	var setlist domain.Setlist
-	res := sr.db.First(&setlist, sid)
+	res := slr.db.First(&setlist, sid)
 
 	if err := res.Error; err != nil {
 		switch {
@@ -37,9 +37,9 @@ func (sr gormSetlistRepository) GetByID(ctx context.Context, sid int64) (*domain
 	return &setlist, nil
 }
 
-func (sr gormSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist, error) {
+func (slr gormSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist, error) {
 	var setlists []domain.Setlist
-	res := sr.db.Find(&setlists)
+	res := slr.db.Find(&setlists)
 
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
@@ -48,9 +48,9 @@ func (sr gormSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist, 
 	return &setlists, nil
 }
 
-func (sr gormSetlistRepository) GetAllGlobal(ctx context.Context, uid int64) (*[]domain.Setlist, error) {
+func (slr gormSetlistRepository) GetAllGlobal(ctx context.Context, uid int64) (*[]domain.Setlist, error) {
 	var setlists []domain.Setlist
-	res := sr.db.Where("is_global = ?", true).Or("creator_id = ?", uid).Find(&setlists)
+	res := slr.db.Where("is_global = ?", true).Or("creator_id = ?", uid).Find(&setlists)
 
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
@@ -59,8 +59,8 @@ func (sr gormSetlistRepository) GetAllGlobal(ctx context.Context, uid int64) (*[
 	return &setlists, nil
 }
 
-func (sr gormSetlistRepository) Create(ctx context.Context, setlist *domain.Setlist) error {
-	res := sr.db.Create(setlist)
+func (slr gormSetlistRepository) Create(ctx context.Context, setlist *domain.Setlist) error {
+	res := slr.db.Create(setlist)
 
 	if err := res.Error; err != nil {
 		var mysqlErr *mysql.MySQLError
@@ -80,9 +80,9 @@ func (sr gormSetlistRepository) Create(ctx context.Context, setlist *domain.Setl
 	return nil
 }
 
-func (sr gormSetlistRepository) Delete(ctx context.Context, sid int64) error {
+func (slr gormSetlistRepository) Delete(ctx context.Context, sid int64) error {
 	setlist := domain.Setlist{ID: sid}
-	res := sr.db.Delete(&setlist)
+	res := slr.db.Delete(&setlist)
 
 	if err := res.Error; err != nil {
 		return domain.NewInternalErr()
@@ -91,8 +91,8 @@ func (sr gormSetlistRepository) Delete(ctx context.Context, sid int64) error {
 	return nil
 }
 
-func (sr gormSetlistRepository) Update(ctx context.Context, setlist *domain.Setlist) (*domain.Setlist, error) {
-	res := sr.db.Updates(setlist)
+func (slr gormSetlistRepository) Update(ctx context.Context, setlist *domain.Setlist) (*domain.Setlist, error) {
+	res := slr.db.Updates(setlist)
 
 	if err := res.Error; err != nil {
 		var mysqlErr *mysql.MySQLError
@@ -111,7 +111,7 @@ func (sr gormSetlistRepository) Update(ctx context.Context, setlist *domain.Setl
 
 	var updatedSetlist domain.Setlist
 
-	res = sr.db.First(&updatedSetlist, setlist.ID)
+	res = slr.db.First(&updatedSetlist, setlist.ID)
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
 	}

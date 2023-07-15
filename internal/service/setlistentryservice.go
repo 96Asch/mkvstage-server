@@ -31,9 +31,7 @@ func (ses setlistEntryService) StoreBatch(ctx context.Context, setlistEntries *[
 			return domain.NewBadRequestErr(fmt.Sprintf("Transpose must be between %d and %d", util.TransposeMin, util.TransposeMax))
 		}
 
-		_, err := ses.sr.GetByID(ctx, entry.SongID)
-
-		if err != nil {
+		if _, err := ses.sr.GetByID(ctx, entry.SongID); err != nil {
 			return domain.NewRecordNotFoundErr("SongID", fmt.Sprint(entry.SongID))
 		}
 	}
@@ -68,6 +66,30 @@ func (ses setlistEntryService) FetchAll(ctx context.Context) (*[]domain.SetlistE
 }
 
 func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *[]domain.SetlistEntry, principal *domain.User) error {
+	if !principal.HasClearance(domain.EDITOR) {
+		return domain.NewNotAuthorizedErr("Invalid authorization")
+	}
+
+	for _, entry := range *setlistEntries {
+		if !util.IsValidTranpose(entry.Transpose) {
+			return domain.NewBadRequestErr(fmt.Sprintf("Transpose must be between %d and %d", util.TransposeMin, util.TransposeMax))
+		}
+
+		if _, err := ses.sr.GetByID(ctx, entry.SongID); err != nil {
+			return domain.NewRecordNotFoundErr("SongID", fmt.Sprint(entry.SongID))
+		}
+
+		if _, err := ses.ser.GetByID(ctx, entry.ID); err != nil {
+			return domain.NewRecordNotFoundErr("ID", fmt.Sprint(entry.ID))
+		}
+	}
+
+	err := ses.ser.UpdateBatch(ctx, setlistEntries)
+
+	if err != nil {
+		return domain.FromError(err)
+	}
+
 	return nil
 }
 

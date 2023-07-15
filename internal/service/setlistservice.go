@@ -40,12 +40,12 @@ func (ss setlistService) FetchAll(ctx context.Context) (*[]domain.Setlist, error
 }
 
 func (ss setlistService) Update(ctx context.Context, setlist *domain.Setlist, principal *domain.User) (*domain.Setlist, error) {
-	if !principal.HasClearance(domain.EDITOR) {
-		currentSetlist, err := ss.slr.GetByID(ctx, setlist.ID)
-		if err != nil {
-			return nil, domain.FromError(err)
-		}
+	currentSetlist, err := ss.slr.GetByID(ctx, setlist.ID)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
 
+	if !principal.HasClearance(domain.ADMIN) {
 		if currentSetlist.CreatorID != principal.ID {
 			return nil, domain.NewNotAuthorizedErr("Not authorized to update setlist")
 		}
@@ -55,8 +55,7 @@ func (ss setlistService) Update(ctx context.Context, setlist *domain.Setlist, pr
 		return nil, domain.NewBadRequestErr(fmt.Sprintf("%s must be later than %s", setlist.Deadline.String(), time.Now().String()))
 	}
 
-	_, err := ss.ur.GetByID(ctx, setlist.CreatorID)
-	if err != nil {
+	if _, err := ss.ur.GetByID(ctx, setlist.CreatorID); err != nil {
 		return nil, domain.FromError(err)
 	}
 

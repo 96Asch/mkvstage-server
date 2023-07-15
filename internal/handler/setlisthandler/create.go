@@ -11,7 +11,6 @@ import (
 type setlistCreateReq struct {
 	Name      string    `json:"name" binding:"required"`
 	CreatorID int64     `json:"creator_id" binding:"required"`
-	Global    bool      `json:"is_global" binding:"required"`
 	Deadline  time.Time `json:"deadline" binding:"required"`
 	// Add created entries
 }

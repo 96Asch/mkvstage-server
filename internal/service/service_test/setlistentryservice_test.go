@@ -590,3 +590,92 @@ func TestSetlistEntryUpdateBatchSetlistEntryRepoErr(t *testing.T) {
 	mockSR.AssertExpectations(t)
 	mockSER.AssertExpectations(t)
 }
+
+func TestSetlistEntryRemoveBatchCorrect(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockSetlistEntryIds := []int64{
+		1,
+		2,
+	}
+
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	for _, id := range mockSetlistEntryIds {
+		mockSER.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), id).
+			Return(nil, nil)
+	}
+
+	mockSER.
+		On("DeleteBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntryIds).
+		Return(nil)
+
+	slr := service.NewSetlistEntryService(mockSER, mockSR)
+
+	err := slr.RemoveBatch(context.TODO(), mockSetlistEntryIds, mockUser)
+	assert.NoError(t, err)
+	mockSER.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryRemoveBatchClearanceErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockSetlistEntryIds := []int64{
+		1,
+		2,
+	}
+
+	mockErr := domain.NewNotAuthorizedErr("")
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSR)
+
+	err := slr.RemoveBatch(context.TODO(), mockSetlistEntryIds, mockUser)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryRemoveBatchInvalidID(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockSetlistEntryIds := []int64{
+		1,
+		2,
+	}
+
+	mockErr := domain.NewRecordNotFoundErr("", "")
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	mockSER.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntryIds[0]).
+		Return(nil, mockErr)
+
+	slr := service.NewSetlistEntryService(mockSER, mockSR)
+
+	err := slr.RemoveBatch(context.TODO(), mockSetlistEntryIds, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}

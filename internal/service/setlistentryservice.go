@@ -32,7 +32,7 @@ func (ses setlistEntryService) StoreBatch(ctx context.Context, setlistEntries *[
 		}
 
 		if _, err := ses.sr.GetByID(ctx, entry.SongID); err != nil {
-			return domain.NewRecordNotFoundErr("SongID", fmt.Sprint(entry.SongID))
+			return domain.FromError(err)
 		}
 	}
 
@@ -76,11 +76,11 @@ func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *
 		}
 
 		if _, err := ses.sr.GetByID(ctx, entry.SongID); err != nil {
-			return domain.NewRecordNotFoundErr("SongID", fmt.Sprint(entry.SongID))
+			return domain.FromError(err)
 		}
 
 		if _, err := ses.ser.GetByID(ctx, entry.ID); err != nil {
-			return domain.NewRecordNotFoundErr("ID", fmt.Sprint(entry.ID))
+			return domain.FromError(err)
 		}
 	}
 
@@ -93,6 +93,22 @@ func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *
 	return nil
 }
 
-func (ses setlistEntryService) RemoveBatch(ctx context.Context, id int64, principal *domain.User) error {
+func (ses setlistEntryService) RemoveBatch(ctx context.Context, ids []int64, principal *domain.User) error {
+	if !principal.HasClearance(domain.EDITOR) {
+		return domain.NewNotAuthorizedErr("Invalid authorization")
+	}
+
+	for _, id := range ids {
+		if _, err := ses.ser.GetByID(ctx, id); err != nil {
+			return domain.FromError(err)
+		}
+	}
+
+	err := ses.ser.DeleteBatch(ctx, ids)
+
+	if err != nil {
+		return domain.FromError(err)
+	}
+
 	return nil
 }

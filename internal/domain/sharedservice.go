@@ -33,5 +33,5 @@ type AuthSingleRemover[T any] interface {
 }
 
 type AuthMultiRemover[T any] interface {
-	RemoveBatch(ctx context.Context, id int64, principal *User) error
+	RemoveBatch(ctx context.Context, ids []int64, principal *User) error
 }

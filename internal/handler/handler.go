@@ -24,6 +24,7 @@ type Config struct {
 	R      domain.RoleService
 	UR     domain.UserRoleService
 	SL     domain.SetlistService
+	SE     domain.SetlistEntryService
 }
 
 func (cfg *Config) New() *Config {

@@ -25,7 +25,7 @@ type AuthSingleStorer[T any] interface {
 }
 
 type AuthMultiStorer[T any] interface {
-	StoreBatch(ctx context.Context, domain *T, principal *User) error
+	StoreBatch(ctx context.Context, domain *[]T, principal *User) error
 }
 
 type AuthSingleRemover[T any] interface {

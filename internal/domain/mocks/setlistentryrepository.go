@@ -87,8 +87,8 @@ func (m MockSetlistEntryRepository) DeleteBatch(ctx context.Context, sids []int6
 	return r0
 }
 
-func (m MockSetlistEntryRepository) Update(ctx context.Context, setlist *domain.Setlist) error {
-	ret := m.Called(ctx, setlist)
+func (m MockSetlistEntryRepository) Update(ctx context.Context, setlistEntry *domain.SetlistEntry) error {
+	ret := m.Called(ctx, setlistEntry)
 
 	var r0 error
 	if ret.Get(0) != nil {

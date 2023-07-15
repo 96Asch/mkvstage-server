@@ -22,12 +22,12 @@ func (m MockSetlistEntryService) StoreBatch(ctx context.Context, id int64, princ
 	return r0
 }
 
-func (m MockSetlistEntryService) FetchByID(ctx context.Context, slid int64) (*domain.Setlist, error) {
+func (m MockSetlistEntryService) FetchByID(ctx context.Context, slid int64) (*domain.SetlistEntry, error) {
 	ret := m.Called(ctx, slid)
 
-	var r0 *domain.Setlist
+	var r0 *domain.SetlistEntry
 	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*domain.Setlist)
+		r0 = ret.Get(0).(*domain.SetlistEntry)
 	}
 
 	var r1 error
@@ -38,12 +38,12 @@ func (m MockSetlistEntryService) FetchByID(ctx context.Context, slid int64) (*do
 	return r0, r1
 }
 
-func (m MockSetlistEntryService) FetchAll(ctx context.Context) (*[]domain.Setlist, error) {
+func (m MockSetlistEntryService) FetchAll(ctx context.Context) (*[]domain.SetlistEntry, error) {
 	ret := m.Called(ctx)
 
-	var r0 *[]domain.Setlist
+	var r0 *[]domain.SetlistEntry
 	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*[]domain.Setlist)
+		r0 = ret.Get(0).(*[]domain.SetlistEntry)
 	}
 
 	var r1 error

@@ -61,7 +61,6 @@ func TestCreateCorrect(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Global:    true,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
@@ -70,7 +69,6 @@ func TestCreateCorrect(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      expSetlist.Name,
 		CreatorID: expSetlist.ID,
-		Global:    expSetlist.Global,
 		Deadline:  expSetlist.Deadline,
 	}
 
@@ -125,7 +123,6 @@ func TestCreateBindErr(t *testing.T) {
 
 	mockSetlist := &domain.Setlist{
 		CreatorID: mockUser.ID,
-		Global:    true,
 	}
 
 	mockErr := domain.NewBadRequestErr("")
@@ -165,7 +162,6 @@ func TestCreateNoContext(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Global:    true,
 		Deadline:  time.Now().Add(time.Hour * 24),
 	}
 
@@ -203,7 +199,6 @@ func TestCreateStoreErr(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Global:    true,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 	}
 

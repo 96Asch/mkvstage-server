@@ -63,7 +63,6 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Global:    false,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
@@ -73,7 +72,6 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Global:    true,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
@@ -82,7 +80,6 @@ func TestUpdateByIDCorrect(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      expSetlist.Name,
 		CreatorID: expSetlist.ID,
-		Global:    expSetlist.Global,
 		Deadline:  expSetlist.Deadline,
 	}
 
@@ -90,7 +87,6 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		ID:        mockPrevSetlist.ID,
 		Name:      expSetlist.Name,
 		CreatorID: expSetlist.ID,
-		Global:    expSetlist.Global,
 		Deadline:  expSetlist.Deadline,
 	}
 
@@ -139,7 +135,6 @@ func TestUpdateByIDInvalidParam(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Global:    true,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
@@ -148,7 +143,6 @@ func TestUpdateByIDInvalidParam(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      expSetlist.Name,
 		CreatorID: expSetlist.ID,
-		Global:    expSetlist.Global,
 		Deadline:  expSetlist.Deadline,
 	}
 
@@ -189,7 +183,6 @@ func TestUpdateByIDBindErr(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Global:    false,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
@@ -197,7 +190,6 @@ func TestUpdateByIDBindErr(t *testing.T) {
 
 	mockSetlist := &domain.Setlist{
 		CreatorID: mockUser.ID,
-		Global:    true,
 	}
 
 	mockErr := domain.NewBadRequestErr("")
@@ -238,7 +230,6 @@ func TestUpdateByIDNoContext(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Global:    false,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
@@ -247,7 +238,6 @@ func TestUpdateByIDNoContext(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Global:    true,
 		Deadline:  time.Now().Add(time.Hour * 24),
 	}
 
@@ -286,7 +276,6 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Global:    false,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
@@ -295,7 +284,6 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Global:    true,
 		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
 	}
 

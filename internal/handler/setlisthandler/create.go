@@ -44,7 +44,6 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 	setlist := &domain.Setlist{
 		Name:      slReq.Name,
 		CreatorID: slReq.CreatorID,
-		Global:    slReq.Global,
 		Deadline:  slReq.Deadline,
 	}
 

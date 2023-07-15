@@ -48,17 +48,6 @@ func (slr gormSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist,
 	return &setlists, nil
 }
 
-func (slr gormSetlistRepository) GetAllGlobal(ctx context.Context, uid int64) (*[]domain.Setlist, error) {
-	var setlists []domain.Setlist
-	res := slr.db.Where("is_global = ?", true).Or("creator_id = ?", uid).Find(&setlists)
-
-	if err := res.Error; err != nil {
-		return nil, domain.NewInternalErr()
-	}
-
-	return &setlists, nil
-}
-
 func (slr gormSetlistRepository) Create(ctx context.Context, setlist *domain.Setlist) error {
 	res := slr.db.Create(setlist)
 

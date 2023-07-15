@@ -43,22 +43,6 @@ func (m MockSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist, e
 	return r0, r1
 }
 
-func (m MockSetlistRepository) GetAllGlobal(ctx context.Context, uid int64) (*[]domain.Setlist, error) {
-	ret := m.Called(ctx, uid)
-
-	var r0 *[]domain.Setlist
-	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*[]domain.Setlist)
-	}
-
-	var r1 error
-	if ret.Get(1) != nil {
-		r1 = ret.Get(1).(error)
-	}
-
-	return r0, r1
-}
-
 func (m MockSetlistRepository) Create(ctx context.Context, setlist *domain.Setlist) error {
 	ret := m.Called(ctx, setlist)
 

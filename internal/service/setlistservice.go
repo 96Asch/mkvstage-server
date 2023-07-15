@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 )
@@ -37,15 +39,6 @@ func (ss setlistService) FetchAll(ctx context.Context) (*[]domain.Setlist, error
 	return setlists, nil
 }
 
-func (ss setlistService) FetchAllGlobal(ctx context.Context, principal *domain.User) (*[]domain.Setlist, error) {
-	setlists, err := ss.slr.GetAllGlobal(ctx, principal.ID)
-	if err != nil {
-		return nil, domain.FromError(err)
-	}
-
-	return setlists, nil
-}
-
 func (ss setlistService) Update(ctx context.Context, setlist *domain.Setlist, principal *domain.User) (*domain.Setlist, error) {
 	if !principal.HasClearance(domain.EDITOR) {
 		currentSetlist, err := ss.slr.GetByID(ctx, setlist.ID)
@@ -54,8 +47,12 @@ func (ss setlistService) Update(ctx context.Context, setlist *domain.Setlist, pr
 		}
 
 		if currentSetlist.CreatorID != principal.ID {
-			return nil, domain.NewNotAuthorizedErr("user is neither an editor nor creator of the setlist")
+			return nil, domain.NewNotAuthorizedErr("Not authorized to update setlist")
 		}
+	}
+
+	if setlist.Deadline.Before(time.Now()) {
+		return nil, domain.NewBadRequestErr(fmt.Sprintf("%s must be later than %s", setlist.Deadline.String(), time.Now().String()))
 	}
 
 	_, err := ss.ur.GetByID(ctx, setlist.CreatorID)
@@ -73,7 +70,11 @@ func (ss setlistService) Update(ctx context.Context, setlist *domain.Setlist, pr
 
 func (ss setlistService) Store(ctx context.Context, setlist *domain.Setlist, principal *domain.User) error {
 	if !principal.HasClearance(domain.MEMBER) {
-		return domain.NewNotAuthorizedErr("not authorized to create setlists")
+		return domain.NewNotAuthorizedErr("Not authorized to create setlists")
+	}
+
+	if setlist.Deadline.Before(time.Now()) {
+		return domain.NewBadRequestErr(fmt.Sprintf("%s must be later than %s", setlist.Deadline.String(), time.Now().String()))
 	}
 
 	if _, err := ss.ur.GetByID(ctx, setlist.CreatorID); err != nil {

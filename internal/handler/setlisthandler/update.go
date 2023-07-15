@@ -56,7 +56,6 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		ID:        int64(setlistID),
 		Name:      slReq.Name,
 		CreatorID: slReq.CreatorID,
-		Global:    slReq.Global,
 		Deadline:  slReq.Deadline,
 	}
 

@@ -23,14 +23,12 @@ func TestSetlistEntryStoreBatchCorrect(t *testing.T) {
 
 	mockSetlistEntries := &[]domain.SetlistEntry{
 		{
-			ID:          1,
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
 		},
 		{
-			ID:          2,
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
@@ -41,20 +39,34 @@ func TestSetlistEntryStoreBatchCorrect(t *testing.T) {
 	mockSER := &mocks.MockSetlistEntryRepository{}
 	mockSR := &mocks.MockSongRepository{}
 
-	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), (*mockSetlistEntries)[0].SongID).
-		Return(nil, nil)
-	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), (*mockSetlistEntries)[1].SongID).
-		Return(nil, nil)
+	for _, entry := range *mockSetlistEntries {
+		mockSR.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.SongID).
+			Return(nil, nil)
+
+	}
+
 	mockSER.
 		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries).
-		Return(nil)
+		Return(nil).
+		Run(func(args mock.Arguments) {
+			arg, ok := args.Get(1).(*[]domain.SetlistEntry)
+			assert.True(t, ok)
+
+			for idx := range *arg {
+				(*arg)[idx].ID = int64(idx + 1)
+			}
+		})
 
 	slr := service.NewSetlistEntryService(mockSER, mockSR)
 
 	err := slr.StoreBatch(context.TODO(), mockSetlistEntries, mockUser)
 	assert.NoError(t, err)
+
+	for idx, entry := range *mockSetlistEntries {
+		assert.Equal(t, int64(idx+1), entry.ID)
+	}
+
 	mockSER.AssertExpectations(t)
 	mockSR.AssertExpectations(t)
 }

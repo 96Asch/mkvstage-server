@@ -19,6 +19,7 @@ func prepareAndServeDelete(
 	t *testing.T,
 	paramID string,
 	mockSL domain.SetlistService,
+	mockSLES domain.SetlistEntryService,
 	mockSS domain.SongService,
 	mockMWH domain.MiddlewareHandler,
 ) *httptest.ResponseRecorder {
@@ -28,7 +29,7 @@ func prepareAndServeDelete(
 	router := gin.New()
 	writer := httptest.NewRecorder()
 
-	setlisthandler.Initialize(&router.RouterGroup, mockSL, mockSS, mockMWH)
+	setlisthandler.Initialize(&router.RouterGroup, mockSL, mockSLES, mockSS, mockMWH)
 
 	req, err := http.NewRequestWithContext(
 		context.TODO(),
@@ -55,6 +56,7 @@ func TestDeleteByIDCorrect(t *testing.T) {
 	mockSetlistID := 1
 
 	mockSL := &mocks.MockSetlistService{}
+	mockSLES := &mocks.MockSetlistEntryService{}
 	mockSS := &mocks.MockSongService{}
 
 	mockMWH := &mocks.MockMiddlewareHandler{}
@@ -72,7 +74,7 @@ func TestDeleteByIDCorrect(t *testing.T) {
 		On("Remove", mock.AnythingOfType("*context.emptyCtx"), int64(mockSetlistID), mockUser).
 		Return(nil)
 
-	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSS, mockMWH)
+	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSLES, mockSS, mockMWH)
 
 	assert.Equal(t, http.StatusAccepted, writer.Code)
 	mockSL.AssertExpectations(t)
@@ -86,6 +88,7 @@ func TestDeleteByIDNoContext(t *testing.T) {
 
 	mockErr := domain.NewInternalErr()
 	mockSL := &mocks.MockSetlistService{}
+	mockSLES := &mocks.MockSetlistEntryService{}
 	mockSS := &mocks.MockSongService{}
 
 	mockMWH := &mocks.MockMiddlewareHandler{}
@@ -96,7 +99,7 @@ func TestDeleteByIDNoContext(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 
-	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSS, mockMWH)
+	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSLES, mockSS, mockMWH)
 
 	assert.Equal(t, mockErr.Status(), writer.Code)
 	mockSL.AssertExpectations(t)
@@ -113,6 +116,7 @@ func TestDeleteByIDInvalidParam(t *testing.T) {
 
 	mockMWH := &mocks.MockMiddlewareHandler{}
 	mockSL := &mocks.MockSetlistService{}
+	mockSLES := &mocks.MockSetlistEntryService{}
 	mockSS := &mocks.MockSongService{}
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
@@ -124,7 +128,7 @@ func TestDeleteByIDInvalidParam(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 
-	writer := prepareAndServeDelete(t, "a", mockSL, mockSS, mockMWH)
+	writer := prepareAndServeDelete(t, "a", mockSL, mockSLES, mockSS, mockMWH)
 	assert.Equal(t, http.StatusBadRequest, writer.Code)
 	mockMWH.AssertExpectations(t)
 	mockSL.AssertExpectations(t)
@@ -144,6 +148,7 @@ func TestDeleteByIDRemoveErr(t *testing.T) {
 
 	mockErr := domain.NewInternalErr()
 	mockSL := &mocks.MockSetlistService{}
+	mockSLES := &mocks.MockSetlistEntryService{}
 	mockSS := &mocks.MockSongService{}
 
 	mockMWH := &mocks.MockMiddlewareHandler{}
@@ -161,7 +166,7 @@ func TestDeleteByIDRemoveErr(t *testing.T) {
 		On("Remove", mock.AnythingOfType("*context.emptyCtx"), int64(mockSetlistID), mockUser).
 		Return(mockErr)
 
-	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSS, mockMWH)
+	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSLES, mockSS, mockMWH)
 
 	assert.Equal(t, mockErr.Status(), writer.Code)
 	mockSL.AssertExpectations(t)

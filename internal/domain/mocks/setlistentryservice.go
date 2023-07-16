@@ -11,8 +11,8 @@ type MockSetlistEntryService struct {
 	mock.Mock
 }
 
-func (m MockSetlistEntryService) StoreBatch(ctx context.Context, id int64, principal *domain.User) error {
-	ret := m.Called(ctx)
+func (m MockSetlistEntryService) StoreBatch(ctx context.Context, entries *[]domain.SetlistEntry, principal *domain.User) error {
+	ret := m.Called(ctx, entries, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {
@@ -54,8 +54,8 @@ func (m MockSetlistEntryService) FetchAll(ctx context.Context) (*[]domain.Setlis
 	return r0, r1
 }
 
-func (m MockSetlistEntryService) UpdateBatch(ctx context.Context, id int64, principal *domain.User) error {
-	ret := m.Called(ctx)
+func (m MockSetlistEntryService) UpdateBatch(ctx context.Context, entries *[]domain.SetlistEntry, principal *domain.User) error {
+	ret := m.Called(ctx, entries, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {
@@ -66,7 +66,7 @@ func (m MockSetlistEntryService) UpdateBatch(ctx context.Context, id int64, prin
 }
 
 func (m MockSetlistEntryService) RemoveBatch(ctx context.Context, ids []int64, principal *domain.User) error {
-	ret := m.Called(ctx)
+	ret := m.Called(ctx, ids, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {

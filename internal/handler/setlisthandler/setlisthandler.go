@@ -6,14 +6,16 @@ import (
 )
 
 type setlistHandler struct {
-	sls domain.SetlistService
-	ss  domain.SongService
+	sls  domain.SetlistService
+	sles domain.SetlistEntryService
+	ss   domain.SongService
 }
 
-func Initialize(group *gin.RouterGroup, sls domain.SetlistService, ss domain.SongService, mwh domain.MiddlewareHandler) {
+func Initialize(group *gin.RouterGroup, sls domain.SetlistService, sles domain.SetlistEntryService, ss domain.SongService, mwh domain.MiddlewareHandler) {
 	setlisthandler := &setlistHandler{
-		sls: sls,
-		ss:  ss,
+		sls:  sls,
+		sles: sles,
+		ss:   ss,
 	}
 
 	setlists := group.Group("setlists")

@@ -5,6 +5,7 @@ import "gorm.io/datatypes"
 type SetlistEntry struct {
 	ID          int64          `json:"id"`
 	SongID      int64          `json:"song_id"`
+	SetlistID   int64          `json:"setlist_id"`
 	Transpose   int16          `json:"transpose"`
 	Notes       string         `json:"notes"`
 	Arrangement datatypes.JSON `json:"arrangement"`

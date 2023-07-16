@@ -326,7 +326,6 @@ func TestSetlistStoreCorrect(t *testing.T) {
 	}
 
 	mockSetlist := &domain.Setlist{
-		ID:        1,
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
@@ -341,12 +340,20 @@ func TestSetlistStoreCorrect(t *testing.T) {
 		Return(mockUser, nil)
 	mockSLR.
 		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
-		Return(nil)
+		Return(nil).
+		Run(func(args mock.Arguments) {
+			arg, ok := args.Get(1).(*domain.Setlist)
+			assert.True(t, ok)
+			arg.ID = 1
+		})
+
+	assert.Equal(t, mockSetlist.ID, int64(0))
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
 
 	err := sls.Store(context.TODO(), mockSetlist, mockUser)
 	assert.NoError(t, err)
+	assert.Equal(t, int64(1), mockSetlist.ID)
 	mockUR.AssertExpectations(t)
 	mockSLR.AssertExpectations(t)
 }

@@ -473,3 +473,110 @@ func TestSetlistStoreErr(t *testing.T) {
 	mockUR.AssertExpectations(t)
 	mockSLR.AssertExpectations(t)
 }
+
+func TestSetlistRemoveCorrect(t *testing.T) {
+	t.Parallel()
+
+	slid := int64(1)
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockSLR.
+		On("Delete", mock.AnythingOfType("*context.emptyCtx"), slid).
+		Return(nil)
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Remove(context.TODO(), slid, mockUser)
+
+	assert.NoError(t, err)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistRemoveNotAuthorized(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		CreatorID: 0,
+	}
+
+	mockErr := domain.NewNotAuthorizedErr("")
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		Return(mockSetlist, nil)
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Remove(context.TODO(), mockSetlist.ID, mockUser)
+
+	assert.ErrorAs(t, err, &mockErr)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistSetlistGetByIDErr(t *testing.T) {
+	t.Parallel()
+
+	slid := int64(1)
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockErr := domain.NewRecordNotFoundErr("", "")
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), slid).
+		Return(nil, mockErr)
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Remove(context.TODO(), slid, mockUser)
+
+	assert.ErrorAs(t, err, &mockErr)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistRemoveErr(t *testing.T) {
+	t.Parallel()
+
+	slid := int64(1)
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockSLR.
+		On("Delete", mock.AnythingOfType("*context.emptyCtx"), slid).
+		Return(mockErr)
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Remove(context.TODO(), slid, mockUser)
+
+	assert.ErrorAs(t, err, &mockErr)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}

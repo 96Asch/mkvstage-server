@@ -96,7 +96,7 @@ func (ss setlistService) Remove(ctx context.Context, sid int64, principal *domai
 		}
 
 		if currentSetlist.CreatorID != principal.ID {
-			return domain.NewNotAuthorizedErr("user is neither an editor nor creator of the setlist")
+			return domain.NewNotAuthorizedErr("User is neither an editor nor creator of the setlist")
 		}
 	}
 

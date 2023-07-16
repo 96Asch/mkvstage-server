@@ -316,3 +316,160 @@ func TestSetlistUpdateErr(t *testing.T) {
 	mockUR.AssertExpectations(t)
 	mockSLR.AssertExpectations(t)
 }
+
+func TestSetlistStoreCorrect(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, 1),
+		Name:      "Foobar",
+		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
+	}
+
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		Return(mockUser, nil)
+	mockSLR.
+		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		Return(nil)
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Store(context.TODO(), mockSetlist, mockUser)
+	assert.NoError(t, err)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistStoreNotAuthorized(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		CreatorID: 0,
+		Deadline:  time.Now().AddDate(0, 0, 1),
+		Name:      "Foobar",
+		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
+	}
+
+	mockErr := domain.NewNotAuthorizedErr("")
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Store(context.TODO(), mockSetlist, mockUser)
+	assert.Error(t, err, &mockErr)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistStoreInvalidDeadline(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, -1),
+		Name:      "Foobar",
+		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
+	}
+
+	mockErr := domain.NewBadRequestErr("")
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Store(context.TODO(), mockSetlist, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistStoreUserGetByIDErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, 1),
+		Name:      "Foobar",
+		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
+	}
+
+	mockErr := domain.NewRecordNotFoundErr("", "")
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		Return(nil, mockErr)
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Store(context.TODO(), mockSetlist, mockUser)
+	assert.Error(t, err, &mockErr)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistStoreErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, 1),
+		Name:      "Foobar",
+		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockUR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		Return(mockUser, nil)
+	mockSLR.
+		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		Return(mockErr)
+
+	sls := service.NewSetlistService(mockUR, mockSLR)
+
+	err := sls.Store(context.TODO(), mockSetlist, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}

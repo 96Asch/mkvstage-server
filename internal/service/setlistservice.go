@@ -89,7 +89,7 @@ func (ss setlistService) Store(ctx context.Context, setlist *domain.Setlist, pri
 }
 
 func (ss setlistService) Remove(ctx context.Context, sid int64, principal *domain.User) error {
-	if !principal.HasClearance(domain.EDITOR) {
+	if !principal.HasClearance(domain.ADMIN) {
 		currentSetlist, err := ss.slr.GetByID(ctx, sid)
 		if err != nil {
 			return domain.FromError(err)

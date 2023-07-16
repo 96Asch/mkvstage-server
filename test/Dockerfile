@@ -16,4 +16,4 @@ COPY . .
 RUN command
 
 
-CMD CGO_ENABLED=0 go test ./...  -coverpkg=./... -coverprofile ./coverage.out;go tool cover -func ./coverage.out
+CMD CGO_ENABLED=0 go test ./...  -coverpkg=./... -coverprofile ./coverage.out && go tool cover -func ./coverage.out

@@ -9,15 +9,17 @@ import (
 )
 
 type setlistEntryService struct {
-	ser domain.SetlistEntryRepository
-	sr  domain.SongRepository
+	sler domain.SetlistEntryRepository
+	slr  domain.SetlistRepository
+	sr   domain.SongRepository
 }
 
 //revive:disable:unexported-return
-func NewSetlistEntryService(ser domain.SetlistEntryRepository, sr domain.SongRepository) *setlistEntryService {
+func NewSetlistEntryService(sler domain.SetlistEntryRepository, slr domain.SetlistRepository, sr domain.SongRepository) *setlistEntryService {
 	return &setlistEntryService{
-		ser: ser,
-		sr:  sr,
+		sler: sler,
+		slr:  slr,
+		sr:   sr,
 	}
 }
 
@@ -36,7 +38,7 @@ func (ses setlistEntryService) StoreBatch(ctx context.Context, setlistEntries *[
 		}
 	}
 
-	err := ses.ser.CreateBatch(ctx, setlistEntries)
+	err := ses.sler.CreateBatch(ctx, setlistEntries)
 
 	if err != nil {
 		return domain.FromError(err)
@@ -46,7 +48,7 @@ func (ses setlistEntryService) StoreBatch(ctx context.Context, setlistEntries *[
 }
 
 func (ses setlistEntryService) FetchByID(ctx context.Context, id int64) (*domain.SetlistEntry, error) {
-	setlistEntry, err := ses.ser.GetByID(ctx, id)
+	setlistEntry, err := ses.sler.GetByID(ctx, id)
 
 	if err != nil {
 		return nil, domain.FromError(err)
@@ -56,7 +58,7 @@ func (ses setlistEntryService) FetchByID(ctx context.Context, id int64) (*domain
 }
 
 func (ses setlistEntryService) FetchAll(ctx context.Context) (*[]domain.SetlistEntry, error) {
-	setlistEntries, err := ses.ser.GetAll(ctx)
+	setlistEntries, err := ses.sler.GetAll(ctx)
 
 	if err != nil {
 		return nil, domain.FromError(err)
@@ -79,12 +81,12 @@ func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *
 			return domain.FromError(err)
 		}
 
-		if _, err := ses.ser.GetByID(ctx, entry.ID); err != nil {
+		if _, err := ses.sler.GetByID(ctx, entry.ID); err != nil {
 			return domain.FromError(err)
 		}
 	}
 
-	err := ses.ser.UpdateBatch(ctx, setlistEntries)
+	err := ses.sler.UpdateBatch(ctx, setlistEntries)
 
 	if err != nil {
 		return domain.FromError(err)
@@ -99,12 +101,12 @@ func (ses setlistEntryService) RemoveBatch(ctx context.Context, ids []int64, pri
 	}
 
 	for _, id := range ids {
-		if _, err := ses.ser.GetByID(ctx, id); err != nil {
+		if _, err := ses.sler.GetByID(ctx, id); err != nil {
 			return domain.FromError(err)
 		}
 	}
 
-	err := ses.ser.DeleteBatch(ctx, ids)
+	err := ses.sler.DeleteBatch(ctx, ids)
 
 	if err != nil {
 		return domain.FromError(err)

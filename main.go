@@ -137,7 +137,7 @@ func main() {
 	userroleService := service.NewUserRoleService(userroleRepo)
 	roleService := service.NewRoleService(roleRepo, userRepo, userroleRepo)
 	setlistService := service.NewSetlistService(userRepo, setlistRepo)
-	setlistEntryService := service.NewSetlistEntryService(setlistEntryRepo, songRepo)
+	setlistEntryService := service.NewSetlistEntryService(setlistEntryRepo, setlistRepo, songRepo)
 
 	config := handler.Config{
 		Router: router,

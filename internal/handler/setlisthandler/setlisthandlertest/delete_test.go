@@ -53,7 +53,7 @@ func TestDeleteByIDCorrect(t *testing.T) {
 		LastName:  "Bar",
 	}
 
-	mockSetlistID := 1
+	mockSetlistID := int64(1)
 
 	mockSL := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
@@ -72,6 +72,10 @@ func TestDeleteByIDCorrect(t *testing.T) {
 
 	mockSL.
 		On("Remove", mock.AnythingOfType("*context.emptyCtx"), int64(mockSetlistID), mockUser).
+		Return(nil)
+
+	mockSLES.
+		On("RemoveBySetlist", mock.AnythingOfType("*context.emptyCtx"), &domain.Setlist{ID: mockSetlistID}, mockUser).
 		Return(nil)
 
 	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSLES, mockSS, mockMWH)
@@ -144,10 +148,10 @@ func TestDeleteByIDRemoveErr(t *testing.T) {
 		LastName:  "Bar",
 	}
 
-	mockSetlistID := 1
+	mockSetlistID := int64(1)
 
 	mockErr := domain.NewInternalErr()
-	mockSL := &mocks.MockSetlistService{}
+	mockSLS := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
 	mockSS := &mocks.MockSongService{}
 
@@ -162,13 +166,57 @@ func TestDeleteByIDRemoveErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 
-	mockSL.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), int64(mockSetlistID), mockUser).
+	mockSLS.
+		On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockSetlistID, mockUser).
 		Return(mockErr)
 
-	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSLES, mockSS, mockMWH)
+	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSLS, mockSLES, mockSS, mockMWH)
 
 	assert.Equal(t, mockErr.Status(), writer.Code)
-	mockSL.AssertExpectations(t)
+	mockSLS.AssertExpectations(t)
+	mockSLES.AssertExpectations(t)
+	mockMWH.AssertExpectations(t)
+}
+
+func TestDeleteByIDRemoveBySetlistErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:        1,
+		FirstName: "Foo",
+		LastName:  "Bar",
+	}
+
+	mockSetlistID := int64(1)
+
+	mockErr := domain.NewInternalErr()
+	mockSLS := &mocks.MockSetlistService{}
+	mockSLES := &mocks.MockSetlistEntryService{}
+	mockSS := &mocks.MockSongService{}
+
+	mockMWH := &mocks.MockMiddlewareHandler{}
+
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
+	mockSLS.
+		On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockSetlistID, mockUser).
+		Return(nil)
+
+	mockSLES.
+		On("RemoveBySetlist", mock.AnythingOfType("*context.emptyCtx"), &domain.Setlist{ID: mockSetlistID}, mockUser).
+		Return(mockErr)
+
+	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSLS, mockSLES, mockSS, mockMWH)
+
+	assert.Equal(t, mockErr.Status(), writer.Code)
+	mockSLS.AssertExpectations(t)
+	mockSLES.AssertExpectations(t)
 	mockMWH.AssertExpectations(t)
 }

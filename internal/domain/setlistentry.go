@@ -20,10 +20,12 @@ type SetlistEntryService interface {
 	Fetcher[SetlistEntry]
 	AuthMultiUpdater[SetlistEntry]
 	RemoveBatch(ctx context.Context, setlist *Setlist, ids []int64, principal *User) error
+	RemoveBySetlist(ctx context.Context, setlist *Setlist, principal *User) error
 }
 
 type SetlistEntryRepository interface {
 	Getter[SetlistEntry]
+	GetBySetlist(ctx context.Context, setlist *Setlist) (*[]SetlistEntry, error)
 	Creator[SetlistEntry]
 	Updater[SetlistEntry]
 	Deleter[SetlistEntry]

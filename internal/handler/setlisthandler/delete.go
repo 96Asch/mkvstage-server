@@ -44,5 +44,11 @@ func (slh setlistHandler) DeleteByID(ctx *gin.Context) {
 		return
 	}
 
+	if err := slh.sles.RemoveBySetlist(context, &domain.Setlist{ID: int64(setlistID)}, user); err != nil {
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
+		return
+	}
+
 	ctx.Status(http.StatusAccepted)
 }

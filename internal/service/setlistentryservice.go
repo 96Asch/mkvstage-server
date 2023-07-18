@@ -36,6 +36,10 @@ func (ses setlistEntryService) StoreBatch(ctx context.Context, setlistEntries *[
 		return domain.NewInternalErr()
 	}
 
+	if len(*setlistEntries) <= 0 {
+		return nil
+	}
+
 	setlistID := (*setlistEntries)[0].SetlistID
 
 	for _, entry := range *setlistEntries {
@@ -159,6 +163,39 @@ func (ses setlistEntryService) RemoveBatch(ctx context.Context, setlist *domain.
 	err := ses.sler.DeleteBatch(ctx, ids)
 
 	if err != nil {
+		return domain.FromError(err)
+	}
+
+	return nil
+}
+
+func (ses setlistEntryService) RemoveBySetlist(ctx context.Context, setlist *domain.Setlist, principal *domain.User) error {
+	if principal == nil {
+		return domain.NewInternalErr()
+	}
+
+	if setlist == nil {
+		return domain.NewInternalErr()
+	}
+
+	if !principal.HasClearance(domain.ADMIN) {
+		if setlist.CreatorID != principal.ID {
+			return domain.NewNotAuthorizedErr("Invalid authorization")
+		}
+	}
+
+	toDeleteSetlistEntries, err := ses.sler.GetBySetlist(ctx, setlist)
+	if err != nil {
+		return domain.FromError(err)
+	}
+
+	toDeleteSetlistEntryIDs := make([]int64, len(*toDeleteSetlistEntries))
+
+	for idx, entry := range *toDeleteSetlistEntries {
+		toDeleteSetlistEntryIDs[idx] = entry.ID
+	}
+
+	if err := ses.sler.DeleteBatch(ctx, toDeleteSetlistEntryIDs); err != nil {
 		return domain.FromError(err)
 	}
 

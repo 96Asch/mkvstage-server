@@ -75,3 +75,14 @@ func (m MockSetlistEntryService) RemoveBatch(ctx context.Context, setlist *domai
 
 	return r0
 }
+
+func (m MockSetlistEntryService) RemoveBySetlist(ctx context.Context, setlist *domain.Setlist, principal *domain.User) error {
+	ret := m.Called(ctx, setlist, principal)
+
+	var r0 error
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(error)
+	}
+
+	return r0
+}

@@ -166,7 +166,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), []int64{3}, mockUser).
+		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
 		Return(nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -775,7 +775,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), []int64{3}, mockUser).
+		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

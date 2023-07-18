@@ -65,8 +65,8 @@ func (m MockSetlistEntryService) UpdateBatch(ctx context.Context, entries *[]dom
 	return r0
 }
 
-func (m MockSetlistEntryService) RemoveBatch(ctx context.Context, ids []int64, principal *domain.User) error {
-	ret := m.Called(ctx, ids, principal)
+func (m MockSetlistEntryService) RemoveBatch(ctx context.Context, setlist *domain.Setlist, ids []int64, principal *domain.User) error {
+	ret := m.Called(ctx, setlist, ids, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {

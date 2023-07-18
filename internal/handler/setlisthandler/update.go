@@ -92,7 +92,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		return
 	}
 
-	if err := slh.sles.RemoveBatch(context, deletedEntriesIds, user); err != nil {
+	if err := slh.sles.RemoveBatch(context, setlist, deletedEntriesIds, user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 
 		return

@@ -832,12 +832,18 @@ func TestSetlistEntryUpdateBatchSetlistDifferentSetlistID(t *testing.T) {
 		ID:         1,
 		Permission: domain.EDITOR,
 	}
-	setlistID := int64(1)
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foobar",
+		CreatorID: mockUser.ID,
+	}
+
 	mockSetlistEntries := &[]domain.SetlistEntry{
 		{
 			ID:          1,
 			SongID:      1,
-			SetlistID:   setlistID,
+			SetlistID:   mockSetlist.ID,
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
@@ -944,6 +950,12 @@ func TestSetlistEntryRemoveBatchCorrect(t *testing.T) {
 		Permission: domain.EDITOR,
 	}
 
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foobar",
+		CreatorID: mockUser.ID,
+	}
+
 	mockSetlistEntryIds := []int64{
 		1,
 		2,
@@ -965,19 +977,116 @@ func TestSetlistEntryRemoveBatchCorrect(t *testing.T) {
 
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
-	err := slr.RemoveBatch(context.TODO(), mockSetlistEntryIds, mockUser)
+	err := slr.RemoveBatch(context.TODO(), mockSetlist, mockSetlistEntryIds, mockUser)
 	assert.NoError(t, err)
 	mockSER.AssertExpectations(t)
 	mockSLR.AssertExpectations(t)
 	mockSR.AssertExpectations(t)
 }
 
-func TestSetlistEntryRemoveBatchClearanceErr(t *testing.T) {
+func TestSetlistEntryRemoveBatchPrincipalNil(t *testing.T) {
 	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.GUEST,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foobar",
+		CreatorID: mockUser.ID,
+	}
+
+	mockSetlistEntryIds := []int64{
+		1,
+		2,
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.RemoveBatch(context.TODO(), mockSetlist, mockSetlistEntryIds, nil)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryRemoveBatchSetlistNil(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockSetlistEntryIds := []int64{
+		1,
+		2,
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.RemoveBatch(context.TODO(), nil, mockSetlistEntryIds, mockUser)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryRemoveBatchIDsEmpty(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foobar",
+		CreatorID: mockUser.ID,
+	}
+
+	mockSetlistEntryIds := []int64{}
+
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.RemoveBatch(context.TODO(), mockSetlist, mockSetlistEntryIds, mockUser)
+	assert.NoError(t, err)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryRemoveBatchNotAuthorizedt(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foobar",
+		CreatorID: 0,
 	}
 
 	mockSetlistEntryIds := []int64{
@@ -992,7 +1101,7 @@ func TestSetlistEntryRemoveBatchClearanceErr(t *testing.T) {
 
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
-	err := slr.RemoveBatch(context.TODO(), mockSetlistEntryIds, mockUser)
+	err := slr.RemoveBatch(context.TODO(), mockSetlist, mockSetlistEntryIds, mockUser)
 	assert.Error(t, err)
 	assert.ErrorAs(t, err, &mockErr)
 	mockSER.AssertExpectations(t)
@@ -1000,12 +1109,18 @@ func TestSetlistEntryRemoveBatchClearanceErr(t *testing.T) {
 	mockSR.AssertExpectations(t)
 }
 
-func TestSetlistEntryRemoveBatchInvalidID(t *testing.T) {
+func TestSetlistEntryRemoveBatchSetlistEntryGetByIDErr(t *testing.T) {
 	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.EDITOR,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foobar",
+		CreatorID: mockUser.ID,
 	}
 
 	mockSetlistEntryIds := []int64{
@@ -1024,7 +1139,50 @@ func TestSetlistEntryRemoveBatchInvalidID(t *testing.T) {
 
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
-	err := slr.RemoveBatch(context.TODO(), mockSetlistEntryIds, mockUser)
+	err := slr.RemoveBatch(context.TODO(), mockSetlist, mockSetlistEntryIds, mockUser)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryRemoveBatchSetlistEntryDeleteBatchErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	mockSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foobar",
+		CreatorID: mockUser.ID,
+	}
+
+	mockSetlistEntryIds := []int64{
+		1,
+		2,
+	}
+
+	mockErr := domain.NewRecordNotFoundErr("", "")
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	for _, id := range mockSetlistEntryIds {
+		mockSER.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), id).
+			Return(nil, nil)
+	}
+
+	mockSER.
+		On("DeleteBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntryIds).
+		Return(mockErr)
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.RemoveBatch(context.TODO(), mockSetlist, mockSetlistEntryIds, mockUser)
 	assert.ErrorAs(t, err, &mockErr)
 	mockSER.AssertExpectations(t)
 	mockSLR.AssertExpectations(t)

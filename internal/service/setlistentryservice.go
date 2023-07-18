@@ -131,9 +131,23 @@ func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *
 	return nil
 }
 
-func (ses setlistEntryService) RemoveBatch(ctx context.Context, ids []int64, principal *domain.User) error {
-	if !principal.HasClearance(domain.EDITOR) {
-		return domain.NewNotAuthorizedErr("Invalid authorization")
+func (ses setlistEntryService) RemoveBatch(ctx context.Context, setlist *domain.Setlist, ids []int64, principal *domain.User) error {
+	if principal == nil {
+		return domain.NewInternalErr()
+	}
+
+	if setlist == nil {
+		return domain.NewInternalErr()
+	}
+
+	if !principal.HasClearance(domain.ADMIN) {
+		if setlist.CreatorID != principal.ID {
+			return domain.NewNotAuthorizedErr("Invalid authorization")
+		}
+	}
+
+	if len(ids) <= 0 {
+		return nil
 	}
 
 	for _, id := range ids {

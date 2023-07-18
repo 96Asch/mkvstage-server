@@ -1,6 +1,10 @@
 package domain
 
-import "gorm.io/datatypes"
+import (
+	"context"
+
+	"gorm.io/datatypes"
+)
 
 type SetlistEntry struct {
 	ID          int64          `json:"id"`
@@ -15,7 +19,7 @@ type SetlistEntryService interface {
 	AuthMultiStorer[SetlistEntry]
 	Fetcher[SetlistEntry]
 	AuthMultiUpdater[SetlistEntry]
-	AuthMultiRemover[SetlistEntry]
+	RemoveBatch(ctx context.Context, setlist *Setlist, ids []int64, principal *User) error
 }
 
 type SetlistEntryRepository interface {

@@ -20,16 +20,18 @@ func TestSetlistEntryStoreBatchCorrect(t *testing.T) {
 		ID:         1,
 		Permission: domain.EDITOR,
 	}
-
+	setlistID := int64(1)
 	mockSetlistEntries := &[]domain.SetlistEntry{
 		{
 			SongID:      1,
+			SetlistID:   setlistID,
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
 		},
 		{
 			SongID:      2,
+			SetlistID:   setlistID,
 			Transpose:   1,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
@@ -44,9 +46,11 @@ func TestSetlistEntryStoreBatchCorrect(t *testing.T) {
 		mockSR.
 			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.SongID).
 			Return(nil, nil)
-
 	}
 
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), setlistID).
+		Return(nil, nil)
 	mockSER.
 		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries).
 		Return(nil).
@@ -68,6 +72,41 @@ func TestSetlistEntryStoreBatchCorrect(t *testing.T) {
 		assert.Equal(t, int64(idx+1), entry.ID)
 	}
 
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryStoreBatchPrincipalNil(t *testing.T) {
+	t.Parallel()
+
+	mockSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          1,
+			SongID:      1,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
+		},
+		{
+			ID:          2,
+			SongID:      2,
+			Transpose:   1,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
+		},
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.StoreBatch(context.TODO(), mockSetlistEntries, nil)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
 	mockSER.AssertExpectations(t)
 	mockSLR.AssertExpectations(t)
 	mockSR.AssertExpectations(t)
@@ -106,6 +145,29 @@ func TestSetlistEntryStoreBatchClearanceErr(t *testing.T) {
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
 	err := slr.StoreBatch(context.TODO(), mockSetlistEntries, mockUser)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryStoreBatchSetlistEntriesNil(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.GUEST,
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.StoreBatch(context.TODO(), nil, mockUser)
 	assert.Error(t, err)
 	assert.ErrorAs(t, err, &mockErr)
 	mockSER.AssertExpectations(t)
@@ -197,24 +259,81 @@ func TestSetlistEntryStoreBatchInvalidTranspose(t *testing.T) {
 	mockSR.AssertExpectations(t)
 }
 
-func TestSetlistEntryStoreBatchSetlistEntryRepoErr(t *testing.T) {
+func TestSetlistEntryStoreBatchCreateBatchErr(t *testing.T) {
 	t.Parallel()
 
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.EDITOR,
 	}
-
+	setlistID := int64(1)
 	mockSetlistEntries := &[]domain.SetlistEntry{
 		{
 			ID:          1,
 			SongID:      1,
+			SetlistID:   setlistID,
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
 		},
 		{
 			ID:          2,
+			SongID:      2,
+			SetlistID:   setlistID,
+			Transpose:   1,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
+		},
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	for _, entry := range *mockSetlistEntries {
+		mockSR.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.SongID).
+			Return(nil, nil)
+	}
+
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), setlistID).
+		Return(nil, nil)
+	mockSER.
+		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries).
+		Return(mockErr)
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.StoreBatch(context.TODO(), mockSetlistEntries, mockUser)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryStoreBatchSetlistGetByIDErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+	setlistID := int64(1)
+	mockSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          1,
+			SongID:      1,
+			SetlistID:   setlistID,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
+		},
+		{
+			ID:          2,
+			SetlistID:   setlistID,
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
@@ -227,15 +346,15 @@ func TestSetlistEntryStoreBatchSetlistEntryRepoErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 	mockSR := &mocks.MockSongRepository{}
 
-	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), (*mockSetlistEntries)[0].SongID).
-		Return(nil, nil)
-	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), (*mockSetlistEntries)[1].SongID).
-		Return(nil, nil)
-	mockSER.
-		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries).
-		Return(mockErr)
+	for _, entry := range *mockSetlistEntries {
+		mockSR.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.SongID).
+			Return(nil, nil)
+	}
+
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), setlistID).
+		Return(nil, mockErr)
 
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
@@ -370,11 +489,12 @@ func TestSetlistEntryUpdateBatchCorrect(t *testing.T) {
 		ID:         1,
 		Permission: domain.EDITOR,
 	}
-
+	setlistID := int64(1)
 	mockSetlistEntries := &[]domain.SetlistEntry{
 		{
 			ID:          1,
 			SongID:      1,
+			SetlistID:   setlistID,
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
@@ -382,6 +502,7 @@ func TestSetlistEntryUpdateBatchCorrect(t *testing.T) {
 		{
 			ID:          2,
 			SongID:      2,
+			SetlistID:   setlistID,
 			Transpose:   1,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
@@ -401,6 +522,10 @@ func TestSetlistEntryUpdateBatchCorrect(t *testing.T) {
 			Return(nil, nil)
 	}
 
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), setlistID).
+		Return(nil, nil)
+
 	mockSER.
 		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries).
 		Return(nil)
@@ -409,6 +534,41 @@ func TestSetlistEntryUpdateBatchCorrect(t *testing.T) {
 
 	err := slr.UpdateBatch(context.TODO(), mockSetlistEntries, mockUser)
 	assert.NoError(t, err)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryUpdateBatchPrincipalNil(t *testing.T) {
+	t.Parallel()
+
+	mockSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          1,
+			SongID:      1,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
+		},
+		{
+			ID:          2,
+			SongID:      2,
+			Transpose:   1,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
+		},
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.UpdateBatch(context.TODO(), mockSetlistEntries, nil)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
 	mockSER.AssertExpectations(t)
 	mockSLR.AssertExpectations(t)
 	mockSR.AssertExpectations(t)
@@ -447,6 +607,29 @@ func TestSetlistEntryUpdateBatchClearanceErr(t *testing.T) {
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
 	err := slr.UpdateBatch(context.TODO(), mockSetlistEntries, mockUser)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryUpdateBatchSetlistEntriesNil(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.ADMIN,
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.UpdateBatch(context.TODO(), nil, mockUser)
 	assert.Error(t, err)
 	assert.ErrorAs(t, err, &mockErr)
 	mockSER.AssertExpectations(t)
@@ -587,7 +770,113 @@ func TestSetlistEntryUpdateBatchInvalidID(t *testing.T) {
 	mockSER.AssertExpectations(t)
 }
 
-func TestSetlistEntryUpdateBatchSetlistEntryRepoErr(t *testing.T) {
+func TestSetlistEntryUpdateBatchSetlistGetByIDErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+	setlistID := int64(1)
+	mockSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          1,
+			SongID:      1,
+			SetlistID:   setlistID,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
+		},
+		{
+			ID:          2,
+			SetlistID:   setlistID,
+			SongID:      2,
+			Transpose:   1,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
+		},
+	}
+
+	mockErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	for _, entry := range *mockSetlistEntries {
+		mockSR.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.SongID).
+			Return(nil, nil)
+		mockSER.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.ID).
+			Return(nil, nil)
+	}
+
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), setlistID).
+		Return(nil, mockErr)
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.UpdateBatch(context.TODO(), mockSetlistEntries, mockUser)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryUpdateBatchSetlistDifferentSetlistID(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+	setlistID := int64(1)
+	mockSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          1,
+			SongID:      1,
+			SetlistID:   setlistID,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
+		},
+		{
+			ID:          2,
+			SetlistID:   0,
+			SongID:      2,
+			Transpose:   1,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
+		},
+	}
+
+	mockErr := domain.NewBadRequestErr("")
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	for _, entry := range *mockSetlistEntries {
+		mockSR.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.SongID).
+			Return(nil, nil)
+		mockSER.
+			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.ID).
+			Return(nil, nil)
+	}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	err := slr.UpdateBatch(context.TODO(), mockSetlistEntries, mockUser)
+	assert.Error(t, err)
+	assert.ErrorAs(t, err, &mockErr)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryUpdateBatchSetlistEntryGetByIDErr(t *testing.T) {
 	t.Parallel()
 
 	mockUser := &domain.User{
@@ -595,10 +884,12 @@ func TestSetlistEntryUpdateBatchSetlistEntryRepoErr(t *testing.T) {
 		Permission: domain.EDITOR,
 	}
 
+	setlistID := int64(1)
 	mockSetlistEntries := &[]domain.SetlistEntry{
 		{
 			ID:          1,
 			SongID:      1,
+			SetlistID:   setlistID,
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
@@ -606,6 +897,7 @@ func TestSetlistEntryUpdateBatchSetlistEntryRepoErr(t *testing.T) {
 		{
 			ID:          2,
 			SongID:      2,
+			SetlistID:   setlistID,
 			Transpose:   1,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
@@ -625,6 +917,10 @@ func TestSetlistEntryUpdateBatchSetlistEntryRepoErr(t *testing.T) {
 			On("GetByID", mock.AnythingOfType("*context.emptyCtx"), entry.ID).
 			Return(nil, nil)
 	}
+
+	mockSLR.
+		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), setlistID).
+		Return(nil, nil)
 
 	mockSER.
 		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries).

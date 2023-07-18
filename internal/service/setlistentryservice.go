@@ -24,9 +24,19 @@ func NewSetlistEntryService(sler domain.SetlistEntryRepository, slr domain.Setli
 }
 
 func (ses setlistEntryService) StoreBatch(ctx context.Context, setlistEntries *[]domain.SetlistEntry, principal *domain.User) error {
+	if principal == nil {
+		return domain.NewInternalErr()
+	}
+
 	if !principal.HasClearance(domain.EDITOR) {
 		return domain.NewNotAuthorizedErr("Invalid authorization")
 	}
+
+	if setlistEntries == nil {
+		return domain.NewInternalErr()
+	}
+
+	setlistID := (*setlistEntries)[0].SetlistID
 
 	for _, entry := range *setlistEntries {
 		if !util.IsValidTranpose(entry.Transpose) {
@@ -36,6 +46,14 @@ func (ses setlistEntryService) StoreBatch(ctx context.Context, setlistEntries *[
 		if _, err := ses.sr.GetByID(ctx, entry.SongID); err != nil {
 			return domain.FromError(err)
 		}
+
+		if setlistID != entry.SetlistID {
+			return domain.NewBadRequestErr("SetlistID must be the same across entries")
+		}
+	}
+
+	if _, err := ses.slr.GetByID(ctx, setlistID); err != nil {
+		return domain.FromError(err)
 	}
 
 	err := ses.sler.CreateBatch(ctx, setlistEntries)
@@ -68,9 +86,19 @@ func (ses setlistEntryService) FetchAll(ctx context.Context) (*[]domain.SetlistE
 }
 
 func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *[]domain.SetlistEntry, principal *domain.User) error {
+	if principal == nil {
+		return domain.NewInternalErr()
+	}
+
 	if !principal.HasClearance(domain.EDITOR) {
 		return domain.NewNotAuthorizedErr("Invalid authorization")
 	}
+
+	if setlistEntries == nil {
+		return domain.NewInternalErr()
+	}
+
+	setlistID := (*setlistEntries)[0].SetlistID
 
 	for _, entry := range *setlistEntries {
 		if !util.IsValidTranpose(entry.Transpose) {
@@ -84,6 +112,14 @@ func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *
 		if _, err := ses.sler.GetByID(ctx, entry.ID); err != nil {
 			return domain.FromError(err)
 		}
+
+		if setlistID != entry.SetlistID {
+			return domain.NewBadRequestErr("SetlistID must be the same across entries")
+		}
+	}
+
+	if _, err := ses.slr.GetByID(ctx, setlistID); err != nil {
+		return domain.FromError(err)
 	}
 
 	err := ses.sler.UpdateBatch(ctx, setlistEntries)

@@ -21,6 +21,27 @@ func NewSetlistService(ur domain.UserRepository, slr domain.SetlistRepository) *
 	}
 }
 
+func (ss setlistService) Store(ctx context.Context, setlist *domain.Setlist, principal *domain.User) error {
+	if !principal.HasClearance(domain.MEMBER) {
+		return domain.NewNotAuthorizedErr("Not authorized to create setlists")
+	}
+
+	if setlist.Deadline.Before(time.Now()) {
+		return domain.NewBadRequestErr(fmt.Sprintf("%s must be later than %s", setlist.Deadline.String(), time.Now().String()))
+	}
+
+	if _, err := ss.ur.GetByID(ctx, setlist.CreatorID); err != nil {
+		return domain.FromError(err)
+	}
+
+	err := ss.slr.Create(ctx, setlist)
+	if err != nil {
+		return domain.FromError(err)
+	}
+
+	return nil
+}
+
 func (ss setlistService) FetchByID(ctx context.Context, sid int64) (*domain.Setlist, error) {
 	setlist, err := ss.slr.GetByID(ctx, sid)
 	if err != nil {
@@ -65,27 +86,6 @@ func (ss setlistService) Update(ctx context.Context, setlist *domain.Setlist, pr
 	}
 
 	return updatedSetlist, nil
-}
-
-func (ss setlistService) Store(ctx context.Context, setlist *domain.Setlist, principal *domain.User) error {
-	if !principal.HasClearance(domain.MEMBER) {
-		return domain.NewNotAuthorizedErr("Not authorized to create setlists")
-	}
-
-	if setlist.Deadline.Before(time.Now()) {
-		return domain.NewBadRequestErr(fmt.Sprintf("%s must be later than %s", setlist.Deadline.String(), time.Now().String()))
-	}
-
-	if _, err := ss.ur.GetByID(ctx, setlist.CreatorID); err != nil {
-		return domain.FromError(err)
-	}
-
-	err := ss.slr.Create(ctx, setlist)
-	if err != nil {
-		return domain.FromError(err)
-	}
-
-	return nil
 }
 
 func (ss setlistService) Remove(ctx context.Context, sid int64, principal *domain.User) error {

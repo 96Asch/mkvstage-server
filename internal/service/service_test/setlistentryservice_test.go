@@ -553,6 +553,90 @@ func TestSetlistEntryFetchAllErr(t *testing.T) {
 	mockSR.AssertExpectations(t)
 }
 
+func TestSetlistEntryFetchBySetlistCorrect(t *testing.T) {
+	t.Parallel()
+
+	mockSetlist := &domain.Setlist{ID: 1}
+
+	mockSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          1,
+			SongID:      1,
+			Transpose:   0,
+			SetlistID:   mockSetlist.ID,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "C1"]}`)),
+		},
+		{
+			ID:          2,
+			SongID:      2,
+			Transpose:   1,
+			SetlistID:   mockSetlist.ID,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{arrangement: ["V1", "V2"]}`)),
+		},
+	}
+
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	mockSER.
+		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		Return(mockSetlistEntries, nil)
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	setlistEntries, err := slr.FetchBySetlist(context.TODO(), mockSetlist)
+	assert.NoError(t, err)
+	assert.Equal(t, mockSetlistEntries, setlistEntries)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryFetchBySetlistSetlistNil(t *testing.T) {
+	t.Parallel()
+
+	mockSetlist := &domain.Setlist{ID: 1}
+
+	expErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	mockSER.
+		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		Return(nil, expErr)
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	setlist, err := slr.FetchBySetlist(context.TODO(), mockSetlist)
+	assert.ErrorAs(t, err, &expErr)
+	assert.Nil(t, setlist)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
+func TestSetlistEntryFetchBySetlistGetBySetlistErr(t *testing.T) {
+	t.Parallel()
+
+	expErr := domain.NewInternalErr()
+	mockSER := &mocks.MockSetlistEntryRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+	mockSR := &mocks.MockSongRepository{}
+
+	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
+
+	setlist, err := slr.FetchBySetlist(context.TODO(), nil)
+	assert.ErrorAs(t, err, &expErr)
+	assert.Nil(t, setlist)
+	mockSER.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+	mockSR.AssertExpectations(t)
+}
+
 func TestSetlistEntryUpdateBatchCorrect(t *testing.T) {
 	t.Parallel()
 

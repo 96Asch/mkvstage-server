@@ -105,6 +105,81 @@ func TestSetlistFetchAllErr(t *testing.T) {
 	assert.Nil(t, setlist)
 }
 
+func TestSetlistFetchByTimeframeCorrect(t *testing.T) {
+	t.Parallel()
+
+	mockSetlists := &[]domain.Setlist{
+		{
+			ID:        1,
+			CreatorID: 1,
+			Name:      "Foo",
+		},
+		{
+			ID:        2,
+			CreatorID: 1,
+			Name:      "Bar",
+		},
+	}
+
+	time1 := time.Now().Truncate(time.Minute)
+	time2 := time.Now().Add(24 * time.Hour).Truncate(time.Minute)
+
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockSLR.
+		On("GetByTimeframe", mock.AnythingOfType("*context.emptyCtx"), time1, time2).
+		Return(mockSetlists, nil)
+
+	slr := service.NewSetlistService(mockUR, mockSLR)
+
+	setlists, err := slr.FetchByTimeframe(context.TODO(), time1, time2)
+	assert.NoError(t, err)
+	assert.Equal(t, mockSetlists, setlists)
+}
+
+func TestSetlistFetchByTimeframeFromAfterTo(t *testing.T) {
+	t.Parallel()
+
+	time1 := time.Now().Add(24 * time.Hour).Truncate(time.Minute)
+	time2 := time.Now().Truncate(time.Minute)
+
+	mockErr := domain.NewBadRequestErr("")
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	slr := service.NewSetlistService(mockUR, mockSLR)
+
+	setlists, err := slr.FetchByTimeframe(context.TODO(), time1, time2)
+	assert.ErrorAs(t, err, &mockErr)
+	assert.Nil(t, setlists)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
+func TestSetlistFetchByTimeframeSetlistGetByTimeframeErr(t *testing.T) {
+	t.Parallel()
+
+	time1 := time.Now().Truncate(time.Minute)
+	time2 := time.Now().Add(24 * time.Hour).Truncate(time.Minute)
+
+	mockErr := domain.NewInternalErr()
+	mockUR := &mocks.MockUserRepository{}
+	mockSLR := &mocks.MockSetlistRepository{}
+
+	mockSLR.
+		On("GetByTimeframe", mock.AnythingOfType("*context.emptyCtx"), time1, time2).
+		Return(nil, mockErr)
+
+	slr := service.NewSetlistService(mockUR, mockSLR)
+
+	setlists, err := slr.FetchByTimeframe(context.TODO(), time1, time2)
+	assert.ErrorAs(t, err, &mockErr)
+	assert.Nil(t, setlists)
+	mockUR.AssertExpectations(t)
+	mockSLR.AssertExpectations(t)
+}
+
 func TestSetlistUpdateCorrect(t *testing.T) {
 	t.Parallel()
 

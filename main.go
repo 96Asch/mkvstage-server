@@ -67,6 +67,8 @@ func setupMigrations(gormDatabase *gorm.DB) error {
 		&domain.Song{},
 		&domain.Role{},
 		&domain.UserRole{},
+		&domain.Setlist{},
+		&domain.SetlistEntry{},
 	}
 
 	for _, model := range models {

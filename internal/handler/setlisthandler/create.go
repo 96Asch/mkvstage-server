@@ -43,7 +43,7 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 	setlist := &domain.Setlist{
 		Name:      slReq.Name,
 		CreatorID: slReq.CreatorID,
-		Deadline:  slReq.Deadline.Local(),
+		Deadline:  slReq.Deadline.Local().Truncate(time.Minute),
 	}
 
 	setlistEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))

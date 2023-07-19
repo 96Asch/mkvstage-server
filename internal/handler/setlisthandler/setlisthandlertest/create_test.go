@@ -62,7 +62,7 @@ func TestCreateCorrect(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
@@ -241,7 +241,7 @@ func TestCreateNoContext(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 	}
 
 	mockSetlistEntries := &[]domain.SetlistEntry{
@@ -301,7 +301,7 @@ func TestCreateSetlistStoreErr(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 	}
 
 	mockSetlistEntries := &[]domain.SetlistEntry{
@@ -368,7 +368,7 @@ func TestCreateSetlistEntryStoreBatchErr(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 	}
 
 	mockSetlistEntries := &[]domain.SetlistEntry{

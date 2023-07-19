@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/go-sql-driver/mysql"
@@ -40,6 +41,19 @@ func (slr gormSetlistRepository) GetByID(ctx context.Context, sid int64) (*domai
 func (slr gormSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist, error) {
 	var setlists []domain.Setlist
 	res := slr.db.Find(&setlists)
+
+	if err := res.Error; err != nil {
+		return nil, domain.NewInternalErr()
+	}
+
+	return &setlists, nil
+}
+
+func (slr gormSetlistRepository) GetByTimeframe(ctx context.Context, from time.Time, to time.Time) (*[]domain.Setlist, error) {
+	var setlists []domain.Setlist
+	res := slr.db.
+		Where("deadline BETWEEN ? AND ?", from, to).
+		Find(&setlists)
 
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()

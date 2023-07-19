@@ -89,6 +89,20 @@ func (ses setlistEntryService) FetchAll(ctx context.Context) (*[]domain.SetlistE
 	return setlistEntries, nil
 }
 
+func (ses setlistEntryService) FetchBySetlist(ctx context.Context, setlist *domain.Setlist) (*[]domain.SetlistEntry, error) {
+	if setlist == nil {
+		return nil, domain.NewInternalErr()
+	}
+
+	setlistEntries, err := ses.sler.GetBySetlist(ctx, setlist)
+
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return setlistEntries, nil
+}
+
 func (ses setlistEntryService) UpdateBatch(ctx context.Context, setlistEntries *[]domain.SetlistEntry, principal *domain.User) error {
 	if principal == nil {
 		return domain.NewInternalErr()

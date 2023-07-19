@@ -64,7 +64,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
 	}
@@ -73,7 +73,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
@@ -197,6 +197,152 @@ func TestUpdateByIDCorrect(t *testing.T) {
 	mockMWH.AssertExpectations(t)
 }
 
+func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:        1,
+		FirstName: "Foo",
+		LastName:  "Bar",
+	}
+
+	mockPrevSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Bar",
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
+		UpdatedAt: time.Now().Truncate(time.Minute),
+		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
+	}
+
+	expSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foo",
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
+		UpdatedAt: time.Now().Truncate(time.Minute),
+		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
+	}
+
+	mockSetlist := &domain.Setlist{
+		Name:      expSetlist.Name,
+		CreatorID: expSetlist.ID,
+		Deadline:  expSetlist.Deadline,
+	}
+
+	expMockSetlist := &domain.Setlist{
+		ID:        mockPrevSetlist.ID,
+		Name:      expSetlist.Name,
+		CreatorID: expSetlist.ID,
+		Deadline:  expSetlist.Deadline,
+	}
+
+	mockCreatedSetlistEntries := &[]domain.SetlistEntry{
+		{
+			SongID:      1,
+			Transpose:   0,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+		},
+	}
+
+	expCreatedSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          1,
+			SongID:      1,
+			Transpose:   0,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+		},
+	}
+
+	mockUpdatedSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          2,
+			SongID:      2,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+		},
+	}
+
+	mockDeletedSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          3,
+			SongID:      1,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+		},
+	}
+
+	mockSL := &mocks.MockSetlistService{}
+	mockSLES := &mocks.MockSetlistEntryService{}
+	mockSS := &mocks.MockSongService{}
+
+	mockMWH := &mocks.MockMiddlewareHandler{}
+
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
+	mockSL.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		Return(expSetlist, nil)
+
+	mockSLES.
+		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		Return(nil).
+		Run(func(args mock.Arguments) {
+			arg, ok := args.Get(1).(*[]domain.SetlistEntry)
+			assert.True(t, ok)
+
+			for idx := range *arg {
+				(*arg)[idx].ID = int64(idx + 1)
+			}
+		})
+
+	mockSLES.
+		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUpdatedSetlistEntries, mockUser).
+		Return(nil)
+
+	mockSLES.
+		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
+		Return(nil)
+
+	byteBody, err := json.Marshal(gin.H{
+		"name":            mockSetlist.Name,
+		"creator_id":      mockSetlist.CreatorID,
+		"deadline":        mockSetlist.Deadline.Format(time.RFC3339),
+		"created_entries": *mockCreatedSetlistEntries,
+		"updated_entries": *mockUpdatedSetlistEntries,
+		"deleted_entries": *mockDeletedSetlistEntries,
+	})
+
+	assert.NoError(t, err)
+
+	writer := prepareAndServeUpdate(t, fmt.Sprint(mockPrevSetlist.ID), mockSL, mockSLES, mockSS, mockMWH, &byteBody)
+
+	assert.Equal(t, http.StatusOK, writer.Code)
+
+	expBody, err := json.Marshal(gin.H{
+		"setlist": expSetlist,
+		"entries": append(*expCreatedSetlistEntries, *mockUpdatedSetlistEntries...),
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, expBody, writer.Body.Bytes())
+	mockSL.AssertExpectations(t)
+	mockSLES.AssertExpectations(t)
+	mockSS.AssertExpectations(t)
+	mockMWH.AssertExpectations(t)
+}
+
 func TestUpdateByIDInvalidParam(t *testing.T) {
 	t.Parallel()
 
@@ -209,7 +355,7 @@ func TestUpdateByIDInvalidParam(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
@@ -259,7 +405,7 @@ func TestUpdateByIDBindErr(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
 	}
@@ -309,7 +455,7 @@ func TestUpdateByIDNoContext(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
 	}
@@ -317,7 +463,7 @@ func TestUpdateByIDNoContext(t *testing.T) {
 	mockSetlist := &domain.Setlist{
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 	}
 
 	mockErr := domain.NewInternalErr()
@@ -358,7 +504,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
 	}
@@ -367,7 +513,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
@@ -465,7 +611,7 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
 	}
@@ -474,7 +620,7 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
@@ -576,7 +722,7 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
 	}
@@ -585,7 +731,7 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
@@ -691,7 +837,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 		ID:        1,
 		Name:      "Bar",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "2,1,3,4"}`)),
 	}
@@ -700,7 +846,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 		ID:        1,
 		Name:      "Foo",
 		CreatorID: mockUser.ID,
-		Deadline:  time.Now().Add(time.Hour * 24).Round(0),
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
 		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}

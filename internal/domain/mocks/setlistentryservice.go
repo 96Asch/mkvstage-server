@@ -54,6 +54,22 @@ func (m MockSetlistEntryService) FetchAll(ctx context.Context) (*[]domain.Setlis
 	return r0, r1
 }
 
+func (m MockSetlistEntryService) FetchBySetlist(ctx context.Context, setlist *domain.Setlist) (*[]domain.SetlistEntry, error) {
+	ret := m.Called(ctx, setlist)
+
+	var r0 *[]domain.SetlistEntry
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*[]domain.SetlistEntry)
+	}
+
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
+}
+
 func (m MockSetlistEntryService) UpdateBatch(ctx context.Context, entries *[]domain.SetlistEntry, principal *domain.User) error {
 	ret := m.Called(ctx, entries, principal)
 

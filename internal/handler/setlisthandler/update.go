@@ -57,7 +57,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		ID:        int64(setlistID),
 		Name:      slReq.Name,
 		CreatorID: slReq.CreatorID,
-		Deadline:  slReq.Deadline.Local(),
+		Deadline:  slReq.Deadline.Local().Truncate((time.Minute)),
 	}
 
 	createdEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))

@@ -49,6 +49,27 @@ func (slr gormSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist,
 	return &setlists, nil
 }
 
+func (slr gormSetlistRepository) Get(ctx context.Context, fromTime time.Time, toTime time.Time) (*[]domain.Setlist, error) {
+	var setlists []domain.Setlist
+
+	var result *gorm.DB
+
+	if fromTime.IsZero() || toTime.IsZero() {
+		result = slr.db.
+			Where("deadline BETWEEN ? AND ?", fromTime, toTime).
+			Find(&setlists)
+	} else {
+		result = slr.db.
+			Find(&setlists)
+	}
+
+	if err := result.Error; err != nil {
+		return nil, domain.NewInternalErr()
+	}
+
+	return &setlists, nil
+}
+
 func (slr gormSetlistRepository) GetByTimeframe(ctx context.Context, from time.Time, to time.Time) (*[]domain.Setlist, error) {
 	var setlists []domain.Setlist
 	res := slr.db.

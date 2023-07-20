@@ -44,6 +44,22 @@ func (m MockSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist, e
 	return r0, r1
 }
 
+func (m MockSetlistRepository) Get(ctx context.Context, from time.Time, to time.Time) (*[]domain.Setlist, error) {
+	ret := m.Called(ctx, from, to)
+
+	var r0 *[]domain.Setlist
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*[]domain.Setlist)
+	}
+
+	var r1 error
+	if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+
+	return r0, r1
+}
+
 func (m MockSetlistRepository) GetByTimeframe(ctx context.Context, from time.Time, to time.Time) (*[]domain.Setlist, error) {
 	ret := m.Called(ctx, from, to)
 

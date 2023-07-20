@@ -39,7 +39,7 @@ func prepareAndServeCreate(
 	req, err := http.NewRequestWithContext(
 		context.TODO(),
 		http.MethodPost,
-		"/setlists/create",
+		"/setlists",
 		requestBody,
 	)
 	assert.NoError(t, err)

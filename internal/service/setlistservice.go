@@ -60,6 +60,19 @@ func (ss setlistService) FetchAll(ctx context.Context) (*[]domain.Setlist, error
 	return setlists, nil
 }
 
+func (ss setlistService) Fetch(ctx context.Context, from time.Time, to time.Time) (*[]domain.Setlist, error) {
+	if from.After(to) {
+		return nil, domain.NewBadRequestErr("From field cannot be after To field.")
+	}
+
+	setlists, err := ss.slr.Get(ctx, from, to)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return setlists, nil
+}
+
 func (ss setlistService) FetchByTimeframe(ctx context.Context, from time.Time, to time.Time) (*[]domain.Setlist, error) {
 	if from.After(to) {
 		return nil, domain.NewBadRequestErr("From field cannot be after To field.")

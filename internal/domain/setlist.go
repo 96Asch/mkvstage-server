@@ -19,6 +19,7 @@ type Setlist struct {
 type SetlistService interface {
 	AuthSingleStorer[Setlist]
 	Fetcher[Setlist]
+	Fetch(ctx context.Context, from time.Time, to time.Time) (*[]Setlist, error)
 	FetchByTimeframe(ctx context.Context, from time.Time, to time.Time) (*[]Setlist, error)
 	Update(ctx context.Context, setlist *Setlist, principal *User) (*Setlist, error)
 	AuthSingleRemover[Setlist]
@@ -26,6 +27,7 @@ type SetlistService interface {
 
 type SetlistRepository interface {
 	Getter[Setlist]
+	Get(ctx context.Context, from time.Time, to time.Time) (*[]Setlist, error)
 	GetByTimeframe(ctx context.Context, from time.Time, to time.Time) (*[]Setlist, error)
 	Delete(ctx context.Context, slid int64) error
 	Update(ctx context.Context, setlist *Setlist) (*Setlist, error)

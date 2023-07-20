@@ -19,9 +19,9 @@ func Initialize(group *gin.RouterGroup, sls domain.SetlistService, sles domain.S
 	}
 
 	setlists := group.Group("setlists")
-	setlists.POST("create", mwh.AuthenticateUser(), setlisthandler.Create)
-	// setlists.GET("", setlisthandler.GetAll)
-	// setlists.GET(":id", setlisthandler.GetByID)
+	setlists.POST("", mwh.AuthenticateUser(), setlisthandler.Create)
+	setlists.GET("", setlisthandler.GetAll)
+	setlists.GET(":id", setlisthandler.GetByID)
 	setlists.DELETE(":id/delete", mwh.AuthenticateUser(), setlisthandler.DeleteByID)
-	setlists.PUT(":id/update", mwh.AuthenticateUser(), setlisthandler.UpdateByID)
+	setlists.PUT(":id", mwh.AuthenticateUser(), setlisthandler.UpdateByID)
 }

@@ -41,9 +41,10 @@ func TestStringToTime(t *testing.T) {
 	t.Parallel()
 
 	expecteds := map[string]time.Time{
-		"1996-02-08 13:00:00": time.Date(1996, time.February, 8, 13, 0, 0, 0, time.UTC),
-		"2023-05-13 00:00:00": time.Date(2023, time.May, 13, 0, 0, 0, 0, time.UTC),
-		"2000-01-01 00:00:00": time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC),
+		"":                     {},
+		"1996-02-08T13:00:00Z": time.Date(1996, time.February, 8, 13, 0, 0, 0, time.UTC),
+		"2023-05-13T00:00:00Z": time.Date(2023, time.May, 13, 0, 0, 0, 0, time.UTC),
+		"2000-01-01T00:00:00Z": time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC),
 	}
 
 	for key, val := range expecteds {
@@ -53,9 +54,9 @@ func TestStringToTime(t *testing.T) {
 	}
 
 	fails := map[string]time.Time{
-		"foobar":             {},
-		"2023--13":           {},
-		"2000-02-01 00:00:0": {},
+		"foobar":              {},
+		"2023--13":            {},
+		"2000-02-01T00:00:0Z": {},
 	}
 
 	for key, val := range fails {

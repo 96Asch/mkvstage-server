@@ -3,29 +3,39 @@ package setlisthandler
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/util"
 	"github.com/gin-gonic/gin"
 )
 
-type setlistGetReqTimeframe struct {
-	From time.Time `json:"from" binding:"required"`
-	To   time.Time `json:"to" binding:"required"`
-}
-
 func (slh setlistHandler) GetAll(ctx *gin.Context) {
-	context := ctx.Request.Context()
-	setlist, err := slh.sls.FetchAll(context)
+	fromTime, fromErr := util.StringToTime(ctx.Query("from"))
+	toTime, toErr := util.StringToTime(ctx.Query("to"))
 
-	if err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
+	if fromErr != nil {
+		ctx.JSON(domain.Status(fromErr), gin.H{"error": fromErr.Error()})
 
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"setlist": setlist,
+	if toErr != nil {
+		ctx.JSON(domain.Status(toErr), gin.H{"error": toErr.Error()})
+
+		return
+	}
+
+	context := ctx.Request.Context()
+	retrievedSetlists, err := slh.sls.Fetch(context, fromTime, toTime)
+
+	if err != nil {
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"setlist": retrievedSetlists,
 	})
 }
 
@@ -44,7 +54,7 @@ func (slh setlistHandler) GetByID(ctx *gin.Context) {
 	setlist, err := slh.sls.FetchByID(context, int64(setlistID))
 
 	if err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}
@@ -52,7 +62,7 @@ func (slh setlistHandler) GetByID(ctx *gin.Context) {
 	setlistEntries, err := slh.sles.FetchBySetlist(context, setlist)
 
 	if err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}
@@ -60,29 +70,5 @@ func (slh setlistHandler) GetByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{
 		"setlist": setlist,
 		"entries": setlistEntries,
-	})
-}
-
-func (slh setlistHandler) GetByTimeframe(ctx *gin.Context) {
-	var slReq setlistGetReqTimeframe
-
-	if err := ctx.BindJSON(&slReq); err != nil {
-		newErr := domain.NewBadRequestErr(err.Error())
-		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
-
-		return
-	}
-
-	context := ctx.Request.Context()
-	setlist, err := slh.sls.FetchByTimeframe(context, slReq.From, slReq.To)
-
-	if err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
-
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, gin.H{
-		"setlist": setlist,
 	})
 }

@@ -27,8 +27,8 @@ func (msrs MockSetlistRoleService) Fetch(ctx context.Context, setlists *[]domain
 	return r0, r1
 }
 
-func (msrs MockSetlistRoleService) Store(ctx context.Context, setlistRoles *[]domain.SetlistRole) error {
-	ret := msrs.Called(ctx, setlistRoles)
+func (msrs MockSetlistRoleService) Store(ctx context.Context, setlistRoles *[]domain.SetlistRole, principal *domain.User) error {
+	ret := msrs.Called(ctx, setlistRoles, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {
@@ -38,19 +38,8 @@ func (msrs MockSetlistRoleService) Store(ctx context.Context, setlistRoles *[]do
 	return r0
 }
 
-func (msrs MockSetlistRoleService) Update(ctx context.Context, setlistRoles *[]domain.SetlistRole) error {
-	ret := msrs.Called(ctx, setlistRoles)
-
-	var r0 error
-	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(error)
-	}
-
-	return r0
-}
-
-func (msrs MockSetlistRoleService) Remove(ctx context.Context, setlistRoleIDs []int64) error {
-	ret := msrs.Called(ctx, setlistRoleIDs)
+func (msrs MockSetlistRoleService) Remove(ctx context.Context, setlistRoleIDs []int64, principal *domain.User) error {
+	ret := msrs.Called(ctx, setlistRoleIDs, principal)
 
 	var r0 error
 	if ret.Get(0) != nil {

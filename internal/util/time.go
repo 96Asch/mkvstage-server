@@ -5,21 +5,9 @@ import (
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
-	"gorm.io/datatypes"
 )
 
-const DateFormat = time.DateOnly
 const TimeFormat = time.RFC3339
-
-func StringToDate(timestring string) (datatypes.Date, error) {
-	date, err := time.Parse(DateFormat, timestring)
-
-	if err != nil {
-		return datatypes.Date{}, domain.NewInternalErr()
-	}
-
-	return datatypes.Date(date.UTC().Truncate(time.Minute)), nil
-}
 
 func StringToTime(timestring string) (time.Time, error) {
 	if len(timestring) <= 0 {

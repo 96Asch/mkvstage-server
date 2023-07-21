@@ -54,8 +54,8 @@ func (m MockSetlistEntryService) FetchAll(ctx context.Context) (*[]domain.Setlis
 	return r0, r1
 }
 
-func (m MockSetlistEntryService) FetchBySetlist(ctx context.Context, setlist *domain.Setlist) (*[]domain.SetlistEntry, error) {
-	ret := m.Called(ctx, setlist)
+func (m MockSetlistEntryService) FetchBySetlist(ctx context.Context, setlists *[]domain.Setlist) (*[]domain.SetlistEntry, error) {
+	ret := m.Called(ctx, setlists)
 
 	var r0 *[]domain.SetlistEntry
 	if ret.Get(0) != nil {

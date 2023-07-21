@@ -18,7 +18,7 @@ type SetlistEntry struct {
 type SetlistEntryService interface {
 	AuthMultiStorer[SetlistEntry]
 	Fetcher[SetlistEntry]
-	FetchBySetlist(ctx context.Context, setlist *Setlist) (*[]SetlistEntry, error)
+	FetchBySetlist(ctx context.Context, setlists *[]Setlist) (*[]SetlistEntry, error)
 	AuthMultiUpdater[SetlistEntry]
 	RemoveBatch(ctx context.Context, setlist *Setlist, ids []int64, principal *User) error
 	RemoveBySetlist(ctx context.Context, setlist *Setlist, principal *User) error
@@ -26,7 +26,7 @@ type SetlistEntryService interface {
 
 type SetlistEntryRepository interface {
 	Getter[SetlistEntry]
-	GetBySetlist(ctx context.Context, setlist *Setlist) (*[]SetlistEntry, error)
+	GetBySetlist(ctx context.Context, setlists *[]Setlist) (*[]SetlistEntry, error)
 	Creator[SetlistEntry]
 	Updater[SetlistEntry]
 	Deleter[SetlistEntry]

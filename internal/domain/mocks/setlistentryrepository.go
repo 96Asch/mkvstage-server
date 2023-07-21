@@ -43,8 +43,8 @@ func (m MockSetlistEntryRepository) GetAll(ctx context.Context) (*[]domain.Setli
 	return r0, r1
 }
 
-func (m MockSetlistEntryRepository) GetBySetlist(ctx context.Context, setlist *domain.Setlist) (*[]domain.SetlistEntry, error) {
-	ret := m.Called(ctx, setlist)
+func (m MockSetlistEntryRepository) GetBySetlist(ctx context.Context, setlists *[]domain.Setlist) (*[]domain.SetlistEntry, error) {
+	ret := m.Called(ctx, setlists)
 
 	var r0 *[]domain.SetlistEntry
 	if ret.Get(0) != nil {

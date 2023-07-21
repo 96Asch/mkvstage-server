@@ -38,17 +38,25 @@ func (ser gormSetlistEntryRepository) GetByID(ctx context.Context, sid int64) (*
 	return &setlistEntry, nil
 }
 
-func (ser gormSetlistEntryRepository) GetBySetlist(ctx context.Context, setlist *domain.Setlist) (*[]domain.SetlistEntry, error) {
-	var setlists []domain.SetlistEntry
-	res := ser.db.
-		Where("setlist_id = ?", setlist.ID).
-		Find(&setlists)
+func (ser gormSetlistEntryRepository) GetBySetlist(ctx context.Context, setlists *[]domain.Setlist) (*[]domain.SetlistEntry, error) {
+	var setlistEntries []domain.SetlistEntry
+
+	if setlists == nil {
+		return nil, domain.NewInternalErr()
+	}
+
+	setlistIDs := make([]int64, len(*setlists))
+	for idx, setlist := range *setlists {
+		setlistIDs[idx] = setlist.ID
+	}
+
+	res := ser.db.Find(&setlistEntries, setlistIDs)
 
 	if err := res.Error; err != nil {
 		return nil, domain.NewInternalErr()
 	}
 
-	return &setlists, nil
+	return &setlistEntries, nil
 }
 
 func (ser gormSetlistEntryRepository) GetAll(ctx context.Context) (*[]domain.SetlistEntry, error) {

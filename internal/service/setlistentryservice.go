@@ -89,12 +89,16 @@ func (ses setlistEntryService) FetchAll(ctx context.Context) (*[]domain.SetlistE
 	return setlistEntries, nil
 }
 
-func (ses setlistEntryService) FetchBySetlist(ctx context.Context, setlist *domain.Setlist) (*[]domain.SetlistEntry, error) {
-	if setlist == nil {
+func (ses setlistEntryService) FetchBySetlist(ctx context.Context, setlists *[]domain.Setlist) (*[]domain.SetlistEntry, error) {
+	if setlists == nil {
 		return nil, domain.NewInternalErr()
 	}
 
-	setlistEntries, err := ses.sler.GetBySetlist(ctx, setlist)
+	if len(*setlists) <= 0 {
+		return nil, domain.NewBadRequestErr("No setlists given")
+	}
+
+	setlistEntries, err := ses.sler.GetBySetlist(ctx, setlists)
 
 	if err != nil {
 		return nil, domain.FromError(err)
@@ -198,7 +202,9 @@ func (ses setlistEntryService) RemoveBySetlist(ctx context.Context, setlist *dom
 		}
 	}
 
-	toDeleteSetlistEntries, err := ses.sler.GetBySetlist(ctx, setlist)
+	setlists := &[]domain.Setlist{*setlist}
+	toDeleteSetlistEntries, err := ses.sler.GetBySetlist(ctx, setlists)
+
 	if err != nil {
 		return domain.FromError(err)
 	}

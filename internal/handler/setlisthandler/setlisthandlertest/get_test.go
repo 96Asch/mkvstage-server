@@ -48,8 +48,6 @@ func prepareAndServeGet(
 }
 
 func TestGetAll(t *testing.T) {
-	t.Parallel()
-
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.EDITOR,
@@ -72,29 +70,44 @@ func TestGetAll(t *testing.T) {
 		},
 	}
 
-	mockSLES := &mocks.MockSetlistEntryService{}
-	mockSS := &mocks.MockSongService{}
-	mockMWH := &mocks.MockMiddlewareHandler{}
-
-	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
-
-	mockMWH.
-		On("AuthenticateUser").
-		Return(mockAuthHF)
+	expSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:        1,
+			SetlistID: 1,
+		},
+		{
+			ID:        2,
+			SetlistID: 1,
+		},
+	}
 
 	t.Run("Correct Get All Setlists", func(t *testing.T) {
 		t.Parallel()
 
 		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
 
 		mockSL.
 			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), time.Time{}, time.Time{}).
 			Return(expSetlist, nil)
 
+		mockSLES.
+			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), expSetlist).
+			Return(expSetlistEntries, nil)
+
 		writer := prepareAndServeGet(t, "", mockSL, mockSLES, mockSS, mockMWH)
 
 		expBody, err := json.Marshal(gin.H{
 			"setlist": expSetlist,
+			"entries": expSetlistEntries,
 		})
 		assert.NoError(t, err)
 
@@ -110,6 +123,15 @@ func TestGetAll(t *testing.T) {
 		t.Parallel()
 
 		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
 
 		fromTime := (*expSetlist)[0].Deadline.Add(-24 * time.Hour)
 		toTime := (*expSetlist)[0].Deadline.Add(-24 * time.Hour)
@@ -118,6 +140,10 @@ func TestGetAll(t *testing.T) {
 			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), fromTime, toTime).
 			Return(expSetlist, nil)
 
+		mockSLES.
+			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), expSetlist).
+			Return(expSetlistEntries, nil)
+
 		fmt.Println(fromTime.Format(time.RFC3339))
 		writer := prepareAndServeGet(t,
 			fmt.Sprintf("?from=%s&to=%s", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339)),
@@ -125,6 +151,7 @@ func TestGetAll(t *testing.T) {
 
 		expBody, err := json.Marshal(gin.H{
 			"setlist": expSetlist,
+			"entries": expSetlistEntries,
 		})
 		assert.NoError(t, err)
 
@@ -140,6 +167,16 @@ func TestGetAll(t *testing.T) {
 		t.Parallel()
 
 		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
+
 		fromTimeString := (*expSetlist)[0].Deadline.Add(-24 * time.Hour).Format(time.RFC1123)
 		toTimeString := (*expSetlist)[0].Deadline.Format(time.RFC3339)
 		writer := prepareAndServeGet(t, fmt.Sprintf("?from=%s&to=%s", fromTimeString, toTimeString), mockSL, mockSLES, mockSS, mockMWH)
@@ -161,6 +198,16 @@ func TestGetAll(t *testing.T) {
 		t.Parallel()
 
 		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
+
 		fromTimeString := (*expSetlist)[0].Deadline.Add(-24 * time.Hour).Format(time.RFC3339)
 		toTimeString := (*expSetlist)[0].Deadline.Format(time.RFC1123)
 		writer := prepareAndServeGet(t, fmt.Sprintf("?from=%s&to=%s", fromTimeString, toTimeString), mockSL, mockSLES, mockSS, mockMWH)
@@ -183,12 +230,226 @@ func TestGetAll(t *testing.T) {
 
 		mockErr := domain.NewInternalErr()
 		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
 
 		mockSL.
 			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), time.Time{}, time.Time{}).
 			Return(nil, mockErr)
 
 		writer := prepareAndServeGet(t, "", mockSL, mockSLES, mockSS, mockMWH)
+
+		expBody, err := json.Marshal(gin.H{
+			"error": mockErr.Error(),
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, domain.Status(mockErr), writer.Code)
+		assert.Equal(t, expBody, writer.Body.Bytes())
+		mockSL.AssertExpectations(t)
+		mockSLES.AssertExpectations(t)
+		mockSS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
+	})
+
+	t.Run("Fail Fetch SetlistEntries", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewInternalErr()
+		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
+
+		mockSL.
+			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), time.Time{}, time.Time{}).
+			Return(expSetlist, nil)
+
+		mockSLES.
+			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), expSetlist).
+			Return(nil, mockErr)
+
+		writer := prepareAndServeGet(t, "", mockSL, mockSLES, mockSS, mockMWH)
+
+		expBody, err := json.Marshal(gin.H{
+			"error": mockErr.Error(),
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, domain.Status(mockErr), writer.Code)
+		assert.Equal(t, expBody, writer.Body.Bytes())
+		mockSL.AssertExpectations(t)
+		mockSLES.AssertExpectations(t)
+		mockSS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
+	})
+}
+
+func TestGetByID(t *testing.T) {
+	mockUser := &domain.User{
+		ID:         1,
+		Permission: domain.EDITOR,
+	}
+
+	expSetlist := &domain.Setlist{
+
+		ID:        1,
+		Name:      "Foobar",
+		Deadline:  time.Now().UTC().AddDate(0, 0, 1).Truncate(time.Minute),
+		CreatorID: mockUser.ID,
+		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
+	}
+
+	expSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:        1,
+			SetlistID: 1,
+		},
+		{
+			ID:        2,
+			SetlistID: 1,
+		},
+	}
+
+	t.Run("Correct Get Setlist By ID", func(t *testing.T) {
+		t.Parallel()
+
+		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
+
+		mockSL.
+			On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), expSetlist.ID).
+			Return(expSetlist, nil)
+
+		mockSLES.
+			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expSetlist}).
+			Return(expSetlistEntries, nil)
+
+		writer := prepareAndServeGet(t, fmt.Sprintf("/%d", expSetlist.ID), mockSL, mockSLES, mockSS, mockMWH)
+
+		expBody, err := json.Marshal(gin.H{
+			"setlist": expSetlist,
+			"entries": expSetlistEntries,
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, writer.Code)
+		assert.Equal(t, expBody, writer.Body.Bytes())
+		mockSL.AssertExpectations(t)
+		mockSLES.AssertExpectations(t)
+		mockSS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
+	})
+
+	t.Run("Fail Invalid Param", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewBadRequestErr("Could not read a")
+		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
+
+		writer := prepareAndServeGet(t, fmt.Sprintf("/%s", "a"), mockSL, mockSLES, mockSS, mockMWH)
+
+		expBody, err := json.Marshal(gin.H{
+			"error": mockErr.Error(),
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, domain.Status(mockErr), writer.Code)
+		assert.Equal(t, expBody, writer.Body.Bytes())
+		mockSL.AssertExpectations(t)
+		mockSLES.AssertExpectations(t)
+		mockSS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
+	})
+
+	t.Run("Fail Fetch Setlist", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewInternalErr()
+		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
+
+		mockSL.
+			On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), expSetlist.ID).
+			Return(nil, mockErr)
+
+		writer := prepareAndServeGet(t, fmt.Sprintf("/%d", expSetlist.ID), mockSL, mockSLES, mockSS, mockMWH)
+
+		expBody, err := json.Marshal(gin.H{
+			"error": mockErr.Error(),
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, domain.Status(mockErr), writer.Code)
+		assert.Equal(t, expBody, writer.Body.Bytes())
+		mockSL.AssertExpectations(t)
+		mockSLES.AssertExpectations(t)
+		mockSS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
+	})
+
+	t.Run("Fail Fetch SetlistEntries", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewInternalErr()
+		mockSL := &mocks.MockSetlistService{}
+		mockSLES := &mocks.MockSetlistEntryService{}
+		mockSS := &mocks.MockSongService{}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+
+		var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+		mockMWH.
+			On("AuthenticateUser").
+			Return(mockAuthHF)
+
+		mockSL.
+			On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), expSetlist.ID).
+			Return(expSetlist, nil)
+
+		mockSLES.
+			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expSetlist}).
+			Return(nil, mockErr)
+
+		writer := prepareAndServeGet(t, fmt.Sprintf("/%d", expSetlist.ID), mockSL, mockSLES, mockSS, mockMWH)
 
 		expBody, err := json.Marshal(gin.H{
 			"error": mockErr.Error(),

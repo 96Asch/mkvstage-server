@@ -582,12 +582,12 @@ func TestSetlistEntryFetchBySetlistCorrect(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSER.
-		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*mockSetlist}).
 		Return(mockSetlistEntries, nil)
 
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
-	setlistEntries, err := slr.FetchBySetlist(context.TODO(), mockSetlist)
+	setlistEntries, err := slr.FetchBySetlist(context.TODO(), &[]domain.Setlist{*mockSetlist})
 	assert.NoError(t, err)
 	assert.Equal(t, mockSetlistEntries, setlistEntries)
 	mockSER.AssertExpectations(t)
@@ -606,12 +606,12 @@ func TestSetlistEntryFetchBySetlistSetlistNil(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSER.
-		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*mockSetlist}).
 		Return(nil, expErr)
 
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
 
-	setlist, err := slr.FetchBySetlist(context.TODO(), mockSetlist)
+	setlist, err := slr.FetchBySetlist(context.TODO(), &[]domain.Setlist{*mockSetlist})
 	assert.ErrorAs(t, err, &expErr)
 	assert.Nil(t, setlist)
 	mockSER.AssertExpectations(t)
@@ -1368,7 +1368,7 @@ func TestSetlistEntryRemoveBySetlistCorrect(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSER.
-		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*mockSetlist}).
 		Return(&[]domain.SetlistEntry{{ID: 1}, {ID: 2}}, nil)
 
 	mockSER.
@@ -1485,7 +1485,7 @@ func TestSetlistEntryRemoveBySetlistSetlistEntryGetBySetlistErr(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSER.
-		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*mockSetlist}).
 		Return(nil, mockErr)
 
 	slr := service.NewSetlistEntryService(mockSER, mockSLR, mockSR)
@@ -1522,7 +1522,7 @@ func TestSetlistEntryRemoveBySetlistSetlistEntryDeleteBatchErr(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSER.
-		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("GetBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*mockSetlist}).
 		Return(&[]domain.SetlistEntry{{ID: 1}, {ID: 2}}, nil)
 
 	mockSER.

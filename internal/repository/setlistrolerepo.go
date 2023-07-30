@@ -37,13 +37,13 @@ func (gsrs gormSetlistRoleRepository) Create(ctx context.Context, setlistRoles *
 func (gsrs gormSetlistRoleRepository) Get(ctx context.Context, setlistIDs []int64) (*[]domain.SetlistRole, error) {
 	var retrievedSetlistRoles []domain.SetlistRole
 
-	var results *gorm.DB
+	conditions := make(map[string][]int64, 0)
 
 	if len(setlistIDs) <= 0 {
-		results = gsrs.db.Find(&retrievedSetlistRoles)
-	} else {
-		results = gsrs.db.Find(&retrievedSetlistRoles, setlistIDs)
+		conditions["setlist_id"] = setlistIDs
 	}
+
+	results := gsrs.db.Where(conditions).Find(&retrievedSetlistRoles)
 
 	if err := results.Error; err != nil {
 		return nil, nil

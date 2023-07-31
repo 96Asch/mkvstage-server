@@ -12,6 +12,7 @@ type setlistRoleService struct {
 	urr  domain.UserRoleRepository
 }
 
+//revive:disable:unexported-return
 func NewSetlistRoleService(slrr domain.SetlistRoleRepository, slr domain.SetlistRepository, urr domain.UserRoleRepository) *setlistRoleService {
 	return &setlistRoleService{
 		slrr: slrr,
@@ -84,7 +85,6 @@ func (slrs setlistRoleService) Store(ctx context.Context, setlistRoles *[]domain
 	}
 
 	return nil
-
 }
 
 func (slrs setlistRoleService) Remove(ctx context.Context, setlistRoleIDs []int64, principal *domain.User) error {

@@ -13,6 +13,13 @@ type gormSetlistRoleRepository struct {
 	db *gorm.DB
 }
 
+//revive:disable:unexported-return
+func NewGormSetlistRoleRepository(db *gorm.DB) *gormSetlistRoleRepository {
+	return &gormSetlistRoleRepository{
+		db: db,
+	}
+}
+
 func (gsrs gormSetlistRoleRepository) Create(ctx context.Context, setlistRoles *[]domain.SetlistRole) error {
 	res := gsrs.db.Create(setlistRoles)
 

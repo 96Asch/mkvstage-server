@@ -61,9 +61,9 @@ func TestGetAll(t *testing.T) {
 
 	mockMWH := &mocks.MockMiddlewareHandler{}
 
-	// var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
 
-	// mockMWH.On("AuthenticateUser").Return(mockAuthHF)
+	mockMWH.On("AuthenticateUser").Return(mockAuthHF)
 
 	t.Run("Correct no filter", func(t *testing.T) {
 		t.Parallel()
@@ -170,5 +170,4 @@ func TestGetAll(t *testing.T) {
 		mockSLRS.AssertExpectations(t)
 		mockMWH.AssertExpectations(t)
 	})
-
 }

@@ -17,5 +17,5 @@ func Initialize(group *gin.RouterGroup, slrs domain.SetlistRoleService, mwh doma
 	setlistRole := group.Group("setlistroles")
 	setlistRole.POST("", mwh.AuthenticateUser(), setlistRolehandler.Create)
 	setlistRole.GET("", setlistRolehandler.GetAll)
-	// setlistRole.DELETE(":id/delete", mwh.AuthenticateUser(), setlistRolehandler.DeleteByID)
+	setlistRole.DELETE("", mwh.AuthenticateUser(), setlistRolehandler.Delete)
 }

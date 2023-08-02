@@ -78,13 +78,13 @@ func TestCreateCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 
@@ -94,14 +94,14 @@ func TestCreateCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
 		},
 		{
 			ID:          2,
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 
@@ -143,10 +143,23 @@ func TestCreateCorrect(t *testing.T) {
 		})
 
 	byteBody, err := json.Marshal(gin.H{
-		"name":            mockSetlist.Name,
-		"creator_id":      mockSetlist.CreatorID,
-		"deadline":        mockSetlist.Deadline,
-		"created_entries": *mockSetlistEntries,
+		"name":       mockSetlist.Name,
+		"creator_id": mockSetlist.CreatorID,
+		"deadline":   mockSetlist.Deadline,
+		"created_entries": []gin.H{
+			{
+				"song_id":     1,
+				"transpose":   0,
+				"notes":       "",
+				"arrangement": []string{"Verse 1", "Chorus 2"},
+			},
+			{
+				"song_id":     2,
+				"transpose":   1,
+				"notes":       "Foobar",
+				"arrangement": []string{"Verse 1", "Verse 2"},
+			},
+		},
 	})
 	assert.NoError(t, err)
 
@@ -186,13 +199,13 @@ func TestCreateBindErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 
@@ -249,13 +262,13 @@ func TestCreateNoContext(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 
@@ -309,13 +322,13 @@ func TestCreateSetlistStoreErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 
@@ -376,13 +389,13 @@ func TestCreateSetlistEntryStoreBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 

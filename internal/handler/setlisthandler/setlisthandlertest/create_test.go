@@ -77,12 +77,14 @@ func TestCreateCorrect(t *testing.T) {
 		{
 			SongID:      1,
 			Transpose:   0,
+			SetlistID:   expSetlist.ID,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
+			SetlistID:   expSetlist.ID,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
@@ -92,6 +94,7 @@ func TestCreateCorrect(t *testing.T) {
 		{
 			ID:          1,
 			SongID:      1,
+			SetlistID:   expSetlist.ID,
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
@@ -99,6 +102,7 @@ func TestCreateCorrect(t *testing.T) {
 		{
 			ID:          2,
 			SongID:      2,
+			SetlistID:   expSetlist.ID,
 			Transpose:   1,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),

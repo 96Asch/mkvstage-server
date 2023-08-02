@@ -60,6 +60,13 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 		Deadline:  slReq.Deadline.Local().Truncate(time.Minute),
 	}
 
+	context := ctx.Request.Context()
+	if err := slh.sls.Store(context, setlist, user); err != nil {
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
+		return
+	}
+
 	setlistEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))
 
 	for idx, entry := range slReq.CreatedEntries {
@@ -73,17 +80,11 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 
 		setlistEntries[idx] = domain.SetlistEntry{
 			SongID:      entry.SongID,
+			SetlistID:   setlist.ID,
 			Transpose:   entry.Transpose,
 			Notes:       entry.Notes,
 			Arrangement: datatypes.JSON(jsonArray),
 		}
-	}
-
-	context := ctx.Request.Context()
-	if err := slh.sls.Store(context, setlist, user); err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
-
-		return
 	}
 
 	if err := slh.sles.StoreBatch(context, &setlistEntries, user); err != nil {

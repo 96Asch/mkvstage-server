@@ -16,8 +16,8 @@ type setlistUpdateReq struct {
 	Name           string                 `json:"name" binding:"required"`
 	CreatorID      int64                  `json:"creator_id" binding:"required"`
 	Deadline       time.Time              `json:"deadline" binding:"required"`
-	CreatedEntries []setlistRoleCreateReq `json:"created_entries" binding:"required"`
-	UpdatedEntries []setlistRoleUpdateReq `json:"updated_entries" binding:"required"`
+	CreatedEntries []setlistRoleCreateReq `json:"created_entries" binding:"required,dive"`
+	UpdatedEntries []setlistRoleUpdateReq `json:"updated_entries" binding:"required,dive"`
 	DeletedEntries []int64                `json:"deleted_entries" binding:"required"`
 }
 
@@ -50,8 +50,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 
 	var slReq setlistUpdateReq
 	if err := util.BindModel(ctx, &slReq); err != nil {
-		newErr := domain.NewBadRequestErr(err.Error())
-		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}
@@ -71,6 +70,15 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		Deadline:  slReq.Deadline.Local().Truncate((time.Minute)),
 	}
 
+	context := ctx.Request.Context()
+	updatedSetlist, err := slh.sls.Update(context, setlist, user)
+
+	if err != nil {
+		ctx.JSON(domain.Status(err), gin.H{"error": err})
+
+		return
+	}
+
 	createdEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))
 	updatedEntries := make([]domain.SetlistEntry, len(slReq.UpdatedEntries))
 
@@ -79,6 +87,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 
 		createdEntries[idx] = domain.SetlistEntry{
 			SongID:      entry.SongID,
+			SetlistID:   updatedSetlist.ID,
 			Transpose:   entry.Transpose,
 			Notes:       entry.Notes,
 			Arrangement: datatypes.JSON(jsonArray),
@@ -91,29 +100,21 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		updatedEntries[idx] = domain.SetlistEntry{
 			ID:          entry.ID,
 			SongID:      entry.SongID,
+			SetlistID:   updatedSetlist.ID,
 			Transpose:   entry.Transpose,
 			Notes:       entry.Notes,
 			Arrangement: datatypes.JSON(jsonArray),
 		}
 	}
 
-	context := ctx.Request.Context()
-	updatedSetlist, err := slh.sls.Update(context, setlist, user)
-
-	if err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
-
-		return
-	}
-
 	if err := slh.sles.StoreBatch(context, &createdEntries, user); err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}
 
 	if err := slh.sles.UpdateBatch(context, &updatedEntries, user); err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}

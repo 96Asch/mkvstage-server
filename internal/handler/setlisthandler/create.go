@@ -58,7 +58,6 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 	setlistEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))
 
 	for idx, entry := range slReq.CreatedEntries {
-
 		jsonArray, err := json.Marshal(entry.Arrangement)
 
 		if err != nil {

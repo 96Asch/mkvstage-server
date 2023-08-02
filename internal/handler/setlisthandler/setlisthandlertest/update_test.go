@@ -96,7 +96,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -106,7 +106,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -116,7 +116,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 			SongID:      2,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -126,7 +126,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -242,7 +242,7 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -252,7 +252,7 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -262,7 +262,7 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 			SongID:      2,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -272,7 +272,7 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -536,7 +536,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -546,7 +546,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 			SongID:      2,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -556,7 +556,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -643,7 +643,7 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -653,7 +653,7 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 			SongID:      2,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -663,7 +663,7 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -754,7 +754,7 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -764,7 +764,7 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 			SongID:      2,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -774,7 +774,7 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -869,7 +869,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -879,7 +879,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 			SongID:      2,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 
@@ -889,7 +889,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 	}
 

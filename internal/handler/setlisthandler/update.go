@@ -1,21 +1,32 @@
 package setlisthandler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/util"
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 )
 
 type setlistUpdateReq struct {
-	Name           string                `json:"name" binding:"required"`
-	CreatorID      int64                 `json:"creator_id" binding:"required"`
-	Deadline       time.Time             `json:"deadline" binding:"required"`
-	CreatedEntries []domain.SetlistEntry `json:"created_entries" binding:"required"`
-	UpdatedEntries []domain.SetlistEntry `json:"updated_entries" binding:"required"`
-	DeletedEntries []domain.SetlistEntry `json:"deleted_entries" binding:"required"`
+	Name           string                 `json:"name" binding:"required"`
+	CreatorID      int64                  `json:"creator_id" binding:"required"`
+	Deadline       time.Time              `json:"deadline" binding:"required"`
+	CreatedEntries []setlistRoleCreateReq `json:"created_entries" binding:"required"`
+	UpdatedEntries []setlistRoleUpdateReq `json:"updated_entries" binding:"required"`
+	DeletedEntries []domain.SetlistEntry  `json:"deleted_entries" binding:"required"`
+}
+
+type setlistRoleUpdateReq struct {
+	ID          int64    `json:"id" binding:"required"`
+	SongID      int64    `json:"song_id" binding:"required"`
+	Transpose   int16    `json:"transpose"`
+	Notes       string   `json:"notes"`
+	Arrangement []string `json:"arrangement"`
 }
 
 func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
@@ -38,7 +49,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 	}
 
 	var slReq setlistUpdateReq
-	if err := ctx.BindJSON(&slReq); err != nil {
+	if err := util.BindModel(ctx, &slReq); err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
 		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
 
@@ -64,8 +75,28 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 	updatedEntries := make([]domain.SetlistEntry, len(slReq.UpdatedEntries))
 	deletedEntriesIds := make([]int64, len(slReq.DeletedEntries))
 
-	copy(createdEntries, slReq.CreatedEntries)
-	copy(updatedEntries, slReq.UpdatedEntries)
+	for idx, entry := range slReq.CreatedEntries {
+		jsonArray, _ := json.Marshal(entry.Arrangement)
+
+		createdEntries[idx] = domain.SetlistEntry{
+			SongID:      entry.SongID,
+			Transpose:   entry.Transpose,
+			Notes:       entry.Notes,
+			Arrangement: datatypes.JSON(jsonArray),
+		}
+	}
+
+	for idx, entry := range slReq.UpdatedEntries {
+		jsonArray, _ := json.Marshal(entry.Arrangement)
+
+		updatedEntries[idx] = domain.SetlistEntry{
+			ID:          entry.ID,
+			SongID:      entry.SongID,
+			Transpose:   entry.Transpose,
+			Notes:       entry.Notes,
+			Arrangement: datatypes.JSON(jsonArray),
+		}
+	}
 
 	for idx, entry := range slReq.DeletedEntries {
 		deletedEntriesIds[idx] = entry.ID

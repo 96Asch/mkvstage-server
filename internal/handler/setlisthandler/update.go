@@ -18,7 +18,7 @@ type setlistUpdateReq struct {
 	Deadline       time.Time              `json:"deadline" binding:"required"`
 	CreatedEntries []setlistRoleCreateReq `json:"created_entries" binding:"required"`
 	UpdatedEntries []setlistRoleUpdateReq `json:"updated_entries" binding:"required"`
-	DeletedEntries []domain.SetlistEntry  `json:"deleted_entries" binding:"required"`
+	DeletedEntries []int64                `json:"deleted_entries" binding:"required"`
 }
 
 type setlistRoleUpdateReq struct {
@@ -73,7 +73,6 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 
 	createdEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))
 	updatedEntries := make([]domain.SetlistEntry, len(slReq.UpdatedEntries))
-	deletedEntriesIds := make([]int64, len(slReq.DeletedEntries))
 
 	for idx, entry := range slReq.CreatedEntries {
 		jsonArray, _ := json.Marshal(entry.Arrangement)
@@ -98,10 +97,6 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		}
 	}
 
-	for idx, entry := range slReq.DeletedEntries {
-		deletedEntriesIds[idx] = entry.ID
-	}
-
 	context := ctx.Request.Context()
 	updatedSetlist, err := slh.sls.Update(context, setlist, user)
 
@@ -123,7 +118,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		return
 	}
 
-	if err := slh.sles.RemoveBatch(context, setlist, deletedEntriesIds, user); err != nil {
+	if err := slh.sles.RemoveBatch(context, setlist, slReq.DeletedEntries, user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 
 		return

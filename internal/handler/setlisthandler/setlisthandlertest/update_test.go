@@ -120,15 +120,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		},
 	}
 
-	mockDeletedSetlistEntries := &[]domain.SetlistEntry{
-		{
-			ID:          3,
-			SongID:      1,
-			Transpose:   0,
-			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
-		},
-	}
+	mockDeletedSetlistEntries := []int64{3}
 
 	mockSL := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
@@ -175,7 +167,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		"deadline":        mockSetlist.Deadline,
 		"created_entries": *mockCreatedSetlistEntries,
 		"updated_entries": *mockUpdatedSetlistEntries,
-		"deleted_entries": *mockDeletedSetlistEntries,
+		"deleted_entries": mockDeletedSetlistEntries,
 	})
 
 	assert.NoError(t, err)
@@ -266,16 +258,7 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 		},
 	}
 
-	mockDeletedSetlistEntries := &[]domain.SetlistEntry{
-		{
-			ID:          3,
-			SongID:      1,
-			Transpose:   0,
-			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
-		},
-	}
-
+	mockDeletedSetlistEntries := []int64{3}
 	mockSL := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
 	mockSS := &mocks.MockSongService{}
@@ -321,7 +304,7 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 		"deadline":        mockSetlist.Deadline.Format(time.RFC3339),
 		"created_entries": *mockCreatedSetlistEntries,
 		"updated_entries": *mockUpdatedSetlistEntries,
-		"deleted_entries": *mockDeletedSetlistEntries,
+		"deleted_entries": mockDeletedSetlistEntries,
 	})
 
 	assert.NoError(t, err)
@@ -550,16 +533,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 		},
 	}
 
-	mockDeletedSetlistEntries := &[]domain.SetlistEntry{
-		{
-			ID:          3,
-			SongID:      1,
-			Transpose:   0,
-			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
-		},
-	}
-
+	mockDeletedSetlistEntries := []int64{3}
 	mockErr := domain.NewBadRequestErr("")
 	mockSL := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
@@ -585,7 +559,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 		"deadline":        mockSetlist.Deadline,
 		"created_entries": *mockCreatedSetlistEntries,
 		"updated_entries": *mockUpdatedSetlistEntries,
-		"deleted_entries": *mockDeletedSetlistEntries,
+		"deleted_entries": mockDeletedSetlistEntries,
 	})
 	assert.NoError(t, err)
 
@@ -657,16 +631,7 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 		},
 	}
 
-	mockDeletedSetlistEntries := &[]domain.SetlistEntry{
-		{
-			ID:          3,
-			SongID:      1,
-			Transpose:   0,
-			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
-		},
-	}
-
+	mockDeletedSetlistEntries := []int64{3}
 	mockErr := domain.NewBadRequestErr("")
 	mockSL := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
@@ -696,7 +661,7 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 		"deadline":        mockSetlist.Deadline,
 		"created_entries": *mockCreatedSetlistEntries,
 		"updated_entries": *mockUpdatedSetlistEntries,
-		"deleted_entries": *mockDeletedSetlistEntries,
+		"deleted_entries": mockDeletedSetlistEntries,
 	})
 	assert.NoError(t, err)
 
@@ -768,16 +733,7 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 		},
 	}
 
-	mockDeletedSetlistEntries := &[]domain.SetlistEntry{
-		{
-			ID:          3,
-			SongID:      1,
-			Transpose:   0,
-			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
-		},
-	}
-
+	mockDeletedSetlistEntries := []int64{3}
 	mockErr := domain.NewBadRequestErr("")
 	mockSL := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
@@ -811,7 +767,7 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 		"deadline":        mockSetlist.Deadline,
 		"created_entries": *mockCreatedSetlistEntries,
 		"updated_entries": *mockUpdatedSetlistEntries,
-		"deleted_entries": *mockDeletedSetlistEntries,
+		"deleted_entries": mockDeletedSetlistEntries,
 	})
 	assert.NoError(t, err)
 
@@ -883,16 +839,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 		},
 	}
 
-	mockDeletedSetlistEntries := &[]domain.SetlistEntry{
-		{
-			ID:          3,
-			SongID:      1,
-			Transpose:   0,
-			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
-		},
-	}
-
+	mockDeletedSetlistEntries := []int64{3}
 	mockErr := domain.NewBadRequestErr("")
 	mockSL := &mocks.MockSetlistService{}
 	mockSLES := &mocks.MockSetlistEntryService{}
@@ -930,7 +877,7 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 		"deadline":        mockSetlist.Deadline,
 		"created_entries": *mockCreatedSetlistEntries,
 		"updated_entries": *mockUpdatedSetlistEntries,
-		"deleted_entries": *mockDeletedSetlistEntries,
+		"deleted_entries": mockDeletedSetlistEntries,
 	})
 	assert.NoError(t, err)
 

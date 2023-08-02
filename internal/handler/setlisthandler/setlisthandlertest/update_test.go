@@ -312,10 +312,14 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 	writer := prepareAndServeUpdate(t, fmt.Sprint(mockPrevSetlist.ID), mockSL, mockSLES, mockSS, mockMWH, &byteBody)
 
 	assert.Equal(t, http.StatusOK, writer.Code)
+	type setlistResponse struct {
+		*domain.Setlist
+		Entries *[]domain.SetlistEntry `json:"entries"`
+	}
 
+	expEntries := append(*expCreatedSetlistEntries, *mockUpdatedSetlistEntries...)
 	expBody, err := json.Marshal(gin.H{
-		"setlist": expSetlist,
-		"entries": append(*expCreatedSetlistEntries, *mockUpdatedSetlistEntries...),
+		"setlist": setlistResponse{expSetlist, &expEntries},
 	})
 	assert.NoError(t, err)
 

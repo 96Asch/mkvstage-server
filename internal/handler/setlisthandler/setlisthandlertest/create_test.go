@@ -167,9 +167,13 @@ func TestCreateCorrect(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, writer.Code)
 
+	type setlistResponse struct {
+		*domain.Setlist
+		Entries *[]domain.SetlistEntry `json:"entries"`
+	}
+
 	expBody, err := json.Marshal(gin.H{
-		"setlist": expSetlist,
-		"entries": expSetlistEntries,
+		"setlist": setlistResponse{expSetlist, expSetlistEntries},
 	})
 	assert.NoError(t, err)
 

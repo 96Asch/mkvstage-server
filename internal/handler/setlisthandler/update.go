@@ -124,8 +124,14 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 		return
 	}
 
+	entries := append(createdEntries, updatedEntries...)
+
+	response := setlistResponse{
+		updatedSetlist,
+		&entries,
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"setlist": updatedSetlist,
-		"entries": append(createdEntries, updatedEntries...),
+		"setlist": response,
 	})
 }

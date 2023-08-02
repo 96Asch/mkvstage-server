@@ -38,6 +38,22 @@ func (slr gormSetlistRepository) GetByID(ctx context.Context, sid int64) (*domai
 	return &setlist, nil
 }
 
+func (slr gormSetlistRepository) GetByIDs(ctx context.Context, sids []int64) (*[]domain.Setlist, error) {
+	var setlists []domain.Setlist
+	res := slr.db.First(&setlists, sids)
+
+	if err := res.Error; err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, domain.NewRecordNotFoundErr("id", fmt.Sprint(sids))
+		default:
+			return nil, domain.NewInternalErr()
+		}
+	}
+
+	return &setlists, nil
+}
+
 func (slr gormSetlistRepository) GetAll(ctx context.Context) (*[]domain.Setlist, error) {
 	var setlists []domain.Setlist
 	res := slr.db.Find(&setlists)

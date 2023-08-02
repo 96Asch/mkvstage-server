@@ -7,6 +7,8 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/bundlehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/mehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
+	"github.com/96Asch/mkvstage-server/internal/handler/setlisthandler"
+	"github.com/96Asch/mkvstage-server/internal/handler/setlistrolehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
 	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
@@ -25,6 +27,7 @@ type Config struct {
 	UR     domain.UserRoleService
 	SL     domain.SetlistService
 	SE     domain.SetlistEntryService
+	SLR    domain.SetlistRoleService
 }
 
 func (cfg *Config) New() *Config {
@@ -46,4 +49,6 @@ func Initialize(config *Config) {
 	songhandler.Initialize(version1, config.S, config.MH)
 	rolehandler.Initialize(version1, config.R, config.MH)
 	userrolehandler.Initialize(version1, config.UR, config.MH)
+	setlisthandler.Initialize(version1, config.SL, config.SE, config.S, config.MH)
+	setlistrolehandler.Initialize(version1, config.SLR, config.MH)
 }

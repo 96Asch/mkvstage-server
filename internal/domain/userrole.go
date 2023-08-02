@@ -25,6 +25,7 @@ type UserRoleService interface {
 type UserRoleRepository interface {
 	Creator[UserRole]
 	Getter[UserRole]
+	Get(ctx context.Context, ids []int64) (*[]UserRole, error)
 	GetByUID(ctx context.Context, uid int64) (*[]UserRole, error)
 	Updater[UserRole]
 	Deleter[UserRole]

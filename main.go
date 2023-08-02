@@ -69,6 +69,7 @@ func setupMigrations(gormDatabase *gorm.DB) error {
 		&domain.UserRole{},
 		&domain.Setlist{},
 		&domain.SetlistEntry{},
+		&domain.SetlistRole{},
 	}
 
 	for _, model := range models {
@@ -130,6 +131,7 @@ func main() {
 	roleRepo := repository.NewGormRoleRepository(database)
 	setlistRepo := repository.NewGormSetlistRepository(database)
 	setlistEntryRepo := repository.NewGormSetlistEntryRepository(database)
+	setlistRoleRepo := repository.NewGormSetlistRoleRepository(database)
 
 	userService := service.NewUserService(userRepo, roleRepo, userroleRepo)
 	tokenService := service.NewTokenService(tokenRepo, userRepo, accessSecret, refreshSecret)
@@ -140,6 +142,7 @@ func main() {
 	roleService := service.NewRoleService(roleRepo, userRepo, userroleRepo)
 	setlistService := service.NewSetlistService(userRepo, setlistRepo)
 	setlistEntryService := service.NewSetlistEntryService(setlistEntryRepo, setlistRepo, songRepo)
+	setlistRoleService := service.NewSetlistRoleService(setlistRoleRepo, setlistRepo, userroleRepo)
 
 	config := handler.Config{
 		Router: router,
@@ -152,6 +155,7 @@ func main() {
 		UR:     userroleService,
 		SL:     setlistService,
 		SE:     setlistEntryService,
+		SLR:    setlistRoleService,
 	}
 
 	run(&config)

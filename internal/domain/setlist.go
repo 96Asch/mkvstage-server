@@ -26,7 +26,9 @@ type SetlistService interface {
 }
 
 type SetlistRepository interface {
-	Getter[Setlist]
+	GetByID(ctx context.Context, id int64) (*Setlist, error)
+	GetByIDs(ctx context.Context, id []int64) (*[]Setlist, error)
+	GetAll(ctx context.Context) (*[]Setlist, error)
 	Get(ctx context.Context, from time.Time, to time.Time) (*[]Setlist, error)
 	GetByTimeframe(ctx context.Context, from time.Time, to time.Time) (*[]Setlist, error)
 	Delete(ctx context.Context, slid int64) error

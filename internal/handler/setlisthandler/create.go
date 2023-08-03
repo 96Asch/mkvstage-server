@@ -23,6 +23,7 @@ type setlistRoleCreateReq struct {
 	Transpose   int16    `json:"transpose"`
 	Notes       string   `json:"notes"`
 	Arrangement []string `json:"arrangement"`
+	Rank        int64    `json:"rank" binding:"required"`
 }
 
 type setlistResponse struct {
@@ -84,6 +85,7 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 			Transpose:   entry.Transpose,
 			Notes:       entry.Notes,
 			Arrangement: datatypes.JSON(jsonArray),
+			Rank:        entry.Rank,
 		}
 	}
 

@@ -64,7 +64,6 @@ func TestCreateCorrect(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
-		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
 
 	mockSetlist := &domain.Setlist{
@@ -80,6 +79,7 @@ func TestCreateCorrect(t *testing.T) {
 			SetlistID:   expSetlist.ID,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
+			Rank:        1000,
 		},
 		{
 			SongID:      2,
@@ -87,6 +87,7 @@ func TestCreateCorrect(t *testing.T) {
 			SetlistID:   expSetlist.ID,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -98,6 +99,7 @@ func TestCreateCorrect(t *testing.T) {
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
+			Rank:        1000,
 		},
 		{
 			ID:          2,
@@ -106,6 +108,7 @@ func TestCreateCorrect(t *testing.T) {
 			Transpose:   1,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -131,7 +134,6 @@ func TestCreateCorrect(t *testing.T) {
 			assert.True(t, ok)
 			arg.ID = expSetlist.ID
 			arg.UpdatedAt = expSetlist.UpdatedAt
-			arg.Order = expSetlist.Order
 		})
 
 	mockSLES.
@@ -156,12 +158,14 @@ func TestCreateCorrect(t *testing.T) {
 				"transpose":   0,
 				"notes":       "",
 				"arrangement": []string{"Verse 1", "Chorus 2"},
+				"rank":        1000,
 			},
 			{
 				"song_id":     2,
 				"transpose":   1,
 				"notes":       "Foobar",
 				"arrangement": []string{"Verse 1", "Verse 2"},
+				"rank":        2000,
 			},
 		},
 	})
@@ -331,12 +335,14 @@ func TestCreateSetlistStoreErr(t *testing.T) {
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        1000,
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -398,12 +404,14 @@ func TestCreateSetlistEntryStoreBatchErr(t *testing.T) {
 			Transpose:   0,
 			Notes:       "",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        1000,
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 

@@ -10,7 +10,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"gorm.io/datatypes"
 )
 
 func TestSetlistFetchByIDCorrect(t *testing.T) {
@@ -193,7 +192,6 @@ func TestSetlistUpdateCorrect(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockUR := &mocks.MockUserRepository{}
@@ -231,7 +229,6 @@ func TestSetlistUpdateSetlistNotFound(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
@@ -264,7 +261,6 @@ func TestSetlistUpdateNotAuthorized(t *testing.T) {
 		CreatorID: 0,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewNotAuthorizedErr("")
@@ -297,7 +293,6 @@ func TestSetlistUpdateInvalidDeadline(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, -1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewBadRequestErr("")
@@ -330,7 +325,6 @@ func TestSetlistUpdateUserGetByIDErr(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
@@ -366,7 +360,6 @@ func TestSetlistUpdateErr(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewInternalErr()
@@ -404,7 +397,6 @@ func TestSetlistStoreCorrect(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockUR := &mocks.MockUserRepository{}
@@ -446,7 +438,6 @@ func TestSetlistStoreNotAuthorized(t *testing.T) {
 		CreatorID: 0,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewNotAuthorizedErr("")
@@ -474,7 +465,6 @@ func TestSetlistStoreInvalidDeadline(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, -1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewBadRequestErr("")
@@ -502,7 +492,6 @@ func TestSetlistStoreUserGetByIDErr(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewRecordNotFoundErr("", "")
@@ -534,7 +523,6 @@ func TestSetlistStoreErr(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1),
 		Name:      "Foobar",
-		Order:     datatypes.JSON([]byte(`{order: [1, 2]}`)),
 	}
 
 	mockErr := domain.NewInternalErr()

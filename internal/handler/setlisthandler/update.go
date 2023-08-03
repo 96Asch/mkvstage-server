@@ -27,6 +27,7 @@ type setlistRoleUpdateReq struct {
 	Transpose   int16    `json:"transpose"`
 	Notes       string   `json:"notes"`
 	Arrangement []string `json:"arrangement"`
+	Rank        int64    `json:"rank" binding:"required"`
 }
 
 func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
@@ -91,6 +92,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 			Transpose:   entry.Transpose,
 			Notes:       entry.Notes,
 			Arrangement: datatypes.JSON(jsonArray),
+			Rank:        entry.Rank,
 		}
 	}
 
@@ -104,6 +106,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 			Transpose:   entry.Transpose,
 			Notes:       entry.Notes,
 			Arrangement: datatypes.JSON(jsonArray),
+			Rank:        entry.Rank,
 		}
 	}
 

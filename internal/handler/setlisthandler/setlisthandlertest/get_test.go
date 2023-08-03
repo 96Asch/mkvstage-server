@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"gorm.io/datatypes"
 )
 
 func prepareAndServeGet(
@@ -59,14 +58,12 @@ func TestGetAll(t *testing.T) {
 			Name:      "Foobar",
 			Deadline:  time.Now().UTC().AddDate(0, 0, 1).Truncate(time.Minute),
 			CreatorID: mockUser.ID,
-			Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 		},
 		{
 			ID:        2,
 			Name:      "Barfoo",
 			Deadline:  time.Now().UTC().AddDate(0, 0, 3).Truncate(time.Minute),
 			CreatorID: 0,
-			Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 		},
 	}
 
@@ -305,12 +302,10 @@ func TestGetByID(t *testing.T) {
 	}
 
 	expSetlist := &domain.Setlist{
-
 		ID:        1,
 		Name:      "Foobar",
 		Deadline:  time.Now().UTC().AddDate(0, 0, 1).Truncate(time.Minute),
 		CreatorID: mockUser.ID,
-		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
 
 	expSetlistEntries := &[]domain.SetlistEntry{

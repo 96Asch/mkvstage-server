@@ -123,16 +123,22 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 	}
 
 	if err := slh.sles.RemoveBatch(context, setlist, slReq.DeletedEntries, user); err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}
 
-	entries := append(createdEntries, updatedEntries...)
+	entries, err := slh.sles.FetchBySetlist(context, &[]domain.Setlist{*setlist})
+
+	if err != nil {
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
+
+		return
+	}
 
 	response := setlistResponse{
 		updatedSetlist,
-		&entries,
+		*entries,
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{

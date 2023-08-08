@@ -100,7 +100,19 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		},
 	}
 
-	expCreatedSetlistEntries := &[]domain.SetlistEntry{
+	mockUpdatedSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          2,
+			SongID:      2,
+			SetlistID:   expMockSetlist.ID,
+			Transpose:   2,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        2000,
+		},
+	}
+
+	expFetchedEntries := &[]domain.SetlistEntry{
 		{
 			ID:          1,
 			SongID:      1,
@@ -110,9 +122,6 @@ func TestUpdateByIDCorrect(t *testing.T) {
 			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 			Rank:        1000,
 		},
-	}
-
-	mockUpdatedSetlistEntries := &[]domain.SetlistEntry{
 		{
 			ID:          2,
 			SongID:      2,
@@ -165,6 +174,10 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
 		Return(nil)
 
+	mockSLES.
+		On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expMockSetlist}).
+		Return(expFetchedEntries, nil)
+
 	byteBody, err := json.Marshal(gin.H{
 		"name":       mockSetlist.Name,
 		"creator_id": mockSetlist.CreatorID,
@@ -200,12 +213,11 @@ func TestUpdateByIDCorrect(t *testing.T) {
 
 	type setlistResponse struct {
 		*domain.Setlist
-		Entries *[]domain.SetlistEntry `json:"entries"`
+		Entries []domain.SetlistEntry `json:"entries"`
 	}
 
-	expEntries := append(*expCreatedSetlistEntries, *mockUpdatedSetlistEntries...)
 	expBody, err := json.Marshal(gin.H{
-		"setlist": setlistResponse{expSetlist, &expEntries},
+		"setlist": setlistResponse{expSetlist, *expFetchedEntries},
 	})
 	assert.NoError(t, err)
 
@@ -265,15 +277,24 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 		},
 	}
 
-	expCreatedSetlistEntries := &[]domain.SetlistEntry{
+	expFetchedEntries := &[]domain.SetlistEntry{
 		{
 			ID:          1,
 			SongID:      1,
-			Transpose:   0,
 			SetlistID:   expMockSetlist.ID,
+			Transpose:   0,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 			Rank:        1000,
+		},
+		{
+			ID:          2,
+			SongID:      2,
+			SetlistID:   expMockSetlist.ID,
+			Transpose:   2,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -329,6 +350,10 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
 		Return(nil)
 
+	mockSLES.
+		On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expMockSetlist}).
+		Return(expFetchedEntries, nil)
+
 	byteBody, err := json.Marshal(gin.H{
 		"name":            mockSetlist.Name,
 		"creator_id":      mockSetlist.CreatorID,
@@ -346,12 +371,11 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 
 	type setlistResponse struct {
 		*domain.Setlist
-		Entries *[]domain.SetlistEntry `json:"entries"`
+		Entries []domain.SetlistEntry `json:"entries"`
 	}
 
-	expEntries := append(*expCreatedSetlistEntries, *mockUpdatedSetlistEntries...)
 	expBody, err := json.Marshal(gin.H{
-		"setlist": setlistResponse{expSetlist, &expEntries},
+		"setlist": setlistResponse{expSetlist, *expFetchedEntries},
 	})
 	assert.NoError(t, err)
 
@@ -923,6 +947,129 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 	writer := prepareAndServeUpdate(t, fmt.Sprint(mockPrevSetlist.ID), mockSL, mockSLES, mockSS, mockMWH, &byteBody)
 
 	assert.Equal(t, mockErr.Status(), writer.Code)
+	mockSL.AssertExpectations(t)
+	mockSLES.AssertExpectations(t)
+	mockSS.AssertExpectations(t)
+	mockMWH.AssertExpectations(t)
+}
+
+func TestUpdateByIDSetlistEntryFetchBySetlistErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		ID:        1,
+		FirstName: "Foo",
+		LastName:  "Bar",
+	}
+
+	mockPrevSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Bar",
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
+		UpdatedAt: time.Now().Round(0),
+	}
+
+	expSetlist := &domain.Setlist{
+		ID:        1,
+		Name:      "Foo",
+		CreatorID: mockUser.ID,
+		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
+		UpdatedAt: time.Now().Round(0),
+	}
+
+	mockSetlist := &domain.Setlist{
+		Name:      expSetlist.Name,
+		CreatorID: expSetlist.ID,
+		Deadline:  expSetlist.Deadline,
+	}
+
+	expMockSetlist := &domain.Setlist{
+		ID:        mockPrevSetlist.ID,
+		Name:      expSetlist.Name,
+		CreatorID: expSetlist.ID,
+		Deadline:  expSetlist.Deadline,
+	}
+
+	mockCreatedSetlistEntries := &[]domain.SetlistEntry{
+		{
+			SongID:      1,
+			SetlistID:   expMockSetlist.ID,
+			Transpose:   0,
+			Notes:       "Foobar",
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        1000,
+		},
+	}
+
+	mockUpdatedSetlistEntries := &[]domain.SetlistEntry{
+		{
+			ID:          2,
+			SongID:      2,
+			SetlistID:   expSetlist.ID,
+			Transpose:   0,
+			Notes:       "",
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        2000,
+		},
+	}
+
+	mockDeletedSetlistEntries := []int64{3}
+	mockErr := domain.NewBadRequestErr("")
+	mockSL := &mocks.MockSetlistService{}
+	mockSLES := &mocks.MockSetlistEntryService{}
+	mockSS := &mocks.MockSongService{}
+	mockMWH := &mocks.MockMiddlewareHandler{}
+
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("user", mockUser)
+		ctx.Next()
+	}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
+	mockSL.
+		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		Return(expSetlist, nil)
+
+	mockSLES.
+		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		Return(nil)
+
+	mockSLES.
+		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUpdatedSetlistEntries, mockUser).
+		Return(nil)
+
+	mockSLES.
+		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
+		Return(nil)
+
+	mockSLES.
+		On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expMockSetlist}).
+		Return(nil, mockErr)
+
+	byteBody, err := json.Marshal(gin.H{
+		"name":            mockSetlist.Name,
+		"creator_id":      mockSetlist.CreatorID,
+		"deadline":        mockSetlist.Deadline,
+		"created_entries": *mockCreatedSetlistEntries,
+		"updated_entries": *mockUpdatedSetlistEntries,
+		"deleted_entries": mockDeletedSetlistEntries,
+	})
+	assert.NoError(t, err)
+
+	writer := prepareAndServeUpdate(t, fmt.Sprint(mockPrevSetlist.ID), mockSL, mockSLES, mockSS, mockMWH, &byteBody)
+
+	expResponse, err := json.Marshal(gin.H{
+		"error": mockErr.Error(),
+	})
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, mockErr.Status(), writer.Code)
+	assert.Equal(t, expResponse, writer.Body.Bytes())
 	mockSL.AssertExpectations(t)
 	mockSLES.AssertExpectations(t)
 	mockSS.AssertExpectations(t)

@@ -24,7 +24,7 @@ func NewGormSetlistRepository(db *gorm.DB) *gormSetlistRepository {
 
 func (slr gormSetlistRepository) GetByID(ctx context.Context, sid int64) (*domain.Setlist, error) {
 	var setlist domain.Setlist
-	res := slr.db.First(&setlist, sid)
+	res := slr.db.Order("setlist_id, deadline asc").First(&setlist, sid)
 
 	if err := res.Error; err != nil {
 		switch {

@@ -26,11 +26,6 @@ type setlistRoleCreateReq struct {
 	Rank        int64    `json:"rank" binding:"required"`
 }
 
-type setlistResponse struct {
-	*domain.Setlist
-	Entries *[]domain.SetlistEntry `json:"entries"`
-}
-
 func (slh setlistHandler) Create(ctx *gin.Context) {
 	val, exists := ctx.Get("user")
 	if !exists {
@@ -97,7 +92,7 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 
 	response := setlistResponse{
 		setlist,
-		&setlistEntries,
+		setlistEntries,
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"setlist": response})

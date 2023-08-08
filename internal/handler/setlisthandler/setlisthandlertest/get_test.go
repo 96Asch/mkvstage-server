@@ -71,11 +71,23 @@ func TestGetAll(t *testing.T) {
 		{
 			ID:        1,
 			SetlistID: 1,
+			Rank:      1000,
 		},
 		{
 			ID:        2,
 			SetlistID: 1,
+			Rank:      2000,
 		},
+		{
+			ID:        3,
+			SetlistID: 2,
+			Rank:      1000,
+		},
+	}
+
+	type setlistResponse struct {
+		*domain.Setlist
+		Entries []domain.SetlistEntry `json:"entries"`
 	}
 
 	t.Run("Correct Get All Setlists", func(t *testing.T) {
@@ -102,9 +114,24 @@ func TestGetAll(t *testing.T) {
 
 		writer := prepareAndServeGet(t, "", mockSL, mockSLES, mockSS, mockMWH)
 
+		response := []setlistResponse{
+			{
+				&(*expSetlist)[0],
+				[]domain.SetlistEntry{
+					(*expSetlistEntries)[0],
+					(*expSetlistEntries)[1],
+				},
+			},
+			{
+				&(*expSetlist)[1],
+				[]domain.SetlistEntry{
+					(*expSetlistEntries)[2],
+				},
+			},
+		}
+
 		expBody, err := json.Marshal(gin.H{
-			"setlist": expSetlist,
-			"entries": expSetlistEntries,
+			"setlists": response,
 		})
 		assert.NoError(t, err)
 

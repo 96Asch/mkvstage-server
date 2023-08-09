@@ -26,7 +26,7 @@ func TestSetlistFetchByIDCorrect(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), slid).
+		On("GetByID", context.TODO(), slid).
 		Return(mockSetlist, nil)
 
 	slr := service.NewSetlistService(mockUR, mockSLR)
@@ -46,7 +46,7 @@ func TestSetlistFetchByIDErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), slid).
+		On("GetByID", context.TODO(), slid).
 		Return(nil, expErr)
 
 	slr := service.NewSetlistService(mockUR, mockSLR)
@@ -76,7 +76,7 @@ func TestSetlistFetchAllCorrect(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(mockSetlists, nil)
 
 	slr := service.NewSetlistService(mockUR, mockSLR)
@@ -94,7 +94,7 @@ func TestSetlistFetchAllErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(nil, expErr)
 
 	slr := service.NewSetlistService(mockUR, mockSLR)
@@ -127,7 +127,7 @@ func TestSetlistFetchByTimeframeCorrect(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByTimeframe", mock.AnythingOfType("*context.emptyCtx"), time1, time2).
+		On("GetByTimeframe", context.TODO(), time1, time2).
 		Return(mockSetlists, nil)
 
 	slr := service.NewSetlistService(mockUR, mockSLR)
@@ -167,7 +167,7 @@ func TestSetlistFetchByTimeframeSetlistGetByTimeframeErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByTimeframe", mock.AnythingOfType("*context.emptyCtx"), time1, time2).
+		On("GetByTimeframe", context.TODO(), time1, time2).
 		Return(nil, mockErr)
 
 	slr := service.NewSetlistService(mockUR, mockSLR)
@@ -198,13 +198,13 @@ func TestSetlistUpdateCorrect(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		On("GetByID", context.TODO(), mockSetlist.CreatorID).
 		Return(mockUser, nil)
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		On("GetByID", context.TODO(), mockSetlist.ID).
 		Return(mockSetlist, nil)
 	mockSLR.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("Update", context.TODO(), mockSetlist).
 		Return(mockSetlist, nil)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -236,7 +236,7 @@ func TestSetlistUpdateSetlistNotFound(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		On("GetByID", context.TODO(), mockSetlist.ID).
 		Return(nil, mockErr)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -268,7 +268,7 @@ func TestSetlistUpdateNotAuthorized(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		On("GetByID", context.TODO(), mockSetlist.ID).
 		Return(mockSetlist, nil)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -300,7 +300,7 @@ func TestSetlistUpdateInvalidDeadline(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		On("GetByID", context.TODO(), mockSetlist.ID).
 		Return(mockSetlist, nil)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -332,10 +332,10 @@ func TestSetlistUpdateUserGetByIDErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		On("GetByID", context.TODO(), mockSetlist.CreatorID).
 		Return(nil, mockErr)
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		On("GetByID", context.TODO(), mockSetlist.ID).
 		Return(mockSetlist, nil)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -367,13 +367,13 @@ func TestSetlistUpdateErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		On("GetByID", context.TODO(), mockSetlist.CreatorID).
 		Return(mockUser, nil)
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		On("GetByID", context.TODO(), mockSetlist.ID).
 		Return(mockSetlist, nil)
 	mockSLR.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("Update", context.TODO(), mockSetlist).
 		Return(nil, mockErr)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -403,10 +403,10 @@ func TestSetlistStoreCorrect(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		On("GetByID", context.TODO(), mockSetlist.CreatorID).
 		Return(mockUser, nil)
 	mockSLR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("Create", context.TODO(), mockSetlist).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Setlist)
@@ -499,7 +499,7 @@ func TestSetlistStoreUserGetByIDErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		On("GetByID", context.TODO(), mockSetlist.CreatorID).
 		Return(nil, mockErr)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -530,10 +530,10 @@ func TestSetlistStoreErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.CreatorID).
+		On("GetByID", context.TODO(), mockSetlist.CreatorID).
 		Return(mockUser, nil)
 	mockSLR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockSetlist).
+		On("Create", context.TODO(), mockSetlist).
 		Return(mockErr)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -557,7 +557,7 @@ func TestSetlistRemoveCorrect(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), slid).
+		On("Delete", context.TODO(), slid).
 		Return(nil)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -587,7 +587,7 @@ func TestSetlistRemoveNotAuthorized(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSetlist.ID).
+		On("GetByID", context.TODO(), mockSetlist.ID).
 		Return(mockSetlist, nil)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -613,7 +613,7 @@ func TestSetlistSetlistGetByIDErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), slid).
+		On("GetByID", context.TODO(), slid).
 		Return(nil, mockErr)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)
@@ -639,7 +639,7 @@ func TestSetlistRemoveErr(t *testing.T) {
 	mockSLR := &mocks.MockSetlistRepository{}
 
 	mockSLR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), slid).
+		On("Delete", context.TODO(), slid).
 		Return(mockErr)
 
 	sls := service.NewSetlistService(mockUR, mockSLR)

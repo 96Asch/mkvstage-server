@@ -91,7 +91,7 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 	}
 
 	response := setlistResponse{
-		setlist,
+		*setlist,
 		setlistEntries,
 	}
 

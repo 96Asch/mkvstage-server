@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/setlistrolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeDelete(
@@ -65,7 +64,7 @@ func TestDelete(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSLRS.
-			On("Remove", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2, 3, 4}, user).
+			On("Remove", context.TODO(), []int64{1, 2, 3, 4}, user).
 			Return(nil)
 
 		writer := prepareAndServeDelete(t, mockSLRS, mockMWH, "?ids=1,2,3,4")
@@ -206,7 +205,7 @@ func TestDelete(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSLRS.
-			On("Remove", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2, 3, 4}, user).
+			On("Remove", context.TODO(), []int64{1, 2, 3, 4}, user).
 			Return(expErr)
 
 		writer := prepareAndServeDelete(t, mockSLRS, mockMWH, "?ids=1,2,3,4")

@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"gorm.io/datatypes"
 )
 
@@ -75,7 +74,7 @@ func TestGetByIDCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), sid).
+		On("FetchByID", context.TODO(), sid).
 		Return(mockSong, nil)
 
 	writer := prepareAndServeGet(t, mockSS, mockMWH, fmt.Sprintf("/%d", sid))
@@ -139,7 +138,7 @@ func TestGetByIDNoRecord(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), sid).
+		On("FetchByID", context.TODO(), sid).
 		Return(nil, mockErr)
 
 	writer := prepareAndServeGet(t, mockSS, mockMWH, fmt.Sprintf("/%d", sid))
@@ -190,7 +189,7 @@ func TestGetAllCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(mockSongs, nil)
 
 	writer := prepareAndServeGet(t, mockSS, mockMWH, "")
@@ -225,7 +224,7 @@ func TestGetAllFetchErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(nil, mockErr)
 
 	writer := prepareAndServeGet(t, mockSS, mockMWH, "")

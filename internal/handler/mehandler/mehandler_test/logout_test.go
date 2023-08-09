@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/mehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 const (
@@ -62,7 +61,7 @@ func TestLogoutCorrect(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("RemoveRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, refreshToken).
+		On("RemoveRefresh", context.TODO(), mockUser.ID, refreshToken).
 		Return(nil)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
@@ -175,7 +174,7 @@ func TestLogoutLogoutErr(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("RemoveRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, refreshToken).
+		On("RemoveRefresh", context.TODO(), mockUser.ID, refreshToken).
 		Return(mockErr)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {

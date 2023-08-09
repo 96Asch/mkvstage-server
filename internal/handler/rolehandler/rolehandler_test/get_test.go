@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeGet(
@@ -77,7 +76,7 @@ func TestGetAllCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(mockRoles, nil)
 
 	writer := prepareAndServeGet(t, mockSS, mockMWH, "")
@@ -112,7 +111,7 @@ func TestGetAllFetchErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(nil, mockErr)
 
 	writer := prepareAndServeGet(t, mockSS, mockMWH, "")

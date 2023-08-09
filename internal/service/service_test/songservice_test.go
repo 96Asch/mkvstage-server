@@ -33,10 +33,10 @@ func TestCreateSongCorrect(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		On("GetByID", context.TODO(), mockSong.CreatorID).
 		Return(mockUser, nil)
 	mockSR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockSong).
+		On("Create", context.TODO(), mockSong).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Song)
@@ -135,7 +135,7 @@ func TestCreateSongCreatorNotExists(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		On("GetByID", context.TODO(), mockSong.CreatorID).
 		Return(nil, mockErr)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -168,7 +168,7 @@ func TestCreateSongInvalidChordsheet(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		On("GetByID", context.TODO(), mockSong.CreatorID).
 		Return(mockUser, nil)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -203,10 +203,10 @@ func TestUpdateSongCorrect(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		On("GetByID", context.TODO(), mockSong.CreatorID).
 		Return(mockUser, nil)
 	mockSR.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockSong).
+		On("Update", context.TODO(), mockSong).
 		Return(nil)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -239,7 +239,7 @@ func TestUpdateSongNoClearanceNotCreator(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.ID).
+		On("GetByID", context.TODO(), mockSong.ID).
 		Return(mockSong, nil)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -274,7 +274,7 @@ func TestUpdateSongNoClearanceGetByIDErr(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.ID).
+		On("GetByID", context.TODO(), mockSong.ID).
 		Return(nil, mockErr)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -337,7 +337,7 @@ func TestUpdateSongCreatorNotExists(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		On("GetByID", context.TODO(), mockSong.CreatorID).
 		Return(nil, mockErr)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -371,7 +371,7 @@ func TestUpdateSongInvalidChordsheet(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.CreatorID).
+		On("GetByID", context.TODO(), mockSong.CreatorID).
 		Return(mockUser, nil)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -405,10 +405,10 @@ func TestRemoveSongCorrect(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.ID).
+		On("GetByID", context.TODO(), mockSong.ID).
 		Return(mockSong, nil)
 	mockSR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockSong.ID).
+		On("Delete", context.TODO(), mockSong.ID).
 		Return(nil)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -441,7 +441,7 @@ func TestRemoveSongNoClearanceNotCreator(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSong.ID).
+		On("GetByID", context.TODO(), mockSong.ID).
 		Return(mockSong, nil)
 
 	ss := service.NewSongService(mockUR, mockSR)
@@ -467,7 +467,7 @@ func TestRemoveSongNoClearanceGetByIDErr(t *testing.T) {
 	mockSR := &mocks.MockSongRepository{}
 
 	mockSR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockSongID).
+		On("GetByID", context.TODO(), mockSongID).
 		Return(nil, mockErr)
 
 	ss := service.NewSongService(mockUR, mockSR)

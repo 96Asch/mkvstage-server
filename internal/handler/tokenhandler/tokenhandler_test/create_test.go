@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeCreate(
@@ -69,7 +68,7 @@ func TestCreateCorrect(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
+		On("CreateAccess", context.TODO(), mockRefresh.Refresh).
 		Return(mockAccess, nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -146,7 +145,7 @@ func TestCreateAccessErr(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
+		On("CreateAccess", context.TODO(), mockRefresh.Refresh).
 		Return(nil, mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

@@ -12,7 +12,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeDelete(
@@ -64,7 +63,7 @@ func TestDeleteByIDCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockRS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), sid, mockUser).
+		On("Remove", context.TODO(), sid, mockUser).
 		Return(nil)
 
 	writer := prepareAndServeDelete(t, mockRS, mockMWH, fmt.Sprint(sid))
@@ -144,7 +143,7 @@ func TestDeleteByIDRemoveErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockRS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), rid, mockUser).
+		On("Remove", context.TODO(), rid, mockUser).
 		Return(mockErr)
 
 	writer := prepareAndServeDelete(t, mockRS, mockMWH, fmt.Sprint(rid))

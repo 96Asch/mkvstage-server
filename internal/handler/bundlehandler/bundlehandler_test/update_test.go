@@ -14,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeUpdate(
@@ -85,7 +84,7 @@ func TestUpdateCorrect(t *testing.T) {
 	}
 
 	mockBS.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
+		On("Update", context.TODO(), mockBundle, mockUser).
 		Return(nil)
 	mockMWH.
 		On("AuthenticateUser").
@@ -208,7 +207,7 @@ func TestUpdateErr(t *testing.T) {
 	mockBS := &mocks.MockBundleService{}
 
 	mockBS.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
+		On("Update", context.TODO(), mockBundle, mockUser).
 		Return(mockErr)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {

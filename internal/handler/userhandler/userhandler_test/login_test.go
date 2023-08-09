@@ -15,7 +15,6 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeLogin(
@@ -69,13 +68,13 @@ func TestLoginCorrect(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("CreateRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, "").
+		On("CreateRefresh", context.TODO(), mockUser.ID, "").
 		Return(mockRefresh, nil)
 	mockTS.
-		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
+		On("CreateAccess", context.TODO(), mockRefresh.Refresh).
 		Return(mockAccess, nil)
 	mockUS.
-		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
+		On("Authorize", context.TODO(), mockUser.Email, mockUser.Password).
 		Return(mockUser, nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -144,7 +143,7 @@ func TestLoginNotAuth(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockUS.
-		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
+		On("Authorize", context.TODO(), mockUser.Email, mockUser.Password).
 		Return(nil, mockErr)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -177,10 +176,10 @@ func TestLoginRefreshErr(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("CreateRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, "").
+		On("CreateRefresh", context.TODO(), mockUser.ID, "").
 		Return(nil, mockErr)
 	mockUS.
-		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
+		On("Authorize", context.TODO(), mockUser.Email, mockUser.Password).
 		Return(mockUser, nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -219,13 +218,13 @@ func TestLoginAccessErr(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("CreateRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, "").
+		On("CreateRefresh", context.TODO(), mockUser.ID, "").
 		Return(mockRefresh, nil)
 	mockTS.
-		On("CreateAccess", mock.AnythingOfType("*context.emptyCtx"), mockRefresh.Refresh).
+		On("CreateAccess", context.TODO(), mockRefresh.Refresh).
 		Return(nil, mockErr)
 	mockUS.
-		On("Authorize", mock.AnythingOfType("*context.emptyCtx"), mockUser.Email, mockUser.Password).
+		On("Authorize", context.TODO(), mockUser.Email, mockUser.Password).
 		Return(mockUser, nil)
 
 	byteBody, err := json.Marshal(gin.H{

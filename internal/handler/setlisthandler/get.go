@@ -1,6 +1,7 @@
 package setlisthandler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
@@ -9,7 +10,7 @@ import (
 )
 
 type setlistResponse struct {
-	*domain.Setlist
+	domain.Setlist
 	Entries []domain.SetlistEntry `json:"entries"`
 }
 
@@ -50,11 +51,12 @@ func (slh setlistHandler) GetAll(ctx *gin.Context) {
 	sortedEntries := sortBySetlist(retrievedSetlistEntries)
 
 	for idx, setlist := range *retrievedSetlists {
-		s := &setlist
+		log.Printf("sid: %d", setlist.ID)
 		response[idx] = setlistResponse{
-			s,
+			setlist,
 			sortedEntries[setlist.ID],
 		}
+		log.Println(response[idx])
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
@@ -89,7 +91,7 @@ func (slh setlistHandler) GetByID(ctx *gin.Context) {
 	}
 
 	response := setlistResponse{
-		setlist,
+		*setlist,
 		*setlistEntries,
 	}
 

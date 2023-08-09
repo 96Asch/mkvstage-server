@@ -137,7 +137,7 @@ func (slh setlistHandler) UpdateByID(ctx *gin.Context) {
 	}
 
 	response := setlistResponse{
-		updatedSetlist,
+		*updatedSetlist,
 		*entries,
 	}
 

@@ -151,11 +151,11 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		On("Update", context.TODO(), expMockSetlist, mockUser).
 		Return(expSetlist, nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockCreatedSetlistEntries, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*[]domain.SetlistEntry)
@@ -167,15 +167,15 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		})
 
 	mockSLES.
-		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUpdatedSetlistEntries, mockUser).
+		On("UpdateBatch", context.TODO(), mockUpdatedSetlistEntries, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
+		On("RemoveBatch", context.TODO(), expMockSetlist, []int64{3}, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expMockSetlist}).
+		On("FetchBySetlist", context.TODO(), &[]domain.Setlist{*expMockSetlist}).
 		Return(expFetchedEntries, nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -327,11 +327,11 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		On("Update", context.TODO(), expMockSetlist, mockUser).
 		Return(expSetlist, nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockCreatedSetlistEntries, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*[]domain.SetlistEntry)
@@ -343,15 +343,15 @@ func TestUpdateByIDStringedDeadlineCorrect(t *testing.T) {
 		})
 
 	mockSLES.
-		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUpdatedSetlistEntries, mockUser).
+		On("UpdateBatch", context.TODO(), mockUpdatedSetlistEntries, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
+		On("RemoveBatch", context.TODO(), expMockSetlist, []int64{3}, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expMockSetlist}).
+		On("FetchBySetlist", context.TODO(), &[]domain.Setlist{*expMockSetlist}).
 		Return(expFetchedEntries, nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -608,7 +608,7 @@ func TestUpdateByIDStoreErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		On("Update", context.TODO(), expMockSetlist, mockUser).
 		Return(nil, mockErr)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -707,11 +707,11 @@ func TestUpdateByIDSetlistEntryStoreBatchErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		On("Update", context.TODO(), expMockSetlist, mockUser).
 		Return(expSetlist, nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockCreatedSetlistEntries, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -811,15 +811,15 @@ func TestUpdateByIDSetlistEntryUpdateBatchErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		On("Update", context.TODO(), expMockSetlist, mockUser).
 		Return(expSetlist, nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockCreatedSetlistEntries, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUpdatedSetlistEntries, mockUser).
+		On("UpdateBatch", context.TODO(), mockUpdatedSetlistEntries, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -919,19 +919,19 @@ func TestUpdateByIDSetlistEntryRemoveBatchErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		On("Update", context.TODO(), expMockSetlist, mockUser).
 		Return(expSetlist, nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockCreatedSetlistEntries, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUpdatedSetlistEntries, mockUser).
+		On("UpdateBatch", context.TODO(), mockUpdatedSetlistEntries, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
+		On("RemoveBatch", context.TODO(), expMockSetlist, []int64{3}, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -1031,23 +1031,23 @@ func TestUpdateByIDSetlistEntryFetchBySetlistErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, mockUser).
+		On("Update", context.TODO(), expMockSetlist, mockUser).
 		Return(expSetlist, nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockCreatedSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockCreatedSetlistEntries, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUpdatedSetlistEntries, mockUser).
+		On("UpdateBatch", context.TODO(), mockUpdatedSetlistEntries, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBatch", mock.AnythingOfType("*context.emptyCtx"), expMockSetlist, []int64{3}, mockUser).
+		On("RemoveBatch", context.TODO(), expMockSetlist, []int64{3}, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expMockSetlist}).
+		On("FetchBySetlist", context.TODO(), &[]domain.Setlist{*expMockSetlist}).
 		Return(nil, mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

@@ -14,7 +14,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/setlisthandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeGet(
@@ -46,6 +45,11 @@ func prepareAndServeGet(
 	return writer
 }
 
+type setlistResponse struct {
+	domain.Setlist
+	Entries []domain.SetlistEntry `json:"entries"`
+}
+
 func TestGetAll(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
@@ -63,7 +67,7 @@ func TestGetAll(t *testing.T) {
 			ID:        2,
 			Name:      "Barfoo",
 			Deadline:  time.Now().UTC().AddDate(0, 0, 3).Truncate(time.Minute),
-			CreatorID: 0,
+			CreatorID: 1,
 		},
 	}
 
@@ -85,11 +89,6 @@ func TestGetAll(t *testing.T) {
 		},
 	}
 
-	type setlistResponse struct {
-		*domain.Setlist
-		Entries []domain.SetlistEntry `json:"entries"`
-	}
-
 	t.Run("Correct Get All Setlists", func(t *testing.T) {
 		t.Parallel()
 
@@ -105,25 +104,25 @@ func TestGetAll(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSL.
-			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), time.Time{}, time.Time{}).
+			On("Fetch", context.TODO(), time.Time{}, time.Time{}).
 			Return(expSetlist, nil)
 
 		mockSLES.
-			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), expSetlist).
+			On("FetchBySetlist", context.TODO(), expSetlist).
 			Return(expSetlistEntries, nil)
 
 		writer := prepareAndServeGet(t, "", mockSL, mockSLES, mockSS, mockMWH)
 
 		response := []setlistResponse{
 			{
-				&(*expSetlist)[0],
+				(*expSetlist)[0],
 				[]domain.SetlistEntry{
 					(*expSetlistEntries)[0],
 					(*expSetlistEntries)[1],
 				},
 			},
 			{
-				&(*expSetlist)[1],
+				(*expSetlist)[1],
 				[]domain.SetlistEntry{
 					(*expSetlistEntries)[2],
 				},
@@ -161,11 +160,11 @@ func TestGetAll(t *testing.T) {
 		toTime := (*expSetlist)[0].Deadline.Add(-24 * time.Hour)
 
 		mockSL.
-			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), fromTime, toTime).
+			On("Fetch", context.TODO(), fromTime, toTime).
 			Return(expSetlist, nil)
 
 		mockSLES.
-			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), expSetlist).
+			On("FetchBySetlist", context.TODO(), expSetlist).
 			Return(expSetlistEntries, nil)
 
 		fmt.Println(fromTime.Format(time.RFC3339))
@@ -173,9 +172,24 @@ func TestGetAll(t *testing.T) {
 			fmt.Sprintf("?from=%s&to=%s", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339)),
 			mockSL, mockSLES, mockSS, mockMWH)
 
+		response := []setlistResponse{
+			{
+				(*expSetlist)[0],
+				[]domain.SetlistEntry{
+					(*expSetlistEntries)[0],
+					(*expSetlistEntries)[1],
+				},
+			},
+			{
+				(*expSetlist)[1],
+				[]domain.SetlistEntry{
+					(*expSetlistEntries)[2],
+				},
+			},
+		}
+
 		expBody, err := json.Marshal(gin.H{
-			"setlist": expSetlist,
-			"entries": expSetlistEntries,
+			"setlists": response,
 		})
 		assert.NoError(t, err)
 
@@ -265,7 +279,7 @@ func TestGetAll(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSL.
-			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), time.Time{}, time.Time{}).
+			On("Fetch", context.TODO(), time.Time{}, time.Time{}).
 			Return(nil, mockErr)
 
 		writer := prepareAndServeGet(t, "", mockSL, mockSLES, mockSS, mockMWH)
@@ -299,11 +313,11 @@ func TestGetAll(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSL.
-			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), time.Time{}, time.Time{}).
+			On("Fetch", context.TODO(), time.Time{}, time.Time{}).
 			Return(expSetlist, nil)
 
 		mockSLES.
-			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), expSetlist).
+			On("FetchBySetlist", context.TODO(), expSetlist).
 			Return(nil, mockErr)
 
 		writer := prepareAndServeGet(t, "", mockSL, mockSLES, mockSS, mockMWH)
@@ -361,18 +375,25 @@ func TestGetByID(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSL.
-			On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), expSetlist.ID).
+			On("FetchByID", context.TODO(), expSetlist.ID).
 			Return(expSetlist, nil)
 
 		mockSLES.
-			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expSetlist}).
+			On("FetchBySetlist", context.TODO(), &[]domain.Setlist{*expSetlist}).
 			Return(expSetlistEntries, nil)
 
 		writer := prepareAndServeGet(t, fmt.Sprintf("/%d", expSetlist.ID), mockSL, mockSLES, mockSS, mockMWH)
 
+		response := setlistResponse{
+			*expSetlist,
+			[]domain.SetlistEntry{
+				(*expSetlistEntries)[0],
+				(*expSetlistEntries)[1],
+			},
+		}
+
 		expBody, err := json.Marshal(gin.H{
-			"setlist": expSetlist,
-			"entries": expSetlistEntries,
+			"setlist": response,
 		})
 		assert.NoError(t, err)
 
@@ -430,7 +451,7 @@ func TestGetByID(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSL.
-			On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), expSetlist.ID).
+			On("FetchByID", context.TODO(), expSetlist.ID).
 			Return(nil, mockErr)
 
 		writer := prepareAndServeGet(t, fmt.Sprintf("/%d", expSetlist.ID), mockSL, mockSLES, mockSS, mockMWH)
@@ -464,11 +485,11 @@ func TestGetByID(t *testing.T) {
 			Return(mockAuthHF)
 
 		mockSL.
-			On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), expSetlist.ID).
+			On("FetchByID", context.TODO(), expSetlist.ID).
 			Return(expSetlist, nil)
 
 		mockSLES.
-			On("FetchBySetlist", mock.AnythingOfType("*context.emptyCtx"), &[]domain.Setlist{*expSetlist}).
+			On("FetchBySetlist", context.TODO(), &[]domain.Setlist{*expSetlist}).
 			Return(nil, mockErr)
 
 		writer := prepareAndServeGet(t, fmt.Sprintf("/%d", expSetlist.ID), mockSL, mockSLES, mockSS, mockMWH)

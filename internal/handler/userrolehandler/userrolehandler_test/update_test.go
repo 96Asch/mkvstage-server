@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/userrolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeUpdate(
@@ -81,7 +80,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockURS.
-		On("SetActiveBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoleIDs, mockUser).
+		On("SetActiveBatch", context.TODO(), mockUserRoleIDs, mockUser).
 		Return(mockUserRoles, nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -180,7 +179,7 @@ func TestUpdateByIDSetActiveErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockURS.
-		On("SetActiveBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoleIDs, mockUser).
+		On("SetActiveBatch", context.TODO(), mockUserRoleIDs, mockUser).
 		Return(nil, mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

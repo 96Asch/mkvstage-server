@@ -56,7 +56,7 @@ func TestCreateCorrect(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockUS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockUser).
+		On("Store", context.TODO(), mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.User)

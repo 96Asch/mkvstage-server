@@ -127,7 +127,7 @@ func TestCreateCorrect(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSetlist, mockUser).
+		On("Store", context.TODO(), mockSetlist, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Setlist)
@@ -137,7 +137,7 @@ func TestCreateCorrect(t *testing.T) {
 		})
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockSetlistEntries, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*[]domain.SetlistEntry)
@@ -363,7 +363,7 @@ func TestCreateSetlistStoreErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSetlist, mockUser).
+		On("Store", context.TODO(), mockSetlist, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -432,11 +432,11 @@ func TestCreateSetlistEntryStoreBatchErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSetlist, mockUser).
+		On("Store", context.TODO(), mockSetlist, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockSetlistEntries, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

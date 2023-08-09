@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/userrolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeGet(
@@ -71,7 +70,7 @@ func TestMeCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuth)
 	mockURS.
-		On("FetchByUser", mock.AnythingOfType("*context.emptyCtx"), mockUser).
+		On("FetchByUser", context.TODO(), mockUser).
 		Return(mockUserRoles, nil)
 
 	writer := prepareAndServeGet(t, mockURS, mockMWH, "/me")
@@ -128,7 +127,7 @@ func TestMeFetchErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuth)
 	mockURS.
-		On("FetchByUser", mock.AnythingOfType("*context.emptyCtx"), mockUser).
+		On("FetchByUser", context.TODO(), mockUser).
 		Return(nil, mockErr)
 
 	writer := prepareAndServeGet(t, mockURS, mockMWH, "/me")
@@ -171,7 +170,7 @@ func TestGetAllCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(nil)
 	mockURS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(mockUserRoles, nil)
 
 	writer := prepareAndServeGet(t, mockURS, mockMWH, "")
@@ -196,7 +195,7 @@ func TestGetAllFetchErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(nil)
 	mockURS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(nil, mockErr)
 
 	writer := prepareAndServeGet(t, mockURS, mockMWH, "")

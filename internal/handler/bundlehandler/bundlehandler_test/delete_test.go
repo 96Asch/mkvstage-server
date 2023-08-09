@@ -12,7 +12,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/bundlehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeDelete(
@@ -60,7 +59,7 @@ func TestDeleteCorrect(t *testing.T) {
 	}
 
 	mockBS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), bid, mockUser).
+		On("Remove", context.TODO(), bid, mockUser).
 		Return(nil)
 	mockMWH.
 		On("AuthenticateUser").
@@ -139,7 +138,7 @@ func TestDeleteRemoveErr(t *testing.T) {
 	}
 
 	mockBS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), bid, mockUser).
+		On("Remove", context.TODO(), bid, mockUser).
 		Return(mockErr)
 	mockMWH.
 		On("AuthenticateUser").

@@ -27,7 +27,7 @@ func TestStoreCorrect(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
+		On("Create", context.TODO(), mockBundle).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Bundle)
@@ -109,7 +109,7 @@ func TestStoreParentNotExist(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ParentID).
+		On("GetByID", context.TODO(), mockBundle.ParentID).
 		Return(nil, mockErr)
 
 	BS := service.NewBundleService(mockBR)
@@ -132,7 +132,7 @@ func TestFetchByID(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("GetByID", context.TODO(), mockBundle.ID).
 		Return(mockBundle, nil)
 
 	BS := service.NewBundleService(mockBR)
@@ -163,7 +163,7 @@ func TestFetchAll(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(mockBundles, nil)
 
 	BS := service.NewBundleService(mockBR)
@@ -201,13 +201,13 @@ func TestRemoveCorrect(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("Delete", context.TODO(), mockBundle.ID).
 		Return(nil)
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("GetByID", context.TODO(), mockBundle.ID).
 		Return(mockBundle, nil)
 	mockBR.
-		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetLeaves", context.TODO()).
 		Return(mockBundles, nil)
 
 	BS := service.NewBundleService(mockBR)
@@ -243,10 +243,10 @@ func TestRemoveNotLeaf(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("GetByID", context.TODO(), mockBundle.ID).
 		Return(mockBundle, nil)
 	mockBR.
-		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetLeaves", context.TODO()).
 		Return(mockBundles, nil)
 
 	BS := service.NewBundleService(mockBR)
@@ -276,10 +276,10 @@ func TestRemoveGetLeavesErr(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("GetByID", context.TODO(), mockBundle.ID).
 		Return(mockBundle, nil)
 	mockBR.
-		On("GetLeaves", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetLeaves", context.TODO()).
 		Return(nil, mockErr)
 
 	BS := service.NewBundleService(mockBR)
@@ -333,7 +333,7 @@ func TestDeleteNoRecord(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("GetByID", context.TODO(), mockBundle.ID).
 		Return(nil, mockErr)
 
 	BS := service.NewBundleService(mockBR)
@@ -361,10 +361,10 @@ func TestUpdateCorrect(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockBundle).
+		On("Update", context.TODO(), mockBundle).
 		Return(nil)
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("GetByID", context.TODO(), mockBundle.ID).
 		Return(mockBundle, nil)
 
 	BS := service.NewBundleService(mockBR)
@@ -393,7 +393,7 @@ func TestUpdateNoRecord(t *testing.T) {
 	mockBR := &mocks.MockBundleRepository{}
 
 	mockBR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("GetByID", context.TODO(), mockBundle.ID).
 		Return(nil, mockErr)
 
 	BS := service.NewBundleService(mockBR)

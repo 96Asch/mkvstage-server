@@ -66,7 +66,7 @@ func TestCreate(t *testing.T) {
 
 		mockSLRS.
 			On("Store",
-				mock.AnythingOfType("*context.emptyCtx"),
+				context.TODO(),
 				&[]domain.SetlistRole{
 					{
 						SetlistID:  1,
@@ -242,7 +242,7 @@ func TestCreate(t *testing.T) {
 
 		mockSLRS.
 			On("Store",
-				mock.AnythingOfType("*context.emptyCtx"),
+				context.TODO(),
 				&[]domain.SetlistRole{
 					{
 						SetlistID:  1,

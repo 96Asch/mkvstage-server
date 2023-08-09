@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeUpdate(
@@ -52,7 +51,7 @@ func TestUpdateCorrect(t *testing.T) {
 	mockTS := &mocks.MockTokenService{}
 	mockUS := &mocks.MockUserService{}
 
-	mockUS.On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
+	mockUS.On("Update", context.TODO(), &domain.User{
 		ID:           1,
 		FirstName:    "Foob",
 		LastName:     "Bars",
@@ -164,7 +163,7 @@ func TestUpdateInternalErr(t *testing.T) {
 	mockTS := &mocks.MockTokenService{}
 	mockUS := &mocks.MockUserService{}
 
-	mockUS.On("Update", mock.AnythingOfType("*context.emptyCtx"), &domain.User{
+	mockUS.On("Update", context.TODO(), &domain.User{
 		ID:           1,
 		FirstName:    "Foob",
 		LastName:     "Bars",

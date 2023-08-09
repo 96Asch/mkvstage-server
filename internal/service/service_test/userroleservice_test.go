@@ -8,7 +8,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
 	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestUserRoleSetActiveBatchCorrect(t *testing.T) {
@@ -58,10 +57,10 @@ func TestUserRoleSetActiveBatchCorrect(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockURR.
-		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByUID", context.TODO(), mockUser.ID).
 		Return(currentUserRoles, nil)
 	mockURR.
-		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
+		On("UpdateBatch", context.TODO(), mockUserRoles).
 		Return(nil)
 
 	URS := service.NewUserRoleService(mockURR)
@@ -85,7 +84,7 @@ func TestUserRoleSetActiveBatchGetByUIDErr(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockURR.
-		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByUID", context.TODO(), mockUser.ID).
 		Return(nil, mockErr)
 
 	URS := service.NewUserRoleService(mockURR)
@@ -123,7 +122,7 @@ func TestUserRoleSetActiveBatchInvalidUserRole(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockURR.
-		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByUID", context.TODO(), mockUser.ID).
 		Return(currentUserRoles, nil)
 
 	URS := service.NewUserRoleService(mockURR)
@@ -175,10 +174,10 @@ func TestUserRoleSetActiveBatchErr(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockURR.
-		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByUID", context.TODO(), mockUser.ID).
 		Return(currentUserRoles, nil)
 	mockURR.
-		On("UpdateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
+		On("UpdateBatch", context.TODO(), mockUserRoles).
 		Return(mockErr)
 
 	URS := service.NewUserRoleService(mockURR)
@@ -216,7 +215,7 @@ func TestUserRoleSetActiveBatchNoChange(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockURR.
-		On("GetByUID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByUID", context.TODO(), mockUser.ID).
 		Return(currentUserRoles, nil)
 
 	URS := service.NewUserRoleService(mockURR)

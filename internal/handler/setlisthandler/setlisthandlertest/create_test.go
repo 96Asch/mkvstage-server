@@ -64,7 +64,6 @@ func TestCreateCorrect(t *testing.T) {
 		CreatorID: mockUser.ID,
 		Deadline:  time.Now().AddDate(0, 0, 1).Truncate(time.Minute),
 		UpdatedAt: time.Now().Round(0),
-		Order:     datatypes.JSON([]byte(`{"order" : "1,2,3,4"}`)),
 	}
 
 	mockSetlist := &domain.Setlist{
@@ -77,14 +76,18 @@ func TestCreateCorrect(t *testing.T) {
 		{
 			SongID:      1,
 			Transpose:   0,
+			SetlistID:   expSetlist.ID,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
+			Rank:        1000,
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
+			SetlistID:   expSetlist.ID,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -92,16 +95,20 @@ func TestCreateCorrect(t *testing.T) {
 		{
 			ID:          1,
 			SongID:      1,
+			SetlistID:   expSetlist.ID,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 2"]`)),
+			Rank:        1000,
 		},
 		{
 			ID:          2,
 			SongID:      2,
+			SetlistID:   expSetlist.ID,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -120,18 +127,17 @@ func TestCreateCorrect(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSetlist, mockUser).
+		On("Store", context.TODO(), mockSetlist, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Setlist)
 			assert.True(t, ok)
 			arg.ID = expSetlist.ID
 			arg.UpdatedAt = expSetlist.UpdatedAt
-			arg.Order = expSetlist.Order
 		})
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockSetlistEntries, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*[]domain.SetlistEntry)
@@ -143,10 +149,25 @@ func TestCreateCorrect(t *testing.T) {
 		})
 
 	byteBody, err := json.Marshal(gin.H{
-		"name":            mockSetlist.Name,
-		"creator_id":      mockSetlist.CreatorID,
-		"deadline":        mockSetlist.Deadline,
-		"created_entries": *mockSetlistEntries,
+		"name":       mockSetlist.Name,
+		"creator_id": mockSetlist.CreatorID,
+		"deadline":   mockSetlist.Deadline,
+		"created_entries": []gin.H{
+			{
+				"song_id":     1,
+				"transpose":   0,
+				"notes":       "",
+				"arrangement": []string{"Verse 1", "Chorus 2"},
+				"rank":        1000,
+			},
+			{
+				"song_id":     2,
+				"transpose":   1,
+				"notes":       "Foobar",
+				"arrangement": []string{"Verse 1", "Verse 2"},
+				"rank":        2000,
+			},
+		},
 	})
 	assert.NoError(t, err)
 
@@ -154,9 +175,13 @@ func TestCreateCorrect(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, writer.Code)
 
+	type setlistResponse struct {
+		*domain.Setlist
+		Entries *[]domain.SetlistEntry `json:"entries"`
+	}
+
 	expBody, err := json.Marshal(gin.H{
-		"setlist": expSetlist,
-		"entries": expSetlistEntries,
+		"setlist": setlistResponse{expSetlist, expSetlistEntries},
 	})
 	assert.NoError(t, err)
 
@@ -186,13 +211,13 @@ func TestCreateBindErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 
@@ -249,13 +274,13 @@ func TestCreateNoContext(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
 		},
 	}
 
@@ -309,13 +334,15 @@ func TestCreateSetlistStoreErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        1000,
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -336,7 +363,7 @@ func TestCreateSetlistStoreErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSetlist, mockUser).
+		On("Store", context.TODO(), mockSetlist, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -376,13 +403,15 @@ func TestCreateSetlistEntryStoreBatchErr(t *testing.T) {
 			SongID:      1,
 			Transpose:   0,
 			Notes:       "",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Chorus 1"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Chorus 1"]`)),
+			Rank:        1000,
 		},
 		{
 			SongID:      2,
 			Transpose:   1,
 			Notes:       "Foobar",
-			Arrangement: datatypes.JSON([]byte(`{"arrangement":["Verse 1","Verse 2"]}`)),
+			Arrangement: datatypes.JSON([]byte(`["Verse 1","Verse 2"]`)),
+			Rank:        2000,
 		},
 	}
 
@@ -403,11 +432,11 @@ func TestCreateSetlistEntryStoreBatchErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSetlist, mockUser).
+		On("Store", context.TODO(), mockSetlist, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("StoreBatch", mock.AnythingOfType("*context.emptyCtx"), mockSetlistEntries, mockUser).
+		On("StoreBatch", context.TODO(), mockSetlistEntries, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

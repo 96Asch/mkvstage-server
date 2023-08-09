@@ -26,7 +26,7 @@ func TestRSFetchByIDCorrect(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockRR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("GetByID", context.TODO(), rid).
 		Return(mockRole, nil)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -49,7 +49,7 @@ func TestRSFetchByIDGetErr(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockRR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("GetByID", context.TODO(), rid).
 		Return(nil, mockErr)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -83,7 +83,7 @@ func TestRSFetchAllCorrect(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockRR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(mockRoles, nil)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -105,7 +105,7 @@ func TestRSFetchAllGetErr(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockRR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(nil, mockErr)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -144,11 +144,11 @@ func TestRSUpdateCorrect(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockRR.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockRole).
+		On("Update", context.TODO(), mockRole).
 		Return(nil)
 
 	mockRR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("GetByID", context.TODO(), rid).
 		Return(prevMockRole, nil)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -240,7 +240,7 @@ func TestRSUpdateNoRecord(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockRR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("GetByID", context.TODO(), rid).
 		Return(nil, mockErr)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -279,11 +279,11 @@ func TestRSUpdateErr(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockRR.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockRole).
+		On("Update", context.TODO(), mockRole).
 		Return(mockErr)
 
 	mockRR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("GetByID", context.TODO(), rid).
 		Return(prevMockRole, nil)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -335,14 +335,14 @@ func TestRSStoreCorrect(t *testing.T) {
 	mockURR := &mocks.MockUserRoleRepository{}
 
 	mockUR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(mockUsers, nil)
 	mockURR.
-		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
+		On("CreateBatch", context.TODO(), mockUserRoles).
 		Return(nil)
 
 	mockRR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockRole).
+		On("Create", context.TODO(), mockRole).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Role)
@@ -405,7 +405,7 @@ func TestRSStoreErr(t *testing.T) {
 	mockRR := &mocks.MockRoleRepository{}
 
 	mockRR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockRole).
+		On("Create", context.TODO(), mockRole).
 		Return(mockErr)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -436,10 +436,10 @@ func TestRSStoreGetAllUserErr(t *testing.T) {
 	mockRR := &mocks.MockRoleRepository{}
 
 	mockUR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(nil, mockErr)
 	mockRR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockRole).
+		On("Create", context.TODO(), mockRole).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Role)
@@ -497,13 +497,13 @@ func TestRSStoreCreateUserRolesErr(t *testing.T) {
 	mockRR := &mocks.MockRoleRepository{}
 
 	mockUR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("GetAll", context.TODO()).
 		Return(mockUsers, nil)
 	mockURR.
-		On("CreateBatch", mock.AnythingOfType("*context.emptyCtx"), mockUserRoles).
+		On("CreateBatch", context.TODO(), mockUserRoles).
 		Return(mockErr)
 	mockRR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mockRole).
+		On("Create", context.TODO(), mockRole).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Role)
@@ -535,10 +535,10 @@ func TestRSDeleteCorrect(t *testing.T) {
 	mockRR := &mocks.MockRoleRepository{}
 
 	mockURR.
-		On("DeleteByRID", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("DeleteByRID", context.TODO(), rid).
 		Return(nil)
 	mockRR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("Delete", context.TODO(), rid).
 		Return(nil)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -589,7 +589,7 @@ func TestRSDeleteErr(t *testing.T) {
 	mockRR := &mocks.MockRoleRepository{}
 
 	mockRR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("Delete", context.TODO(), rid).
 		Return(mockErr)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)
@@ -617,10 +617,10 @@ func TestRSDeleteDeleteByRIDErr(t *testing.T) {
 	mockRR := &mocks.MockRoleRepository{}
 
 	mockURR.
-		On("DeleteByRID", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("DeleteByRID", context.TODO(), rid).
 		Return(mockErr)
 	mockRR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), rid).
+		On("Delete", context.TODO(), rid).
 		Return(nil)
 
 	RS := service.NewRoleService(mockRR, mockUR, mockURR)

@@ -76,7 +76,7 @@ func TestCreateCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
+		On("Store", context.TODO(), mockSong, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Song)
@@ -211,7 +211,7 @@ func TestCreateStoreErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
+		On("Store", context.TODO(), mockSong, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

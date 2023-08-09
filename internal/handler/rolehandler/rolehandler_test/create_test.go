@@ -65,7 +65,7 @@ func TestCreateCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockRS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
+		On("Store", context.TODO(), mockRole, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, ok := args.Get(1).(*domain.Role)
@@ -173,7 +173,7 @@ func TestCreateStoreErr(t *testing.T) {
 	mockRS := &mocks.MockRoleService{}
 
 	mockRS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
+		On("Store", context.TODO(), mockRole, mockUser).
 		Return(mockErr)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {

@@ -13,6 +13,7 @@ type SetlistEntry struct {
 	Transpose   int16          `json:"transpose"`
 	Notes       string         `json:"notes"`
 	Arrangement datatypes.JSON `json:"arrangement"`
+	Rank        int64          `json:"rank"`
 }
 
 type SetlistEntryService interface {

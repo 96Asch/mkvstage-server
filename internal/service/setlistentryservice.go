@@ -86,6 +86,16 @@ func (ses setlistEntryService) FetchAll(ctx context.Context) (*[]domain.SetlistE
 		return nil, domain.FromError(err)
 	}
 
+	var minRank int64
+
+	for _, entry := range *setlistEntries {
+		if minRank > entry.Rank {
+			return nil, domain.NewInternalErr()
+		}
+
+		minRank = entry.Rank
+	}
+
 	return setlistEntries, nil
 }
 
@@ -102,6 +112,16 @@ func (ses setlistEntryService) FetchBySetlist(ctx context.Context, setlists *[]d
 
 	if err != nil {
 		return nil, domain.FromError(err)
+	}
+
+	var minRank int64
+
+	for _, entry := range *setlistEntries {
+		if minRank > entry.Rank {
+			return nil, domain.NewInternalErr()
+		}
+
+		minRank = entry.Rank
 	}
 
 	return setlistEntries, nil

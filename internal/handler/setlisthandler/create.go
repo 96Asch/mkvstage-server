@@ -1,18 +1,29 @@
 package setlisthandler
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/internal/util"
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 )
 
 type setlistCreateReq struct {
-	Name           string                `json:"name" binding:"required"`
-	CreatorID      int64                 `json:"creator_id" binding:"required"`
-	Deadline       time.Time             `json:"deadline" binding:"required"`
-	CreatedEntries []domain.SetlistEntry `json:"created_entries" binding:"required"`
+	Name           string                 `json:"name" binding:"required"`
+	CreatorID      int64                  `json:"creator_id" binding:"required"`
+	Deadline       time.Time              `json:"deadline" binding:"required"`
+	CreatedEntries []setlistRoleCreateReq `json:"created_entries" binding:"required,dive"`
+}
+
+type setlistRoleCreateReq struct {
+	SongID      int64    `json:"song_id" binding:"required"`
+	Transpose   int16    `json:"transpose"`
+	Notes       string   `json:"notes"`
+	Arrangement []string `json:"arrangement"`
+	Rank        int64    `json:"rank" binding:"required"`
 }
 
 func (slh setlistHandler) Create(ctx *gin.Context) {
@@ -25,9 +36,8 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 	}
 
 	var slReq setlistCreateReq
-	if err := ctx.BindJSON(&slReq); err != nil {
-		newErr := domain.NewBadRequestErr(err.Error())
-		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+	if err := util.BindModel(ctx, &slReq); err != nil {
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}
@@ -46,14 +56,32 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 		Deadline:  slReq.Deadline.Local().Truncate(time.Minute),
 	}
 
-	setlistEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))
-	copy(setlistEntries, slReq.CreatedEntries)
-
 	context := ctx.Request.Context()
 	if err := slh.sls.Store(context, setlist, user); err != nil {
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 
 		return
+	}
+
+	setlistEntries := make([]domain.SetlistEntry, len(slReq.CreatedEntries))
+
+	for idx, entry := range slReq.CreatedEntries {
+		jsonArray, err := json.Marshal(entry.Arrangement)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
+			return
+		}
+
+		setlistEntries[idx] = domain.SetlistEntry{
+			SongID:      entry.SongID,
+			SetlistID:   setlist.ID,
+			Transpose:   entry.Transpose,
+			Notes:       entry.Notes,
+			Arrangement: datatypes.JSON(jsonArray),
+			Rank:        entry.Rank,
+		}
 	}
 
 	if err := slh.sles.StoreBatch(context, &setlistEntries, user); err != nil {
@@ -62,8 +90,10 @@ func (slh setlistHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"setlist": setlist,
-		"entries": setlistEntries,
-	})
+	response := setlistResponse{
+		*setlist,
+		setlistEntries,
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"setlist": response})
 }

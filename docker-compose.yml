@@ -1,9 +1,11 @@
 version: "3.9"
 services:
 
-  app:
-    container_name: mkv_app
-    build: .
+  backend:
+    container_name: mkv_stage_backend
+    build: 
+      dockerfile: Dockerfile
+      context: ./backend
     environment:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASS: ${MYSQL_PASS}
@@ -24,6 +26,26 @@ services:
       - fullstack
     volumes:
       - main_app:/usr/src/app
+  
+  auth:
+    container_name: auth-backend
+    build: 
+      dockerfile: Dockerfile
+      context: ./auth
+    environment:
+      REDIS_HOST: mkv-redis      
+      REDIS_PORT: ${REDIS_PORT} 
+    ports:
+      - 9080:9080
+    restart:
+      on-failure
+    depends_on:
+      - mkv-redis
+    networks:
+      - fullstack
+    volumes:
+      - auth_app:/usr/src/app
+
 
   mkv-mysql:
     image: mysql:8.0
@@ -84,6 +106,7 @@ services:
 
 volumes:
   main_app:
+  auth_app:
   database_mysql:  
   database_redis:     
 

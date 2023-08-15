@@ -1,13 +1,14 @@
-FROM node:18.17.1
+FROM node:16-alpine
+WORKDIR /usr/local/apps/myapp/dev
 
-WORKDIR /usr/src/app
+COPY package.json ./
+RUN npm install && npm cache clean --force
 
-COPY package*.json ./
+COPY tsconfig.json ./
 
-RUN npm install
+COPY src ./src
 
-COPY . .
+EXPOSE ${PORT}
 
-EXPOSE 9080
-
-CMD [ "npm", "test" ]
+RUN npm run build
+CMD ["npm", "run", "test"]

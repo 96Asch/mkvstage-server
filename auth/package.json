@@ -4,6 +4,8 @@
   "description": "Authentication server for the MKVStage API",
   "main": "app.js",
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
     "test": "jest"
   },
   "keywords": [
@@ -12,9 +14,12 @@
   "author": "96Asch",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "redis": "^4.6.7"
   },
   "devDependencies": {
-    "jest": "^29.6.2"
+    "@types/express": "^4.17.17",
+    "jest": "^29.6.2",
+    "typescript": "^5.1.6"
   }
 }

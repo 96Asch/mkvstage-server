@@ -6,6 +6,8 @@ services:
     build: 
       dockerfile: Dockerfile
       context: ./backend
+      args:
+        - PORT = 9080
     environment:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASS: ${MYSQL_PASS}
@@ -24,10 +26,8 @@ services:
       - mkv-redis
     networks:
       - fullstack
-    volumes:
-      - main_app:/usr/src/app
   
-  auth:
+  auth-backend:
     container_name: auth-backend
     build: 
       dockerfile: Dockerfile
@@ -43,8 +43,6 @@ services:
       - mkv-redis
     networks:
       - fullstack
-    volumes:
-      - auth_app:/usr/src/app
 
 
   mkv-mysql:
@@ -105,8 +103,6 @@ services:
       - fullstack
 
 volumes:
-  main_app:
-  auth_app:
   database_mysql:  
   database_redis:     
 

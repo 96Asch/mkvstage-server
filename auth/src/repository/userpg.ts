@@ -1,12 +1,12 @@
-import { makeDuplicateError } from "../model/error";
+import { makeDuplicateError, makeInternalError } from "../model/error";
 import { User, emptyUser } from "../model/user";
-import type { Pool } from "pg";
 
 export default function makeUserPg({ pgPool }) {
   async function create(user: User): Promise<User> {
     let createdUser: User = user;
     const createQuery =
       "INSERT INTO Users (email, password) VALUES ($1, $2) RETURNING *";
+
     try {
       const res = await pgPool.query(createQuery, [user.email, user.password]);
       createdUser.id = res.rows[0].id;
@@ -24,11 +24,29 @@ export default function makeUserPg({ pgPool }) {
     return createdUser;
   }
 
-  async function readWithId(id: number): Promise<User[]> {
+  async function read(): Promise<User[]> {
+    const createQuery = "SELECT * FROM users";
+    try {
+      const res = await pgPool.query(createQuery);
+
+      return res.rows.map((row) => {
+        const user: User = {
+          id: row.id,
+          email: row.email,
+          password: row.password,
+        };
+        return user;
+      });
+    } catch (error) {
+      throw makeInternalError();
+    }
+  }
+
+  async function readWithId(ids: number[]): Promise<User[]> {
     return [];
   }
 
-  async function readWithEmail(email: string): Promise<User> {
+  async function readWithEmail(emails: string[]): Promise<User> {
     const user: User = { id: 1, email: "", password: "" };
     return user;
   }
@@ -43,6 +61,7 @@ export default function makeUserPg({ pgPool }) {
 
   return Object.freeze({
     create,
+    read,
     readWithId,
     readWithEmail,
     update,

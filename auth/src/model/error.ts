@@ -19,4 +19,13 @@ const makeEmailFormatError = (email: string) => {
   return new AppError(message, 401);
 };
 
-export { AppError, makeDuplicateError, makeEmailFormatError };
+const makeInternalError = () => {
+  return new AppError("an error has occured on the server", 500);
+};
+
+export {
+  AppError,
+  makeDuplicateError,
+  makeEmailFormatError,
+  makeInternalError,
+};

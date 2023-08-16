@@ -23,4 +23,11 @@ userRoute.post("/", async (req, res, next) => {
     .catch(next);
 });
 
+userRoute.get("/", async (req, res, next) => {
+  usercontroller
+    .getUsers()
+    .then((retrievedUsers) => res.status(200).json({ users: retrievedUsers }))
+    .catch(next);
+});
+
 export default userRoute;

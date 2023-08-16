@@ -1,19 +1,26 @@
 import { Router } from "express";
 import usercontroller from "../controller/usercontroller";
+import validateEmail from "../util/validateemail";
+import { makeEmailFormatError } from "../model/error";
 
+const userRoute = Router();
 
-const userRoute = Router()
+userRoute.post("/", async (req, res, next) => {
+  const { email, password } = req.body;
 
-userRoute.post('/', (req, res) => {
-    const body = req.params
-    try {
-        const user = {id: 1, email:"foobar@gmail.com", password:"password"}
-        usercontroller.storeUser(user)        
+  if (!validateEmail(email)) {
+    next(makeEmailFormatError(email));
+    return;
+  }
 
-    } catch (error) {
-    }
-    res.send("User Create")
-    res.status(201)
-})
+  const user = { id: 0, email: email, password: password };
 
-export default userRoute
+  usercontroller
+    .storeUser(user)
+    .then((createdUser) =>
+      res.status(201).json({ id: createdUser.id, email: createdUser.email })
+    )
+    .catch(next);
+});
+
+export default userRoute;

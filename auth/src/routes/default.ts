@@ -1,7 +1,7 @@
-import Router from 'express'
+import Router from "express";
 
-export const defaultRouter = Router()
+export const defaultRouter = Router();
 
-defaultRouter.get('/', (req, res) => {
-    res.send("Default page")
-})
+defaultRouter.get("/", (req, res) => {
+  res.send("Default page");
+});

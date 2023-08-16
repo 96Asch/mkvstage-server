@@ -27,22 +27,6 @@ services:
     networks:
       - fullstack
   
-  auth-backend:
-    container_name: auth-backend
-    build: 
-      dockerfile: Dockerfile
-      context: ./auth
-    environment:
-      REDIS_HOST: mkv-redis      
-      REDIS_PORT: ${REDIS_PORT} 
-    ports:
-      - 9080:9080
-    restart:
-      on-failure
-    depends_on:
-      - mkv-redis
-    networks:
-      - fullstack
 
 
   mkv-mysql:
@@ -102,10 +86,66 @@ services:
     networks:
       - fullstack
 
+  auth-backend:
+    container_name: auth-backend
+    build: 
+      dockerfile: Dockerfile
+      context: ./auth
+    environment:
+      REDIS_HOST: mkv-redis      
+      REDIS_PORT: ${REDIS_PORT}
+      PG_HOST: ${PG_HOST}
+      PG_USER: ${PG_USER}
+      PG_PASS: ${PG_PASS}
+      PG_DB: ${PG_DB}
+      PG_PORT: ${PG_PORT}
+    ports:
+      - 9080:9080
+    restart:
+      on-failure
+    depends_on:
+      - mkv-redis
+      - auth-postgres
+    networks:
+      - auth
+
+  auth-postgres:
+    container_name: auth-postgres
+    hostname: auth-postgres
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+    networks:
+      - auth
+    volumes:
+      - database_postgres:/data
+
+  auth-adminer:
+    container_name: auth-adminer
+    hostname: auth-adminer
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - 5678:80
+    depends_on:
+      - auth-postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASS}
+    networks:
+      - auth
+
 volumes:
+  database_postgres:
   database_mysql:  
   database_redis:     
 
 networks:
+  auth:
   fullstack:
     driver: bridge

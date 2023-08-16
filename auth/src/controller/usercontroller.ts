@@ -1,6 +1,6 @@
-import { User } from "../repository/userpg";
+import { User } from "../model/user";
 import { storeUser } from "../usecase/user";
 
 export default Object.freeze({
-    storeUser: (user: User) => storeUser(user)
-})
+  storeUser: (user: User) => storeUser(user),
+});

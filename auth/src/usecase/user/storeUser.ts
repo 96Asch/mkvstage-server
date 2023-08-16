@@ -1,11 +1,9 @@
-import { User, emptyUser } from "../../repository/userpg";
+import { User, emptyUser } from "../../model/user";
 
-export default function makeStoreUser( {userDb} ) {
+export default function makeStoreUser({ userDb }) {
+  return async function storeUser(user: User): Promise<User> {
+    const createdUser = await userDb.create(user);
 
-    return async function storeUser(user: User): Promise<User>{
-
-        console.log("Use-Case: storeUser:", user)
-        userDb.create(user)
-        return emptyUser
-    }
+    return createdUser;
+  };
 }

@@ -4,9 +4,10 @@ import { REDIS_EXP } from '../model/redis';
 export default function makeRedisTokenRepo({ redisClient }) {
     async function create(email: string, refreshtoken: string) {
         try {
-            await redisClient.setEx(email, REDIS_EXP, refreshtoken);
+            await redisClient.set(email, refreshtoken, 'EX', REDIS_EXP);
         } catch (error) {
-            throw error;
+            console.error(error);
+            throw makeInternalError();
         }
     }
 
@@ -14,10 +15,12 @@ export default function makeRedisTokenRepo({ redisClient }) {
         try {
             const value = await redisClient.get(email);
             console.log(value);
+
+            return value;
         } catch (error) {
-            throw error;
+            console.error(error);
+            throw makeInternalError();
         }
-        return '';
     }
 
     return Object.freeze({

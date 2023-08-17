@@ -81,7 +81,7 @@ services:
     volumes:
       - database_redis:/data
     networks:
-      - fullstack
+      - auth
   
   redis-commander:
     container_name: redis-commander
@@ -97,6 +97,7 @@ services:
       - 8081:8081
     networks:
       - fullstack
+      - auth
 
 
   auth-backend:
@@ -106,8 +107,8 @@ services:
       context: ./auth
     environment:
       REDIS_HOST: auth-redis      
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_EXP_HOURS: ${REDIS_EXP_HOURS}
+      REDIS_PORT: ${AUTH_REDIS_PORT}
+      REDIS_EXP_HOURS: ${AUTH_REDIS_EXP_HOURS}
       PG_HOST: ${PG_HOST}
       PG_USER: ${PG_USER}
       PG_PASS: ${PG_PASS}

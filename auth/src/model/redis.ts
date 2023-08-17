@@ -1,13 +1,10 @@
-import { createClient } from 'redis';
+import { Redis } from 'ioredis';
 
 const { REDIS_EXP_HOURS, REDIS_PORT, REDIS_HOST } = process.env;
 
-const redisClient = createClient({
-    url: `redis://${REDIS_HOST}:${REDIS_PORT}`,
-});
-
-redisClient.connect().then(() => {
-    console.log('Redis connected');
+const redisClient = new Redis({
+    host: REDIS_HOST,
+    port: parseInt(REDIS_PORT),
 });
 
 export default redisClient;

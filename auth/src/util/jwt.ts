@@ -1,12 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { makeBadRequestError } from '../model/error';
-import { JWTPayload } from '../model/jwt';
+import { JWTPayload } from '../model/token';
 
-const create = (payload: JWTPayload, secret: string): string => {
+const create = (payload: JWTPayload, secret: string, expiry: string): string => {
     const token: string = jwt.sign(payload, secret, {
         algorithm: 'HS256',
         issuer: process.env.JWT_ISS,
-        expiresIn: process.env.JWT_EXP,
+        expiresIn: expiry,
     });
 
     return token;

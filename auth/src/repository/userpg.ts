@@ -1,7 +1,6 @@
-import type { QueryResult, QueryResultRow } from 'pg';
+import type { QueryResultRow } from 'pg';
 import { makeDuplicateError, makeInternalError } from '../model/error';
-import { User, emptyUser } from '../model/user';
-import { query } from 'express';
+import { User } from '../model/user';
 
 export default function makeUserPg({ pgPool }) {
     async function create(user: User): Promise<User> {
@@ -69,46 +68,6 @@ export default function makeUserPg({ pgPool }) {
             throw makeInternalError();
         }
     }
-
-    // async function readWithId(ids: number[]): Promise<User[]> {
-    //     const query = 'SELECT * FROM users WHERE id in ($1)';
-
-    //     try {
-    //         const res = await pgPool.query(query, [ids.join(', ')]);
-
-    //         return res.rows.map((row: QueryResultRow) => {
-    //             const user: User = {
-    //                 id: row.id,
-    //                 email: row.id,
-    //                 password: row.pasword,
-    //             };
-
-    //             return user;
-    //         });
-    //     } catch (error) {
-    //         throw makeInternalError();
-    //     }
-    // }
-
-    // async function readWithEmail(emails: string[]): Promise<User> {
-    //     const query = 'SELECT * FROM users WHERE email in ($1)';
-
-    //     try {
-    //         const res = await pgPool.query(query, [emails.join(', ')]);
-
-    //         return res.rows.map((row: QueryResultRow) => {
-    //             const user: User = {
-    //                 id: row.id,
-    //                 email: row.id,
-    //                 password: row.pasword,
-    //             };
-
-    //             return user;
-    //         });
-    //     } catch (error) {
-    //         throw makeInternalError();
-    //     }
-    // }
 
     async function update(user: User): Promise<User> {
         const query = 'UPDATE users SET password = $1 WHERE id = $2';

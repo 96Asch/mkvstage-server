@@ -66,7 +66,18 @@ services:
     hostname: mkv-redis
     image: redis:alpine
     ports:
-      - 6379:6379
+      - 6370:6379
+    volumes:
+      - database_redis:/data
+    networks:
+      - fullstack
+
+  auth-redis:
+    container_name: auth-redis
+    hostname: auth-redis
+    image: redis:alpine
+    ports:
+      - 6371:6379
     volumes:
       - database_redis:/data
     networks:
@@ -74,17 +85,19 @@ services:
   
   redis-commander:
     container_name: redis-commander
-    hostname: redis-commander
+    hostname: edis-commander
     image: ghcr.io/joeferner/redis-commander:latest
     restart: always
     depends_on:
       - mkv-redis
+      - auth-redis
     environment:
-      - REDIS_HOSTS=local:mkv-redis:6379
+      - REDIS_HOSTS=local:mkv-redis:6379,local:auth-redis:6379
     ports:
       - 8081:8081
     networks:
       - fullstack
+
 
   auth-backend:
     container_name: auth-backend
@@ -92,8 +105,9 @@ services:
       dockerfile: Dockerfile
       context: ./auth
     environment:
-      REDIS_HOST: mkv-redis      
+      REDIS_HOST: auth-redis      
       REDIS_PORT: ${REDIS_PORT}
+      REDIS_EXP_HOURS: ${REDIS_EXP_HOURS}
       PG_HOST: ${PG_HOST}
       PG_USER: ${PG_USER}
       PG_PASS: ${PG_PASS}
@@ -102,13 +116,14 @@ services:
       JWT_ACCESS: ${JWT_ACCESS}
       JWT_REFRESH: ${JWT_REFRESH}
       JWT_ISS: ${JWT_ISS}
-      JWT_EXP: ${JWT_EXP}
+      JWT_ACCESS_EXP: ${JWT_ACCESS_EXP}
+      JWT_REFRESH_EXP: ${JWT_REFRESH_EXP}
     ports:
       - 9080:9080
     restart:
       on-failure
     depends_on:
-      - mkv-redis
+      - auth-redis
       - auth-postgres
     networks:
       - auth

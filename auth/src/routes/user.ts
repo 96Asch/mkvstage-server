@@ -10,6 +10,12 @@ const userRoute = Router();
 userRoute.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
 
+    if (!email && password) {
+        next(makeBadRequestError('email and password must not be empty'));
+
+        return;
+    }
+
     if (!validateEmail(email)) {
         next(makeEmailFormatError(email));
 
@@ -40,17 +46,15 @@ userRoute.get('/', async (req: Request, res: Response, next: NextFunction) => {
         return email != '';
     });
 
-    const ids: number[] = idsParam
-        .split(',')
-        .reduce((result: number[], el: string) => {
-            const id = parseInt(el);
+    const ids: number[] = idsParam.split(',').reduce((result: number[], el: string) => {
+        const id = parseInt(el);
 
-            if (!Number.isNaN(id)) {
-                result.push(id);
-            }
+        if (!Number.isNaN(id)) {
+            result.push(id);
+        }
 
-            return result;
-        }, []);
+        return result;
+    }, []);
 
     console.log(ids);
 
@@ -66,24 +70,21 @@ userRoute.get('/', async (req: Request, res: Response, next: NextFunction) => {
         .catch(next);
 });
 
-userRoute.get(
-    '/:id',
-    async (req: Request, res: Response, next: NextFunction) => {
-        const id: number = parseInt(req.params.id);
+userRoute.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    const id: number = parseInt(req.params.id);
 
-        if (Number.isNaN(id)) {
-            next(makeBadRequestError('given id was not a number'));
+    if (Number.isNaN(id)) {
+        next(makeBadRequestError('given id was not a number'));
 
-            return;
-        }
-
-        usercontroller
-            .getUsers([id], [])
-            .then((retrievedUsers) => {
-                res.status(200).json({ users: retrievedUsers });
-            })
-            .catch(next);
+        return;
     }
-);
+
+    usercontroller
+        .getUsers([id], [])
+        .then((retrievedUsers) => {
+            res.status(200).json({ users: retrievedUsers });
+        })
+        .catch(next);
+});
 
 export default userRoute;

@@ -1,6 +1,7 @@
 import type { QueryResult, QueryResultRow } from 'pg';
 import { makeDuplicateError, makeInternalError } from '../model/error';
 import { User, emptyUser } from '../model/user';
+import { query } from 'express';
 
 export default function makeUserPg({ pgPool }) {
     async function create(user: User): Promise<User> {
@@ -9,10 +10,7 @@ export default function makeUserPg({ pgPool }) {
             'INSERT INTO Users (email, password) VALUES ($1, $2) RETURNING *';
 
         try {
-            const res = await pgPool.query(createQuery, [
-                user.email,
-                user.password,
-            ]);
+            const res = await pgPool.query(createQuery, [user.email, user.password]);
             createdUser.id = res.rows[0].id;
         } catch (error) {
             console.log(error.code);
@@ -53,6 +51,8 @@ export default function makeUserPg({ pgPool }) {
             params.push(emails.join(', '));
             paramCount++;
         }
+
+        console.log('Query:', createQuery, params);
 
         try {
             const res = await pgPool.query(createQuery, params);

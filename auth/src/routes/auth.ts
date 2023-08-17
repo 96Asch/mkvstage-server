@@ -1,21 +1,34 @@
-import { Router } from 'express'
+import { Router } from 'express';
+import type { Response, Request, NextFunction } from 'express';
 
-import controller from "../controller/tokencontroller"
+import { makeBadRequestError, makeEmailFormatError } from '../model/error';
+import tokencontroller from '../controller/tokencontroller';
+import validateEmail from '../util/validateemail';
 
-const authRoute = Router()
+const authRoute = Router();
 
-authRoute.post("/", async (req, res) => {
-    const email = req.body.email
-    let token = ""
-    try {
-        token = await controller.createToken(email)
-        
-    } catch (error) {
-        
+authRoute.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+
+    if (!(email && password)) {
+        next(makeBadRequestError('email and password cannot be empty'));
+        return;
     }
 
-    res.send(token)
-    res.status(200)
-})
+    if (!validateEmail(email)) {
+        next(makeEmailFormatError(email));
 
-export default authRoute
+        return;
+    }
+
+    console.log(email, password);
+    try {
+        const tokenPair = await tokencontroller.authorizeUser(email, password);
+
+        res.status(200).json({ tokens: tokenPair });
+    } catch (error) {
+        next(error);
+    }
+});
+
+export default authRoute;

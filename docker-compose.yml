@@ -99,6 +99,10 @@ services:
       PG_PASS: ${PG_PASS}
       PG_DB: ${PG_DB}
       PG_PORT: ${PG_PORT}
+      JWT_ACCESS: ${JWT_ACCESS}
+      JWT_REFRESH: ${JWT_REFRESH}
+      JWT_ISS: ${JWT_ISS}
+      JWT_EXP: ${JWT_EXP}
     ports:
       - 9080:9080
     restart:

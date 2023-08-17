@@ -7,29 +7,19 @@ const app = express();
 
 const logger = (req: Request, res: Response, next: NextFunction) => {
     res.on('finish', () => {
-        console.log(
-            req.method,
-            decodeURI(req.url),
-            res.statusCode,
-            res.statusMessage
-        );
+        console.log(req.method, decodeURI(req.url), res.statusCode, res.statusMessage);
     });
     next();
 };
 
-const errorHandler = (
-    err: Error,
-    _: Request,
-    res: Response,
-    next: NextFunction
-) => {
+const errorHandler = (err: Error, _: Request, res: Response, next: NextFunction) => {
     if (err instanceof AppError) {
         const appError = err as AppError;
         res.status(appError.httpCode);
     } else {
         res.status(500);
     }
-
+    console.error(err.stack);
     res.json({ error: err.message });
     next();
 };

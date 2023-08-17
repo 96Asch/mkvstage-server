@@ -1,18 +1,18 @@
 import { userDb, redisDb } from '../../repository';
-import makeAuthorizeUser from './authorizeuser';
+import makeAuthenticateUser from './authenticateUser';
 import makeGetUsers from './getusers';
 import makeStoreUser from './storeuser';
 
 const storeUser = makeStoreUser({ userDb });
-const authorizeUser = makeAuthorizeUser({ userDb, redisDb });
+const authenticateUser = makeAuthenticateUser({ userDb });
 const getUsers = makeGetUsers({ userDb });
 
 const userService = Object.freeze({
     storeUser,
     getUsers,
-    authorizeUser,
+    authenticateUser,
 });
 
 export default userService;
 
-export { storeUser, getUsers, authorizeUser };
+export { storeUser, getUsers, authenticateUser };

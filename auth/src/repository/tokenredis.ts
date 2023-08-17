@@ -2,18 +2,22 @@ import { makeInternalError } from '../model/error';
 import { REDIS_EXP } from '../model/redis';
 
 export default function makeRedisTokenRepo({ redisClient }) {
-    async function create(email: string, refreshtoken: string) {
+    async function create(sender: string, email: string, refreshtoken: string) {
+        const key = `${email}:${sender}`;
+
         try {
-            await redisClient.set(email, refreshtoken, 'EX', REDIS_EXP);
+            await redisClient.set(key, refreshtoken, 'EX', REDIS_EXP);
         } catch (error) {
             console.error(error);
             throw makeInternalError();
         }
     }
 
-    async function get(email: string): Promise<string> {
+    async function get(sender: string, email: string): Promise<string> {
+        const key = `${email}:${sender}`;
+
         try {
-            const value = await redisClient.get(email);
+            const value = await redisClient.get(key);
             console.log(value);
 
             return value;

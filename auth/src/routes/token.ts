@@ -9,10 +9,11 @@ import {
 import tokencontroller from '../controller/tokencontroller';
 import validateEmail from '../util/validateemail';
 import usercontroller from '../controller/usercontroller';
+import { TokenPair } from '../model/token';
 
-const authRoute = Router();
+const tokenRoute = Router();
 
-authRoute.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+tokenRoute.post('/login', async (req: Request, res: Response, next: NextFunction) => {
     const { senderId, email, password } = req.body;
 
     if (!(email && password && senderId)) {
@@ -44,4 +45,22 @@ authRoute.post('/login', async (req: Request, res: Response, next: NextFunction)
     }
 });
 
-export default authRoute;
+tokenRoute.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
+    const { refresh } = req.body;
+
+    if (!refresh) {
+        next(makeBadRequestError('refresh field must not be empty'));
+
+        return;
+    }
+
+    tokencontroller
+        .renewAccess(refresh)
+        .then((accessToken) => {
+            const tokenPair: TokenPair = { access: accessToken, refresh: refresh };
+            res.status(202).json({ tokens: tokenPair });
+        })
+        .catch(next);
+});
+
+export default tokenRoute;

@@ -1,10 +1,10 @@
 import express from 'express';
-import authRoute from './auth';
+import tokenRoute from './token';
 import userRoute from './user';
 
 const routes = express.Router();
 
-routes.use('/auth', authRoute);
+routes.use('/tokens', tokenRoute);
 routes.use('/users', userRoute);
 
 export default routes;

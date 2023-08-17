@@ -13,42 +13,46 @@ export default function makeRedisTokenRepo({ redisClient }) {
         }
     }
 
-    async function get(sender: string, email: string): Promise<string> {
-        const key = `${email}:${sender}`;
+    async function read(email: string): Promise<string[]> {
+        const key = `${email}:*`;
 
-        try {
-            const value = await redisClient.get(key);
-            console.log(value);
+        return new Promise((resolve, _) => {
+            var stream = redisClient.scanStream({
+                match: key,
+            });
 
-            return value;
-        } catch (error) {
-            console.error(error);
-            throw makeInternalError();
-        }
+            var keys = [];
+            stream.on('data', function (resultKeys) {
+                for (var i = 0; i < resultKeys.length; i++) {
+                    keys.push(resultKeys[i]);
+                }
+            });
+
+            stream.on('end', function () {
+                resolve(keys);
+            });
+        });
     }
 
     async function del(email: string): Promise<void> {
-        console.log('delete');
         const stream = redisClient.scanStream({
             match: `${email}:*`,
         });
-        console.log('stream');
 
         stream.on('data', function (keys) {
-            console.log(keys);
             if (keys.length) {
                 redisClient.unlink(keys);
             }
         });
 
         stream.on('end', function () {
-            console.log('done');
+            console.log('Finished deleting keys');
         });
     }
 
     return Object.freeze({
         create,
-        get,
+        read,
         del,
     });
 }

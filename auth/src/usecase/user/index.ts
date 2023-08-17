@@ -1,17 +1,16 @@
-import { userDb } from "../../repository";
-import makeAuthorizeUser from "./authorizeUser";
-import makeGetUsers from "./readUser";
-
-import makeStoreUser from "./storeUser";
+import { userDb } from '../../repository';
+import makeAuthorizeUser from './authorizeuser';
+import makeGetUsers from './getusers';
+import makeStoreUser from './storeuser';
 
 const storeUser = makeStoreUser({ userDb });
 const authorizeUser = makeAuthorizeUser({ userDb });
 const getUsers = makeGetUsers({ userDb });
 
 const userService = Object.freeze({
-  storeUser,
-  getUsers,
-  authorizeUser,
+    storeUser,
+    getUsers,
+    authorizeUser,
 });
 
 export default userService;

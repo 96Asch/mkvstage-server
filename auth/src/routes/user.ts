@@ -2,8 +2,14 @@ import Router from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import usercontroller from '../controller/usercontroller';
 import validateEmail from '../util/validateemail';
-import { makeBadRequestError, makeEmailFormatError } from '../model/error';
+import {
+    makeBadRequestError,
+    makeEmailFormatError,
+    makeInternalError,
+} from '../model/error';
 import { User } from '../model/user';
+import middleware from './middleware';
+import tokencontroller from '../controller/tokencontroller';
 
 const userRoute = Router();
 
@@ -69,6 +75,48 @@ userRoute.get('/', async (req: Request, res: Response, next: NextFunction) => {
         )
         .catch(next);
 });
+
+userRoute.get(
+    '/me',
+    middleware.verifyAndExtractEmail,
+    async (req: Request, res: Response, next: NextFunction) => {
+        const email = res.locals.email;
+
+        if (!email) {
+            next(makeInternalError());
+
+            return;
+        }
+
+        usercontroller
+            .getUsers([], [email])
+            .then((retrievedUsers) => {
+                res.status(200).json({ users: retrievedUsers });
+            })
+            .catch(next);
+    }
+);
+
+userRoute.get(
+    '/logout',
+    middleware.verifyAndExtractEmail,
+    async (req: Request, res: Response, next: NextFunction) => {
+        const email = res.locals.email;
+
+        if (!email) {
+            next(makeInternalError());
+
+            return;
+        }
+
+        tokencontroller
+            .removeTokensByEmail(email)
+            .then(() => {
+                res.sendStatus(202);
+            })
+            .catch(next);
+    }
+);
 
 userRoute.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     const id: number = parseInt(req.params.id);

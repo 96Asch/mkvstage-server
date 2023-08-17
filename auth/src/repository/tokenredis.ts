@@ -27,8 +27,28 @@ export default function makeRedisTokenRepo({ redisClient }) {
         }
     }
 
+    async function del(email: string): Promise<void> {
+        console.log('delete');
+        const stream = redisClient.scanStream({
+            match: `${email}:*`,
+        });
+        console.log('stream');
+
+        stream.on('data', function (keys) {
+            console.log(keys);
+            if (keys.length) {
+                redisClient.unlink(keys);
+            }
+        });
+
+        stream.on('end', function () {
+            console.log('done');
+        });
+    }
+
     return Object.freeze({
         create,
         get,
+        del,
     });
 }

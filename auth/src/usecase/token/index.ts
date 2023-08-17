@@ -1,15 +1,16 @@
-import { redisDb } from "../../repository";
+import { redisDb } from '../../repository';
+import makeRemoveTokensByEmail from './removetokensbyemail';
 
-import makeCreateToken from "./storetoken";
+import makeCreateToken from './storetoken';
 
-const createToken = makeCreateToken({redisDb})
+const createToken = makeCreateToken({ redisDb });
+const removeTokensByEmail = makeRemoveTokensByEmail({ redisDb });
 
 const tokenService = Object.freeze({
-    createToken
-})
+    createToken,
+    removeTokensByEmail,
+});
 
-export default tokenService
+export default tokenService;
 
-export {
-    createToken
-}
+export { createToken, removeTokensByEmail };

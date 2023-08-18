@@ -85,6 +85,8 @@ func TestGetAll(t *testing.T) {
 	})
 
 	t.Run("Fail FetchAll Error", func(t *testing.T) {
+		t.Parallel()
+
 		expectedErr := domain.NewInternalErr()
 
 		mockUS := &mocks.MockUserService{}
@@ -101,5 +103,4 @@ func TestGetAll(t *testing.T) {
 		assert.Equal(t, expectedRes, writer.Body.Bytes())
 		mockUS.AssertExpectations(t)
 	})
-
 }

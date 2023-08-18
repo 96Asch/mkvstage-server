@@ -52,5 +52,4 @@ func TestExtractEmail(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, email)
 	})
-
 }

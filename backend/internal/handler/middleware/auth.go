@@ -15,7 +15,7 @@ func (gmh ginMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
 
 		if err := ctx.BindHeader(&header); err != nil {
 			newErr := domain.NewBadRequestErr(err.Error())
-			ctx.JSON(domain.Status(newErr), gin.H{"error": newErr.Error})
+			ctx.JSON(domain.Status(newErr), gin.H{"error": newErr.Error()})
 			ctx.Abort()
 
 			return
@@ -25,7 +25,7 @@ func (gmh ginMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
 
 		email, err := gmh.TS.ExtractEmail(context, header.Access)
 		if err != nil {
-			ctx.JSON(domain.Status(err), gin.H{"error": err})
+			ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 			ctx.Abort()
 
 			return
@@ -33,7 +33,7 @@ func (gmh ginMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
 
 		user, err := gmh.US.FetchByEmail(context, email)
 		if err != nil {
-			ctx.JSON(domain.Status(err), gin.H{"error": err})
+			ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 			ctx.Abort()
 
 			return
@@ -50,7 +50,7 @@ func (gmh ginMiddlewareHandler) JWTExtractEmail() gin.HandlerFunc {
 
 		if err := ctx.BindHeader(&header); err != nil {
 			newErr := domain.NewBadRequestErr(err.Error())
-			ctx.JSON(domain.Status(newErr), gin.H{"error": newErr.Error})
+			ctx.JSON(domain.Status(newErr), gin.H{"error": newErr.Error()})
 			ctx.Abort()
 
 			return
@@ -60,7 +60,7 @@ func (gmh ginMiddlewareHandler) JWTExtractEmail() gin.HandlerFunc {
 
 		email, err := gmh.TS.ExtractEmail(context, header.Access)
 		if err != nil {
-			ctx.JSON(domain.Status(err), gin.H{"error": err})
+			ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 			ctx.Abort()
 
 			return

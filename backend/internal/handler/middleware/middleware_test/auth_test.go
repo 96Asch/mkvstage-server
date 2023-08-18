@@ -37,6 +37,8 @@ func prepareAndServeAuthenticate(t *testing.T, mockUS domain.UserService, mockTS
 	return writer
 }
 
+const mockAccess string = "access_token"
+
 func TestAuthenticateUserCorrect(t *testing.T) {
 	t.Parallel()
 
@@ -47,8 +49,6 @@ func TestAuthenticateUserCorrect(t *testing.T) {
 		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",
 	}
-
-	mockAccess := "access-token"
 
 	mockUS := &mocks.MockUserService{}
 	mockTS := &mocks.MockTokenService{}

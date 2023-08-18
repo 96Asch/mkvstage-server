@@ -1,9 +1,13 @@
 version: "3.9"
 services:
 
-  app:
-    container_name: mkv_app
-    build: .
+  backend:
+    container_name: mkv_stage_backend
+    build: 
+      dockerfile: Dockerfile
+      context: ./backend
+      args:
+        - PORT = 9080
     environment:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASS: ${MYSQL_PASS}
@@ -21,10 +25,8 @@ services:
       - mkv-mysql
       - mkv-redis
     networks:
-      - fullstack
-    volumes:
-      - main_app:/usr/src/app
-
+      - app
+  
   mkv-mysql:
     image: mysql:8.0
     container_name: mkv-mysql
@@ -37,7 +39,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_NAME}
       MYSQL_ROOT_HOST: ${MYSQL_HOST} 
     networks:
-      - fullstack
+      - app
     volumes:
       - database_mysql:/var/lib/mysql
 
@@ -55,38 +57,116 @@ services:
       - 9090:80
     restart: always
     networks:
-      - fullstack
+      - app
 
   mkv-redis:
     container_name: mkv-redis
     hostname: mkv-redis
     image: redis:alpine
     ports:
-      - 6379:6379
+      - 6370:6379
     volumes:
-      - database_redis:/data
+      - app-redis:/data
     networks:
-      - fullstack
+      - app
+
+  auth-redis:
+    container_name: auth-redis
+    hostname: auth-redis
+    image: redis:alpine
+    ports:
+      - 6371:6379
+    volumes:
+      - auth-redis:/data
+    networks:
+      - auth
   
   redis-commander:
     container_name: redis-commander
-    hostname: redis-commander
+    hostname: edis-commander
     image: ghcr.io/joeferner/redis-commander:latest
     restart: always
     depends_on:
       - mkv-redis
+      - auth-redis
     environment:
-      - REDIS_HOSTS=local:mkv-redis:6379
+      - REDIS_HOSTS=local:mkv-redis:6379,local:auth-redis:6379
     ports:
       - 8081:8081
     networks:
-      - fullstack
+      - app
+      - auth
+
+
+  auth-backend:
+    container_name: auth-backend
+    build: 
+      dockerfile: Dockerfile
+      context: ./auth
+    environment:
+      REDIS_HOST: auth-redis      
+      REDIS_PORT: ${AUTH_REDIS_PORT}
+      REDIS_EXP_HOURS: ${AUTH_REDIS_EXP_HOURS}
+      PG_HOST: ${PG_HOST}
+      PG_USER: ${PG_USER}
+      PG_PASS: ${PG_PASS}
+      PG_DB: ${PG_DB}
+      PG_PORT: ${PG_PORT}
+      JWT_ACCESS: ${JWT_ACCESS}
+      JWT_REFRESH: ${JWT_REFRESH}
+      JWT_ISS: ${JWT_ISS}
+      JWT_ACCESS_EXP: ${JWT_ACCESS_EXP}
+      JWT_REFRESH_EXP: ${JWT_REFRESH_EXP}
+    ports:
+      - 9080:9080
+    restart:
+      on-failure
+    depends_on:
+      - auth-redis
+      - auth-postgres
+    networks:
+      - auth
+
+  auth-postgres:
+    container_name: auth-postgres
+    hostname: auth-postgres
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+    networks:
+      - auth
+    volumes:
+      - database_postgres:/data
+
+  auth-adminer:
+    container_name: auth-adminer
+    hostname: auth-adminer
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - 5678:80
+    depends_on:
+      - auth-postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASS}
+    networks:
+      - auth
 
 volumes:
-  main_app:
+  database_postgres:
   database_mysql:  
-  database_redis:     
+  auth-redis:
+    driver: local
+  app-redis:
+    driver: local     
 
 networks:
-  fullstack:
+  auth:
+  app:
     driver: bridge

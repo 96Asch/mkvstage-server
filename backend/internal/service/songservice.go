@@ -40,6 +40,10 @@ func (ss songService) FetchAll(ctx context.Context) (*[]domain.Song, error) {
 	return songs, nil
 }
 
+func (ss songService) Fetch(ctx context.Context, options *domain.SongFilterOptions) ([]domain.Song, error) {
+	return []domain.Song{}, nil
+}
+
 func (ss songService) Update(ctx context.Context, song *domain.Song, principal *domain.User) error {
 	if !principal.HasClearance(domain.EDITOR) {
 		currentSong, err := ss.sr.GetByID(ctx, song.ID)

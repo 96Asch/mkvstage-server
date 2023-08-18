@@ -37,7 +37,7 @@ func prepareAndServeUpdate(
 	req, err := http.NewRequestWithContext(
 		context.TODO(),
 		http.MethodPut,
-		fmt.Sprintf("/songs/%s/update", param),
+		fmt.Sprintf("/songs/%s", param),
 		requestBody,
 	)
 	assert.NoError(t, err)

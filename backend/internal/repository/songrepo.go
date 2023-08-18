@@ -48,6 +48,10 @@ func (sr gormSongRepository) GetAll(ctx context.Context) (*[]domain.Song, error)
 	return &songs, nil
 }
 
+func (sr gormSongRepository) Get(ctx context.Context, options *domain.SongFilterOptions) ([]domain.Song, error) {
+	return []domain.Song{}, nil
+}
+
 func (sr gormSongRepository) Create(ctx context.Context, song *domain.Song) error {
 	res := sr.db.Create(song)
 

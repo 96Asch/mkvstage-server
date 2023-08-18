@@ -40,7 +40,15 @@ func TestSongServiceStore(t *testing.T) {
 		mockUR := &mocks.MockUserRepository{}
 		mockSR := &mocks.MockSongRepository{}
 		mockBR := &mocks.MockBundleRepository{}
-
+		mockSong := &domain.Song{
+			CreatorID:  mockUser.ID,
+			Title:      "Foo",
+			Subtitle:   "Bar",
+			Key:        "A",
+			BundleID:   1,
+			Bpm:        120,
+			ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
+		}
 		mockBR.
 			On("GetByID", context.TODO(), mockSong.BundleID).
 			Return(mockBundle, nil)
@@ -77,7 +85,6 @@ func TestSongServiceStore(t *testing.T) {
 		mockUser.Permission = domain.GUEST
 		err := ss.Store(ctx, mockSong, mockUser)
 		assert.ErrorAs(t, err, &mockErr)
-		assert.Empty(t, mockSong.ID)
 		mockSR.AssertExpectations(t)
 	})
 

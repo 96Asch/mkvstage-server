@@ -14,14 +14,14 @@ type AccessTokenClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateAccessToken(user *domain.User, config *domain.TokenConfig) (*domain.AccessToken, error) {
+func GenerateAccessToken(email string, config *domain.TokenConfig) (*domain.AccessToken, error) {
 	accessUUID, err := uuid.NewRandom()
 	if err != nil {
 		return nil, errors.New("could not generate a uuid")
 	}
 
 	claims := AccessTokenClaims{
-		Email: user.Email,
+		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(config.IAT),
 			ExpiresAt: jwt.NewNumericDate(config.IAT.Add(config.ExpDuration)),

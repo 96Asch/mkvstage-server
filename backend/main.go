@@ -121,7 +121,6 @@ func main() {
 	database, _ := setupStore()
 
 	accessSecret := os.Getenv("ACCESS_SECRET")
-	refreshSecret := os.Getenv("REFRESH_SECRET")
 
 	userRepo := repository.NewGormUserRepository(database)
 	bundleRepo := repository.NewGormBundleRepository(database)
@@ -133,7 +132,7 @@ func main() {
 	setlistRoleRepo := repository.NewGormSetlistRoleRepository(database)
 
 	userService := service.NewUserService(userRepo, roleRepo, userroleRepo)
-	tokenService := service.NewTokenService(accessSecret, refreshSecret)
+	tokenService := service.NewTokenService(accessSecret)
 	mhw := middleware.NewGinMiddlewareHandler(userService, tokenService)
 	bundleService := service.NewBundleService(bundleRepo)
 	songService := service.NewSongService(userRepo, songRepo)

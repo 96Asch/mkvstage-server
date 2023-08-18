@@ -8,15 +8,13 @@ import (
 )
 
 type tokenService struct {
-	accessSecret  string
-	refreshSecret string
+	accessSecret string
 }
 
 //revive:disable:unexported-return
-func NewTokenService(accessSecret, refreshSecret string) *tokenService {
+func NewTokenService(accessSecret string) *tokenService {
 	return &tokenService{
-		accessSecret:  accessSecret,
-		refreshSecret: refreshSecret,
+		accessSecret: accessSecret,
 	}
 }
 

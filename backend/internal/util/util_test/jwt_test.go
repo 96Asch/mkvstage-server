@@ -17,16 +17,9 @@ const (
 func TestGenerateAccess(t *testing.T) {
 	t.Parallel()
 
-	user := &domain.User{
-		ID:        1,
-		FirstName: "Foo",
-		LastName:  "Bar",
-		Email:     "Foo@Bar.com",
-	}
-
 	now := time.Now()
 
-	accessToken, err := util.GenerateAccessToken(user, &domain.TokenConfig{
+	accessToken, err := util.GenerateAccessToken("foobar@barfoo.com", &domain.TokenConfig{
 		IAT:         now,
 		ExpDuration: time.Second * time.Duration(15),
 		Secret:      secret,
@@ -39,15 +32,10 @@ func TestGenerateAccess(t *testing.T) {
 func TestVerifyAccessTokenCorrect(t *testing.T) {
 	t.Parallel()
 
-	user := &domain.User{
-		ID:        1,
-		FirstName: "Foo",
-		LastName:  "Bar",
-		Email:     "Foo@Bar.com",
-	}
+	email := "foobar@barfoo.com"
 
 	now := time.Now()
-	accessToken, err := util.GenerateAccessToken(user, &domain.TokenConfig{
+	accessToken, err := util.GenerateAccessToken(email, &domain.TokenConfig{
 		IAT:         now,
 		ExpDuration: time.Second * time.Duration(15),
 		Secret:      secret,
@@ -61,7 +49,7 @@ func TestVerifyAccessTokenCorrect(t *testing.T) {
 
 	assert.NotEmpty(t, claims.Email)
 	assert.Equal(t, jwt.NewNumericDate(now), claims.IssuedAt)
-	assert.Equal(t, claims.Email, user.Email)
+	assert.Equal(t, claims.Email, email)
 }
 
 func TestVerifyAccessInvalidToken(t *testing.T) {

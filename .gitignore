@@ -13,5 +13,9 @@
 
 .env
 /tmp
+
+# NodeJS modules
+auth/node_modules
+
 # Dependency directories (remove the comment below to include it)
 # vendor/

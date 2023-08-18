@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 

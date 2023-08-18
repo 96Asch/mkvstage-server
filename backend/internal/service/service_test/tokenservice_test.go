@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
-	"github.com/96Asch/mkvstage-server/internal/service"
-	"github.com/96Asch/mkvstage-server/internal/util"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/service"
+	"github.com/96Asch/mkvstage-server/backend/internal/util"
 	"github.com/stretchr/testify/assert"
 )
 

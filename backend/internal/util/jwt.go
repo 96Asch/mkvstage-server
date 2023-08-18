@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )

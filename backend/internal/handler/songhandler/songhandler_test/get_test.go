@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
-	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
-	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/songhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/datatypes"

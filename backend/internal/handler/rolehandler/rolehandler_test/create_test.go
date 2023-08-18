@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
-	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
-	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/rolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

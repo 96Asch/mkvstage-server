@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
 	"github.com/stretchr/testify/mock"
 )
 

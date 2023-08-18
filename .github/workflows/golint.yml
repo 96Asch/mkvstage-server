@@ -33,7 +33,7 @@ jobs:
                   version: v1.51.2
 
                   # Optional: working directory, useful for monorepos
-                  working-directory: mkvstage/backend
+                  working-directory: ./backend
 
                   # Optional: golangci-lint command line arguments.
                   args: --timeout=10m

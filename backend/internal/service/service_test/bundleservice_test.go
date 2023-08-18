@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
-	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
-	"github.com/96Asch/mkvstage-server/internal/service"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/backend/internal/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

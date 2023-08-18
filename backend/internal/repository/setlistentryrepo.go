@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )

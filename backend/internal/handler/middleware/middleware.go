@@ -1,6 +1,6 @@
 package middleware
 
-import "github.com/96Asch/mkvstage-server/internal/domain"
+import "github.com/96Asch/mkvstage-server/backend/internal/domain"
 
 type ginMiddlewareHandler struct {
 	US domain.UserService

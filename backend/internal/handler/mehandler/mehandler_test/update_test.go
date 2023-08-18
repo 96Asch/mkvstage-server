@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
-	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
-	"github.com/96Asch/mkvstage-server/internal/handler/mehandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/mehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"

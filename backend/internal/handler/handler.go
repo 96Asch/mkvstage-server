@@ -3,15 +3,15 @@ package handler
 import (
 	"log"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
-	"github.com/96Asch/mkvstage-server/internal/handler/bundlehandler"
-	"github.com/96Asch/mkvstage-server/internal/handler/mehandler"
-	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
-	"github.com/96Asch/mkvstage-server/internal/handler/setlisthandler"
-	"github.com/96Asch/mkvstage-server/internal/handler/setlistrolehandler"
-	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
-	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
-	"github.com/96Asch/mkvstage-server/internal/handler/userrolehandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/bundlehandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/mehandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/rolehandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/setlisthandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/setlistrolehandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/songhandler"
+	userhandler "github.com/96Asch/mkvstage-server/backend/internal/handler/userhandler"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/userrolehandler"
 	"github.com/gin-gonic/gin"
 )
 

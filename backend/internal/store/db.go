@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

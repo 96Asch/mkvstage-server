@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/96Asch/mkvstage-server/internal/domain"
-	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
-	"github.com/96Asch/mkvstage-server/internal/handler/middleware"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain"
+	"github.com/96Asch/mkvstage-server/backend/internal/domain/mocks"
+	"github.com/96Asch/mkvstage-server/backend/internal/handler/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -81,7 +81,7 @@ func TestAuthenticateUserExtractErr(t *testing.T) {
 	writer := prepareAndServeAuthenticate(t, mockUS, mockTS, mockAccess)
 	assert.Equal(t, domain.Status(expErr), writer.Code)
 
-	expBody, err := json.Marshal(gin.H{"error": expErr})
+	expBody, err := json.Marshal(gin.H{"error": expErr.Error()})
 	assert.NoError(t, err)
 
 	assert.Equal(t, expBody, writer.Body.Bytes())
@@ -115,7 +115,7 @@ func TestAuthenticateUserFetchByEmailErr(t *testing.T) {
 	writer := prepareAndServeAuthenticate(t, mockUS, mockTS, mockAccess)
 	assert.Equal(t, domain.Status(expErr), writer.Code)
 
-	expBody, err := json.Marshal(gin.H{"error": expErr})
+	expBody, err := json.Marshal(gin.H{"error": expErr.Error()})
 	assert.NoError(t, err)
 
 	assert.Equal(t, expBody, writer.Body.Bytes())

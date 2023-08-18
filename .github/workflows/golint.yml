@@ -14,13 +14,10 @@ permissions:
     # pull-requests: read
 
 jobs:
-    golangci:
+    golangci-lint:
         name: lint
         runs-on: ubuntu-latest
 
-        defaults:
-        run:
-            working-directory: ./backend
         steps:
             - uses: actions/checkout@v3
 
@@ -36,7 +33,7 @@ jobs:
                   version: v1.51.2
 
                   # Optional: working directory, useful for monorepos
-                  working-directory: mkvstage
+                  working-directory: mkvstage/backend
 
                   # Optional: golangci-lint command line arguments.
                   args: --timeout=10m

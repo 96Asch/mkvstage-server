@@ -10,13 +10,15 @@ import (
 type songService struct {
 	ur domain.UserRepository
 	sr domain.SongRepository
+	br domain.BundleRepository
 }
 
 //revive:disable:unexported-return
-func NewSongService(ur domain.UserRepository, sr domain.SongRepository) *songService {
+func NewSongService(ur domain.UserRepository, sr domain.SongRepository, br domain.BundleRepository) *songService {
 	return &songService{
 		ur: ur,
 		sr: sr,
+		br: br,
 	}
 }
 
@@ -58,12 +60,15 @@ func (ss songService) Update(ctx context.Context, song *domain.Song, principal *
 		return domain.NewBadRequestErr(err.Error())
 	}
 
-	_, err := ss.ur.GetByID(ctx, song.CreatorID)
-	if err != nil {
+	if _, err := ss.br.GetByID(ctx, song.BundleID); err != nil {
 		return domain.FromError(err)
 	}
 
-	err = ss.sr.Update(ctx, song)
+	if _, err := ss.ur.GetByID(ctx, song.CreatorID); err != nil {
+		return domain.FromError(err)
+	}
+
+	err := ss.sr.Update(ctx, song)
 	if err != nil {
 		return domain.FromError(err)
 	}
@@ -76,6 +81,10 @@ func (ss songService) Store(ctx context.Context, song *domain.Song, principal *d
 		return domain.NewNotAuthorizedErr("not authorized to create songs")
 	}
 
+	if song.CreatorID != principal.ID {
+		return domain.NewBadRequestErr("cannot create a song with different creator")
+	}
+
 	if !song.IsValidKey() {
 		return domain.NewBadRequestErr("invalid key")
 	}
@@ -84,7 +93,7 @@ func (ss songService) Store(ctx context.Context, song *domain.Song, principal *d
 		return domain.NewBadRequestErr(err.Error())
 	}
 
-	if _, err := ss.ur.GetByID(ctx, song.CreatorID); err != nil {
+	if _, err := ss.br.GetByID(ctx, song.BundleID); err != nil {
 		return domain.FromError(err)
 	}
 

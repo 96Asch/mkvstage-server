@@ -135,7 +135,7 @@ func main() {
 	tokenService := service.NewTokenService(accessSecret)
 	mhw := middleware.NewGinMiddlewareHandler(userService, tokenService)
 	bundleService := service.NewBundleService(bundleRepo)
-	songService := service.NewSongService(userRepo, songRepo)
+	songService := service.NewSongService(userRepo, songRepo, bundleRepo)
 	userroleService := service.NewUserRoleService(userroleRepo)
 	roleService := service.NewRoleService(roleRepo, userRepo, userroleRepo)
 	setlistService := service.NewSetlistService(userRepo, setlistRepo)

@@ -41,10 +41,10 @@ func TestCreateAccessCorrect(t *testing.T) {
 	mockRefreshTokens := &[]domain.RefreshToken{{Refresh: refresh.Refresh}}
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByID", context.TODO(), mockUser.ID).
 		Return(mockUser, nil)
 	mockTR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetAll", context.TODO(), mockUser.ID).
 		Return(mockRefreshTokens, nil)
 
 	tokenService := service.NewTokenService(mockTR, mockUR, accessSecret, refreshSecret)
@@ -85,10 +85,10 @@ func TestCreateAccessRepoErr(t *testing.T) {
 	assert.NoError(t, err)
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByID", context.TODO(), mockUser.ID).
 		Return(mockUser, nil)
 	mockTR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetAll", context.TODO(), mockUser.ID).
 		Return(nil, mockErr)
 
 	tokenService := service.NewTokenService(mockTR, mockUR, accessSecret, refreshSecret)
@@ -121,10 +121,10 @@ func TestCreateAccessRefreshNotInRepo(t *testing.T) {
 	assert.NoError(t, err)
 
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByID", context.TODO(), mockUser.ID).
 		Return(mockUser, nil)
 	mockTR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetAll", context.TODO(), mockUser.ID).
 		Return(mockRefreshTokens, nil)
 
 	tokenService := service.NewTokenService(mockTR, mockUR, accessSecret, refreshSecret)
@@ -192,7 +192,7 @@ func TestCreateRefreshCorrect(t *testing.T) {
 	mockUR := &mocks.MockUserRepository{}
 
 	mockTR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*domain.RefreshToken")).
+		On("Create", context.TODO(), mock.AnythingOfType("*domain.RefreshToken")).
 		Return(nil)
 
 	tokenService := service.NewTokenService(mockTR, mockUR, accessSecret, refreshSecret)
@@ -223,10 +223,10 @@ func TestCreateRefreshDeleteErr(t *testing.T) {
 	mockUR := &mocks.MockUserRepository{}
 
 	mockTR.
-		On("Create", mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*domain.RefreshToken")).
+		On("Create", context.TODO(), mock.AnythingOfType("*domain.RefreshToken")).
 		Return(nil)
 	mockTR.
-		On("Delete", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID, refreshToken).
+		On("Delete", context.TODO(), mockUser.ID, refreshToken).
 		Return(mockErr)
 
 	tokenService := service.NewTokenService(mockTR, mockUR, accessSecret, refreshSecret)
@@ -258,7 +258,7 @@ func TestCreateRefreshNotExpired(t *testing.T) {
 	mockRefreshTokens := &[]domain.RefreshToken{{Refresh: refresh.Refresh}}
 
 	mockTR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetAll", context.TODO(), mockUser.ID).
 		Return(mockRefreshTokens, nil)
 
 	tokenService := service.NewTokenService(mockTR, mockUR, accessSecret, refreshSecret)
@@ -294,10 +294,10 @@ func TestExtractUser(t *testing.T) {
 	mockRefreshTokens := &[]domain.RefreshToken{{Refresh: refresh.Refresh}}
 
 	mockTR.
-		On("GetAll", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetAll", context.TODO(), mockUser.ID).
 		Return(mockRefreshTokens, nil)
 	mockUR.
-		On("GetByID", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("GetByID", context.TODO(), mockUser.ID).
 		Return(mockUser, nil)
 
 	tokenService := service.NewTokenService(mockTR, mockUR, accessSecret, refreshSecret)

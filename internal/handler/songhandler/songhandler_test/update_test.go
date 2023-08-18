@@ -14,7 +14,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"gorm.io/datatypes"
 )
 
@@ -80,7 +79,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
+		On("Update", context.TODO(), mockSong, mockUser).
 		Return(nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -249,7 +248,7 @@ func TestUpdateByIDUpdateErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockSS.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockSong, mockUser).
+		On("Update", context.TODO(), mockSong, mockUser).
 		Return(mockErr)
 
 	byteBody, err := json.Marshal(gin.H{

@@ -56,7 +56,7 @@ func TestCreateCorrect(t *testing.T) {
 
 	mockBS := new(mocks.MockBundleService)
 	mockBS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
+		On("Store", context.TODO(), mockBundle, mockUser).
 		Return(nil).
 		Run(func(args mock.Arguments) {
 			arg, valid := args.Get(1).(*domain.Bundle)
@@ -148,7 +148,7 @@ func TestCreateStoreErr(t *testing.T) {
 	mockBS := &mocks.MockBundleService{}
 
 	mockBS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
+		On("Store", context.TODO(), mockBundle, mockUser).
 		Return(mockErr)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
@@ -216,7 +216,7 @@ func TestCreateNotAuth(t *testing.T) {
 	mockErr := domain.NewNotAuthorizedErr("")
 	mockBS := &mocks.MockBundleService{}
 	mockBS.
-		On("Store", mock.AnythingOfType("*context.emptyCtx"), mockBundle, mockUser).
+		On("Store", context.TODO(), mockBundle, mockUser).
 		Return(mockErr)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {

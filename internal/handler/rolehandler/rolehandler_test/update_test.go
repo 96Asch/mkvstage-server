@@ -14,7 +14,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/rolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeUpdate(
@@ -74,7 +73,7 @@ func TestUpdateByIDCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockRS.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
+		On("Update", context.TODO(), mockRole, mockUser).
 		Return(nil)
 
 	byteBody, err := json.Marshal(gin.H{
@@ -220,7 +219,7 @@ func TestUpdateByIDUpdateErr(t *testing.T) {
 	}
 
 	mockRS.
-		On("Update", mock.AnythingOfType("*context.emptyCtx"), mockRole, mockUser).
+		On("Update", context.TODO(), mockRole, mockUser).
 		Return(mockErr)
 	mockMWH.
 		On("AuthenticateUser").

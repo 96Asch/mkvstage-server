@@ -12,7 +12,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/setlisthandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeDelete(
@@ -71,11 +70,11 @@ func TestDeleteByIDCorrect(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSL.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), int64(mockSetlistID), mockUser).
+		On("Remove", context.TODO(), int64(mockSetlistID), mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBySetlist", mock.AnythingOfType("*context.emptyCtx"), &domain.Setlist{ID: mockSetlistID}, mockUser).
+		On("RemoveBySetlist", context.TODO(), &domain.Setlist{ID: mockSetlistID}, mockUser).
 		Return(nil)
 
 	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSL, mockSLES, mockSS, mockMWH)
@@ -167,7 +166,7 @@ func TestDeleteByIDRemoveErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSLS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockSetlistID, mockUser).
+		On("Remove", context.TODO(), mockSetlistID, mockUser).
 		Return(mockErr)
 
 	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSLS, mockSLES, mockSS, mockMWH)
@@ -206,11 +205,11 @@ func TestDeleteByIDRemoveBySetlistErr(t *testing.T) {
 		Return(mockAuthHF)
 
 	mockSLS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockSetlistID, mockUser).
+		On("Remove", context.TODO(), mockSetlistID, mockUser).
 		Return(nil)
 
 	mockSLES.
-		On("RemoveBySetlist", mock.AnythingOfType("*context.emptyCtx"), &domain.Setlist{ID: mockSetlistID}, mockUser).
+		On("RemoveBySetlist", context.TODO(), &domain.Setlist{ID: mockSetlistID}, mockUser).
 		Return(mockErr)
 
 	writer := prepareAndServeDelete(t, fmt.Sprint(mockSetlistID), mockSLS, mockSLES, mockSS, mockMWH)

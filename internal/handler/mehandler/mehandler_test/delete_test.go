@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeDelete(
@@ -56,10 +55,10 @@ func TestDeleteCorrect(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockTS.
-		On("RemoveAllRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("RemoveAllRefresh", context.TODO(), mockUser.ID).
 		Return(nil)
 	mockUS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockUser, deleteID).
+		On("Remove", context.TODO(), mockUser, deleteID).
 		Return(mockUser.ID, nil)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
@@ -156,7 +155,7 @@ func TestDeleteRemoveErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockUS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockUser, deleteID).
+		On("Remove", context.TODO(), mockUser, deleteID).
 		Return(nil, expectedErr)
 
 	mockByte, err := json.Marshal(gin.H{
@@ -190,10 +189,10 @@ func TestDeleteRemoveRefreshErr(t *testing.T) {
 	mockMWH := &mocks.MockMiddlewareHandler{}
 
 	mockTS.
-		On("RemoveAllRefresh", mock.AnythingOfType("*context.emptyCtx"), mockUser.ID).
+		On("RemoveAllRefresh", context.TODO(), mockUser.ID).
 		Return(mockErr)
 	mockUS.
-		On("Remove", mock.AnythingOfType("*context.emptyCtx"), mockUser, deleteID).
+		On("Remove", context.TODO(), mockUser, deleteID).
 		Return(mockUser.ID, nil)
 
 	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {

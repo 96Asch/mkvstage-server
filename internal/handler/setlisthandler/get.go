@@ -1,12 +1,18 @@
 package setlisthandler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/96Asch/mkvstage-server/internal/domain"
 	"github.com/96Asch/mkvstage-server/internal/util"
 	"github.com/gin-gonic/gin"
 )
+
+type setlistResponse struct {
+	domain.Setlist
+	Entries []domain.SetlistEntry `json:"entries"`
+}
 
 func (slh setlistHandler) GetAll(ctx *gin.Context) {
 	fromTime, fromErr := util.StringToTime(ctx.Query("from"))
@@ -41,9 +47,20 @@ func (slh setlistHandler) GetAll(ctx *gin.Context) {
 		return
 	}
 
+	response := make([]setlistResponse, len(*retrievedSetlists))
+	sortedEntries := sortBySetlist(retrievedSetlistEntries)
+
+	for idx, setlist := range *retrievedSetlists {
+		log.Printf("sid: %d", setlist.ID)
+		response[idx] = setlistResponse{
+			setlist,
+			sortedEntries[setlist.ID],
+		}
+		log.Println(response[idx])
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"setlist": retrievedSetlists,
-		"entries": retrievedSetlistEntries,
+		"setlists": response,
 	})
 }
 
@@ -73,8 +90,23 @@ func (slh setlistHandler) GetByID(ctx *gin.Context) {
 		return
 	}
 
+	response := setlistResponse{
+		*setlist,
+		*setlistEntries,
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"setlist": setlist,
-		"entries": setlistEntries,
+		"setlist": response,
 	})
+}
+
+func sortBySetlist(entries *[]domain.SetlistEntry) map[int64][]domain.SetlistEntry {
+	sortedBySetlist := make(map[int64][]domain.SetlistEntry)
+
+	for _, entry := range *entries {
+		val := sortedBySetlist[entry.SetlistID]
+		sortedBySetlist[entry.SetlistID] = append(val, entry)
+	}
+
+	return sortedBySetlist
 }

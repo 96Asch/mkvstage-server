@@ -8,7 +8,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/domain/mocks"
 	"github.com/96Asch/mkvstage-server/internal/service"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestSetlistRoleFetch(t *testing.T) {
@@ -42,7 +41,7 @@ func TestSetlistRoleFetch(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{}).
+			On("Get", context.TODO(), []int64{}).
 			Return(setlistRoles, nil)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -65,7 +64,7 @@ func TestSetlistRoleFetch(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(setlistRoles, nil)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -89,7 +88,7 @@ func TestSetlistRoleFetch(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{}).
+			On("Get", context.TODO(), []int64{}).
 			Return(nil, expErr)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -159,11 +158,11 @@ func TestSetlistRoleStore(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Create", mock.AnythingOfType("*context.emptyCtx"), setlistRoles).
+			On("Create", context.TODO(), setlistRoles).
 			Return(nil)
 
 		mockSLR.
-			On("GetByIDs", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 1}).
+			On("GetByIDs", context.TODO(), []int64{1, 1}).
 			Return(setlists, nil)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -222,7 +221,7 @@ func TestSetlistRoleStore(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockURR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(nil, expErr)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -244,7 +243,7 @@ func TestSetlistRoleStore(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockURR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(userRoles, nil)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -268,7 +267,7 @@ func TestSetlistRoleStore(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLR.
-			On("GetByIDs", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 1}).
+			On("GetByIDs", context.TODO(), []int64{1, 1}).
 			Return(nil, expErr)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -292,11 +291,11 @@ func TestSetlistRoleStore(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Create", mock.AnythingOfType("*context.emptyCtx"), setlistRoles).
+			On("Create", context.TODO(), setlistRoles).
 			Return(expErr)
 
 		mockSLR.
-			On("GetByIDs", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 1}).
+			On("GetByIDs", context.TODO(), []int64{1, 1}).
 			Return(setlists, nil)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -368,11 +367,11 @@ func TestRemove(t *testing.T) {
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
 
 		mockSLRR.
-			On("Delete", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Delete", context.TODO(), []int64{1, 2}).
 			Return(nil)
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(nil, nil)
 
 		err := setlistRoleService.Remove(context.TODO(), []int64{1, 2}, admin)
@@ -430,7 +429,7 @@ func TestRemove(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(nil, expErr)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -453,11 +452,11 @@ func TestRemove(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(setlistRoles, nil)
 
 		mockURR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(nil, expErr)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -480,11 +479,11 @@ func TestRemove(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(setlistRoles, nil)
 
 		mockURR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(userRoles, nil)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)
@@ -507,11 +506,11 @@ func TestRemove(t *testing.T) {
 		mockURR := &mocks.MockUserRoleRepository{}
 
 		mockSLRR.
-			On("Get", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Get", context.TODO(), []int64{1, 2}).
 			Return(setlistRoles, nil)
 
 		mockSLRR.
-			On("Delete", mock.AnythingOfType("*context.emptyCtx"), []int64{1, 2}).
+			On("Delete", context.TODO(), []int64{1, 2}).
 			Return(expErr)
 
 		setlistRoleService := service.NewSetlistRoleService(mockSLRR, mockSLR, mockURR)

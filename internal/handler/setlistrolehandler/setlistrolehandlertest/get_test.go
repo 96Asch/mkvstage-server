@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/setlistrolehandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeGet(
@@ -73,7 +72,7 @@ func TestGetAll(t *testing.T) {
 		mockSLRS := &mocks.MockSetlistRoleService{}
 
 		mockSLRS.
-			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), mockSetlists).
+			On("Fetch", context.TODO(), mockSetlists).
 			Return(expSetlistRoles, nil)
 
 		writer := prepareAndServeGet(t, "", mockSLRS, mockMWH)
@@ -107,7 +106,7 @@ func TestGetAll(t *testing.T) {
 		mockSLRS := &mocks.MockSetlistRoleService{}
 
 		mockSLRS.
-			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), mockSetlists).
+			On("Fetch", context.TODO(), mockSetlists).
 			Return(expFilteredSetlistRoles, nil)
 
 		writer := prepareAndServeGet(t, "?setlist=1", mockSLRS, mockMWH)
@@ -154,7 +153,7 @@ func TestGetAll(t *testing.T) {
 		mockSLRS := &mocks.MockSetlistRoleService{}
 
 		mockSLRS.
-			On("Fetch", mock.AnythingOfType("*context.emptyCtx"), mockSetlists).
+			On("Fetch", context.TODO(), mockSetlists).
 			Return(nil, expErr)
 
 		writer := prepareAndServeGet(t, "", mockSLRS, mockMWH)

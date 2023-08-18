@@ -13,7 +13,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/userhandler"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeGet(
@@ -64,7 +63,7 @@ func TestGetAllCorrect(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockUS.
-		On("FetchAll", mock.Anything).
+		On("FetchAll", context.TODO()).
 		Return(mockUsers, nil)
 
 	writer := prepareAndServeGet(t, mockUS, mockTS, "")
@@ -85,7 +84,7 @@ func TestGetAllInternalErr(t *testing.T) {
 	mockUS := &mocks.MockUserService{}
 
 	mockUS.
-		On("FetchAll", mock.Anything).
+		On("FetchAll", context.TODO()).
 		Return(nil, expectedErr)
 
 	writer := prepareAndServeGet(t, mockUS, mockTS, "")

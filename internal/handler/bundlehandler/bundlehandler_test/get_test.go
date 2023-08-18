@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func prepareAndServeGet(
@@ -70,7 +69,7 @@ func TestGetByIDCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockBS.
-		On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), mockBundle.ID).
+		On("FetchByID", context.TODO(), mockBundle.ID).
 		Return(mockBundle, nil)
 
 	writer := prepareAndServeGet(t, "/1", mockBS, mockMWH)
@@ -134,7 +133,7 @@ func TestGetNoRecord(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockBS.
-		On("FetchByID", mock.AnythingOfType("*context.emptyCtx"), int64(-1)).
+		On("FetchByID", context.TODO(), int64(-1)).
 		Return(nil, mockErr)
 
 	writer := prepareAndServeGet(t, "/-1", mockBS, mockMWH)
@@ -177,7 +176,7 @@ func TestGetAllCorrect(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockBS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(mockBundles, nil)
 
 	writer := prepareAndServeGet(t, "", mockBS, mockMWH)
@@ -213,7 +212,7 @@ func TestGetAllFetchErr(t *testing.T) {
 		On("AuthenticateUser").
 		Return(mockAuthHF)
 	mockBS.
-		On("FetchAll", mock.AnythingOfType("*context.emptyCtx")).
+		On("FetchAll", context.TODO()).
 		Return(nil, mockErr)
 
 	writer := prepareAndServeGet(t, "", mockBS, mockMWH)

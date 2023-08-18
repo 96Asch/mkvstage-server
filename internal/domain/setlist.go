@@ -3,17 +3,14 @@ package domain
 import (
 	"context"
 	"time"
-
-	"gorm.io/datatypes"
 )
 
 type Setlist struct {
-	ID        int64          `json:"id"`
-	Name      string         `json:"name"`
-	CreatorID int64          `json:"creator_id"`
-	Deadline  time.Time      `json:"deadline"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	Order     datatypes.JSON `json:"-"`
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	CreatorID int64     `json:"creator_id"`
+	Deadline  time.Time `json:"deadline"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type SetlistService interface {

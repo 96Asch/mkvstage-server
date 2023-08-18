@@ -19,3 +19,14 @@ func (m MockMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
 
 	return r0
 }
+
+func (m MockMiddlewareHandler) JWTExtractEmail() gin.HandlerFunc {
+	ret := m.Called()
+
+	var r0 gin.HandlerFunc
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(gin.HandlerFunc)
+	}
+
+	return r0
+}

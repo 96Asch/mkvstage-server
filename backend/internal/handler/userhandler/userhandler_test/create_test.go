@@ -19,7 +19,7 @@ import (
 func prepareAndServeCreate(
 	t *testing.T,
 	mockUS domain.UserService,
-	mockTS domain.TokenService,
+	mockMWH domain.MiddlewareHandler,
 	body *[]byte,
 ) *httptest.ResponseRecorder {
 	t.Helper()
@@ -28,7 +28,7 @@ func prepareAndServeCreate(
 	router := gin.New()
 	writer := httptest.NewRecorder()
 
-	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS)
+	userhandler.Initialize(&router.RouterGroup, mockUS, mockMWH)
 
 	requestBody := bytes.NewReader(*body)
 
@@ -40,137 +40,196 @@ func prepareAndServeCreate(
 	return writer
 }
 
-func TestCreateCorrect(t *testing.T) {
-	t.Parallel()
-
+func TestCreate(t *testing.T) {
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
-		Password:     "FooBar",
 		Email:        "Foo@Bar.com",
 		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",
 	}
 
-	mockTS := &mocks.MockTokenService{}
-	mockUS := &mocks.MockUserService{}
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("email", "Foo@Bar.com")
+		ctx.Next()
+	}
 
-	mockUS.
-		On("Store", context.TODO(), mockUser).
-		Return(nil).
-		Run(func(args mock.Arguments) {
-			arg, ok := args.Get(1).(*domain.User)
-			assert.True(t, ok)
-			arg.ID = 1
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
+		mockMWH := &mocks.MockMiddlewareHandler{}
+		mockUS := &mocks.MockUserService{}
+
+		mockUS.
+			On("Store", context.TODO(), mockUser).
+			Return(nil).
+			Run(func(args mock.Arguments) {
+				arg, ok := args.Get(1).(*domain.User)
+				assert.True(t, ok)
+				arg.ID = 1
+			})
+
+		mockMWH.
+			On("JWTExtractEmail").
+			Return(mockAuthHF)
+
+		byteBody, err := json.Marshal(gin.H{
+			"first_name":    "Foo",
+			"last_name":     "Bar",
+			"profile_color": "FFFFFF",
 		})
+		assert.NoError(t, err)
 
-	byteBody, err := json.Marshal(gin.H{
-		"first_name":    "Foo",
-		"last_name":     "Bar",
-		"email":         "Foo@Bar.com",
-		"password":      "FooBar",
-		"profile_color": "FFFFFF",
+		writer := prepareAndServeCreate(t, mockUS, mockMWH, &byteBody)
+
+		expbody, err := json.Marshal(gin.H{
+			"user": &domain.User{
+				ID:           1,
+				FirstName:    "Foo",
+				LastName:     "Bar",
+				Email:        "Foo@Bar.com",
+				Permission:   domain.GUEST,
+				ProfileColor: "FFFFFF",
+			},
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, http.StatusCreated, writer.Code)
+		assert.Equal(t, expbody, writer.Body.Bytes())
+		mockUS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
 	})
-	assert.NoError(t, err)
 
-	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
+	t.Run("Fail no context", func(t *testing.T) {
+		t.Parallel()
 
-	expectedUser, err := json.Marshal(gin.H{
-		"user": &domain.User{
-			ID:           1,
-			FirstName:    "Foo",
-			LastName:     "Bar",
-			Email:        "Foo@Bar.com",
-			Permission:   domain.GUEST,
-			ProfileColor: "FFFFFF",
-		},
+		expErr := domain.NewInternalErr()
+
+		var emptyMockAuth gin.HandlerFunc = func(ctx *gin.Context) {}
+		mockMWH := &mocks.MockMiddlewareHandler{}
+		mockUS := &mocks.MockUserService{}
+
+		mockMWH.
+			On("JWTExtractEmail").
+			Return(emptyMockAuth)
+
+		byteBody, err := json.Marshal(gin.H{
+			"first_name":    "Foo",
+			"last_name":     "Bar",
+			"profile_color": "FFFFFF",
+		})
+		assert.NoError(t, err)
+
+		writer := prepareAndServeCreate(t, mockUS, mockMWH, &byteBody)
+
+		expbody, err := json.Marshal(gin.H{
+			"error": expErr.Message,
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, expErr.Status(), writer.Code)
+		assert.Equal(t, expbody, writer.Body.Bytes())
+		mockUS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
 	})
-	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusCreated, writer.Code)
-	assert.Equal(t, expectedUser, writer.Body.Bytes())
-	mockUS.AssertExpectations(t)
-}
+	t.Run("Fail email conversion err", func(t *testing.T) {
+		t.Parallel()
 
-func TestCreateInvalidEmail(t *testing.T) {
-	t.Parallel()
+		expErr := domain.NewInternalErr()
+		mockMWH := &mocks.MockMiddlewareHandler{}
+		mockUS := &mocks.MockUserService{}
 
-	mockTS := &mocks.MockTokenService{}
-	mockUS := &mocks.MockUserService{}
+		var wrongMockAuth gin.HandlerFunc = func(ctx *gin.Context) {
+			ctx.Set("email", mockUser)
+			ctx.Next()
+		}
 
-	byteBody, err := json.Marshal(gin.H{
-		"first_name":    "Foo",
-		"last_name":     "Bar",
-		"email":         "Foocom",
-		"password":      "Foo",
-		"profile_color": "Foo",
+		mockMWH.
+			On("JWTExtractEmail").
+			Return(wrongMockAuth)
+
+		byteBody, err := json.Marshal(gin.H{
+			"first_name":    "Foo",
+			"last_name":     "Bar",
+			"profile_color": "FFFFFF",
+		})
+		assert.NoError(t, err)
+
+		writer := prepareAndServeCreate(t, mockUS, mockMWH, &byteBody)
+
+		expbody, err := json.Marshal(gin.H{
+			"error": expErr.Message,
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, expErr.Status(), writer.Code)
+		assert.Equal(t, expbody, writer.Body.Bytes())
+		mockUS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
 	})
-	assert.NoError(t, err)
 
-	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
+	t.Run("Fail invalid bind", func(t *testing.T) {
+		t.Parallel()
 
-	assert.Equal(t, http.StatusBadRequest, writer.Code)
-	mockUS.AssertNotCalled(t, "Store")
-}
+		expErr := domain.NewBadRequestErr("field 'first_name' is required")
+		mockMWH := &mocks.MockMiddlewareHandler{}
+		mockUS := &mocks.MockUserService{}
 
-func TestCreateInvalidBind(t *testing.T) {
-	t.Parallel()
+		mockMWH.
+			On("JWTExtractEmail").
+			Return(mockAuthHF)
 
-	mockUS := &mocks.MockUserService{}
-	mockTS := &mocks.MockTokenService{}
+		byteBody, err := json.Marshal(gin.H{
+			"first_names":   "Foo",
+			"last_name":     "Bar",
+			"profile_color": "Foo",
+		})
+		assert.NoError(t, err)
 
-	byteBody, err := json.Marshal(gin.H{
-		"first_name":   "Foo",
-		"last_name":    "Bar",
-		"emails":       "Foo@bar.com",
-		"password":     "Foo",
-		"profileColor": "Foo",
+		writer := prepareAndServeCreate(t, mockUS, mockMWH, &byteBody)
+
+		expbody, err := json.Marshal(gin.H{
+			"error": expErr.Message,
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, expErr.Status(), writer.Code)
+		assert.Equal(t, expbody, writer.Body.Bytes())
+		mockUS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
 	})
-	assert.NoError(t, err)
 
-	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
+	t.Run("Fail createUser error", func(t *testing.T) {
+		t.Parallel()
+		expErr := domain.NewInternalErr()
+		mockMWH := &mocks.MockMiddlewareHandler{}
+		mockUS := &mocks.MockUserService{}
 
-	assert.Equal(t, http.StatusBadRequest, writer.Code)
-	mockUS.AssertNotCalled(t, "Create")
-}
+		mockMWH.
+			On("JWTExtractEmail").
+			Return(mockAuthHF)
 
-func TestCreateServerError(t *testing.T) {
-	t.Parallel()
+		mockUS.On("Store", mock.Anything, mockUser).
+			Return(expErr)
 
-	mockUser := &domain.User{
-		FirstName:    "Foo",
-		LastName:     "Bar",
-		Email:        "Foo@Bar.com",
-		Password:     "FooBar",
-		Permission:   domain.GUEST,
-		ProfileColor: "FFFFFF",
-	}
+		byteBody, err := json.Marshal(gin.H{
+			"first_name":    "Foo",
+			"last_name":     "Bar",
+			"profile_color": "FFFFFF",
+		})
+		assert.NoError(t, err)
 
-	expectedErr := domain.NewInternalErr()
-	mockTS := &mocks.MockTokenService{}
-	mockUS := &mocks.MockUserService{}
+		writer := prepareAndServeCreate(t, mockUS, mockMWH, &byteBody)
 
-	mockUS.On("Store", mock.Anything, mockUser).
-		Return(expectedErr)
+		expbody, err := json.Marshal(gin.H{
+			"error": expErr.Message,
+		})
+		assert.NoError(t, err)
 
-	byteBody, err := json.Marshal(gin.H{
-		"first_name":    "Foo",
-		"last_name":     "Bar",
-		"email":         "Foo@Bar.com",
-		"password":      "FooBar",
-		"permission":    "member",
-		"profile_color": "FFFFFF",
+		assert.Equal(t, expErr.Status(), writer.Code)
+		assert.Equal(t, expbody, writer.Body.Bytes())
+		mockUS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
 	})
-	assert.NoError(t, err)
 
-	writer := prepareAndServeCreate(t, mockUS, mockTS, &byteBody)
-
-	expectedRes, err := json.Marshal(gin.H{
-		"error": expectedErr,
-	})
-	assert.NoError(t, err)
-
-	assert.Equal(t, http.StatusInternalServerError, writer.Code)
-	assert.Equal(t, expectedRes, writer.Body.Bytes())
-	mockUS.AssertExpectations(t)
 }

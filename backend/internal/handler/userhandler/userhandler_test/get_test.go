@@ -18,7 +18,7 @@ import (
 func prepareAndServeGet(
 	t *testing.T,
 	mockUS domain.UserService,
-	mockTS domain.TokenService,
+	mockMWH domain.MiddlewareHandler,
 	param string,
 ) *httptest.ResponseRecorder {
 	t.Helper()
@@ -27,7 +27,7 @@ func prepareAndServeGet(
 	router := gin.New()
 	writer := httptest.NewRecorder()
 
-	userhandler.Initialize(&router.RouterGroup, mockUS, mockTS)
+	userhandler.Initialize(&router.RouterGroup, mockUS, mockMWH)
 
 	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, fmt.Sprintf("/users%s", param), nil)
 	assert.NoError(t, err)
@@ -37,9 +37,7 @@ func prepareAndServeGet(
 	return writer
 }
 
-func TestGetAllCorrect(t *testing.T) {
-	t.Parallel()
-
+func TestGetAll(t *testing.T) {
 	mockUsers := &[]domain.User{
 		{
 			ID:           1,
@@ -59,40 +57,49 @@ func TestGetAllCorrect(t *testing.T) {
 		},
 	}
 
-	mockTS := &mocks.MockTokenService{}
-	mockUS := &mocks.MockUserService{}
+	mockMWH := &mocks.MockMiddlewareHandler{}
 
-	mockUS.
-		On("FetchAll", context.TODO()).
-		Return(mockUsers, nil)
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
+		ctx.Set("email", "Foo@Bar.com")
+		ctx.Next()
+	}
 
-	writer := prepareAndServeGet(t, mockUS, mockTS, "")
+	mockMWH.On("JWTExtractEmail").Return(mockAuthHF)
 
-	expectedRes, err := json.Marshal(gin.H{"users": mockUsers})
-	assert.NoError(t, err)
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
 
-	assert.Equal(t, http.StatusOK, writer.Code)
-	assert.Equal(t, expectedRes, writer.Body.Bytes())
-	mockUS.AssertExpectations(t)
-}
+		mockUS := &mocks.MockUserService{}
+		mockUS.
+			On("FetchAll", context.TODO()).
+			Return(mockUsers, nil)
 
-func TestGetAllInternalErr(t *testing.T) {
-	t.Parallel()
+		writer := prepareAndServeGet(t, mockUS, mockMWH, "")
 
-	expectedErr := domain.NewInternalErr()
-	mockTS := &mocks.MockTokenService{}
-	mockUS := &mocks.MockUserService{}
+		expectedRes, err := json.Marshal(gin.H{"users": mockUsers})
+		assert.NoError(t, err)
 
-	mockUS.
-		On("FetchAll", context.TODO()).
-		Return(nil, expectedErr)
+		assert.Equal(t, http.StatusOK, writer.Code)
+		assert.Equal(t, expectedRes, writer.Body.Bytes())
+		mockUS.AssertExpectations(t)
+	})
 
-	writer := prepareAndServeGet(t, mockUS, mockTS, "")
+	t.Run("Fail FetchAll Error", func(t *testing.T) {
+		expectedErr := domain.NewInternalErr()
 
-	expectedRes, err := json.Marshal(gin.H{"error": expectedErr})
-	assert.NoError(t, err)
+		mockUS := &mocks.MockUserService{}
+		mockUS.
+			On("FetchAll", context.TODO()).
+			Return(nil, expectedErr)
 
-	assert.Equal(t, http.StatusInternalServerError, writer.Code)
-	assert.Equal(t, expectedRes, writer.Body.Bytes())
-	mockUS.AssertExpectations(t)
+		writer := prepareAndServeGet(t, mockUS, mockMWH, "")
+
+		expectedRes, err := json.Marshal(gin.H{"error": expectedErr})
+		assert.NoError(t, err)
+
+		assert.Equal(t, http.StatusInternalServerError, writer.Code)
+		assert.Equal(t, expectedRes, writer.Body.Bytes())
+		mockUS.AssertExpectations(t)
+	})
+
 }

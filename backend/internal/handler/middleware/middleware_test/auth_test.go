@@ -43,7 +43,6 @@ func TestAuthenticateUserCorrect(t *testing.T) {
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
-		Password:     "FooBar",
 		Email:        "Foo@Bar.com",
 		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",
@@ -95,7 +94,6 @@ func TestAuthenticateUserFetchByEmailErr(t *testing.T) {
 	mockUser := &domain.User{
 		FirstName:    "Foo",
 		LastName:     "Bar",
-		Password:     "FooBar",
 		Email:        "Foo@Bar.com",
 		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",

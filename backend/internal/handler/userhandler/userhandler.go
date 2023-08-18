@@ -8,22 +8,20 @@ import (
 )
 
 type userHandler struct {
-	userService  domain.UserService
-	tokenService domain.TokenService
+	userService domain.UserService
 }
 
-func Initialize(group *gin.RouterGroup, us domain.UserService, ts domain.TokenService) *gin.RouterGroup {
+func Initialize(group *gin.RouterGroup, us domain.UserService, mwh domain.MiddlewareHandler) *gin.RouterGroup {
 	log.Println("Setting up user handlers")
 
 	userhandler := &userHandler{
-		userService:  us,
-		tokenService: ts,
+		userService: us,
 	}
 
 	users := group.Group("users")
 
 	users.GET("", userhandler.GetAll)
-	users.POST("/create", userhandler.Create)
+	users.POST("/create", mwh.JWTExtractEmail(), userhandler.Create)
 
 	return users
 }

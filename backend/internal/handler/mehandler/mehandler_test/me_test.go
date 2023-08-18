@@ -45,7 +45,6 @@ func TestMeCorrect(t *testing.T) {
 		FirstName:    "Foo",
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
-		Password:     "FooBar",
 		Permission:   domain.MEMBER,
 		ProfileColor: "FFFFFF",
 	}
@@ -108,7 +107,6 @@ func TestMeNotFound(t *testing.T) {
 		FirstName:    "Foo",
 		LastName:     "Bar",
 		Email:        "Foo@Bar.com",
-		Password:     "FooBar",
 		Permission:   domain.GUEST,
 		ProfileColor: "FFFFFF",
 	}

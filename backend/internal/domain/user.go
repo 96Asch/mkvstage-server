@@ -19,7 +19,6 @@ const (
 type User struct {
 	ID           int64          `json:"id"`
 	Email        string         `json:"email" gorm:"unique"`
-	Password     string         `json:"-"`
 	FirstName    string         `json:"first_name"`
 	LastName     string         `json:"last_name"`
 	Permission   Clearance      `json:"permission"`
@@ -38,7 +37,6 @@ type UserService interface {
 	Store(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
 	Remove(ctx context.Context, user *User, id int64) (int64, error)
-	Authorize(ctx context.Context, email, password string) (*User, error)
 }
 
 type UserRepository interface {

@@ -41,7 +41,6 @@ func (mh meHandler) Update(ctx *gin.Context) {
 
 	user := domain.User{
 		ID:           tokenUser.ID,
-		Password:     uUser.Password,
 		FirstName:    uUser.FirstName,
 		LastName:     uUser.LastName,
 		Permission:   tokenUser.Permission,

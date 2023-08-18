@@ -41,7 +41,12 @@ func (ss songService) FetchAll(ctx context.Context) (*[]domain.Song, error) {
 }
 
 func (ss songService) Fetch(ctx context.Context, options *domain.SongFilterOptions) ([]domain.Song, error) {
-	return []domain.Song{}, nil
+	songs, err := ss.sr.Get(ctx, options)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return songs, nil
 }
 
 func (ss songService) Update(ctx context.Context, song *domain.Song, principal *domain.User) error {

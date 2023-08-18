@@ -49,7 +49,40 @@ func (sr gormSongRepository) GetAll(ctx context.Context) (*[]domain.Song, error)
 }
 
 func (sr gormSongRepository) Get(ctx context.Context, options *domain.SongFilterOptions) ([]domain.Song, error) {
-	return []domain.Song{}, nil
+	transaction := sr.db.Model(&domain.Song{})
+
+	if len(options.IDs) > 0 {
+		transaction = transaction.Where("id IN ?", options.IDs)
+	}
+
+	if len(options.BIDs) > 0 {
+		transaction = transaction.Where("bundle_id IN ?", options.BIDs)
+	}
+
+	if len(options.CIDs) > 0 {
+		transaction = transaction.Where("creator_id IN ?", options.CIDs)
+	}
+
+	if len(options.Keys) > 0 {
+		transaction = transaction.Where("key IN ?", options.Keys)
+	}
+
+	if len(options.Bpms) > 0 {
+		transaction = transaction.Where("bpm IN ?", options.Bpms)
+	}
+
+	if options.Title != "" {
+		transaction = transaction.Where("title LIKE ?", options.Title)
+	}
+
+	var songs []domain.Song
+	res := transaction.Find(&songs)
+
+	if res.Error != nil {
+		return nil, domain.NewInternalErr()
+	}
+
+	return songs, nil
 }
 
 func (sr gormSongRepository) Create(ctx context.Context, song *domain.Song) error {

@@ -12,6 +12,65 @@ import (
 	"gorm.io/datatypes"
 )
 
+func TestSongServiceFetch(t *testing.T) {
+	mockSongs := []domain.Song{
+		{
+			ID:    1,
+			Title: "Foobar",
+		},
+		{
+			ID:    2,
+			Title: "Barfoo",
+		},
+	}
+
+	mockFilterOptions := &domain.SongFilterOptions{}
+
+	mockUR := &mocks.MockUserRepository{}
+	mockBR := &mocks.MockBundleRepository{}
+
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
+
+		mockSR := &mocks.MockSongRepository{}
+
+		mockSR.
+			On("Get", context.TODO(), mockFilterOptions).
+			Return(mockSongs, nil)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+
+		songs, err := ss.Fetch(context.TODO(), mockFilterOptions)
+
+		assert.NoError(t, err)
+		assert.Equal(t, mockSongs, songs)
+		mockSR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+	})
+
+	t.Run("fail Song Get error", func(t *testing.T) {
+		t.Parallel()
+
+		expErr := domain.NewInternalErr()
+		mockSR := &mocks.MockSongRepository{}
+
+		mockSR.
+			On("Get", context.TODO(), mockFilterOptions).
+			Return(nil, expErr)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+
+		songs, err := ss.Fetch(context.TODO(), mockFilterOptions)
+
+		assert.ErrorAs(t, err, &expErr)
+		assert.Nil(t, songs)
+		mockSR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+	})
+}
+
 func TestSongServiceStore(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,

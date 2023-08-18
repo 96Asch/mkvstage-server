@@ -23,7 +23,15 @@ func (gmh ginMiddlewareHandler) AuthenticateUser() gin.HandlerFunc {
 
 		context := ctx.Request.Context()
 
-		user, err := gmh.TS.ExtractUser(context, header.Access)
+		email, err := gmh.TS.ExtractEmail(context, header.Access)
+		if err != nil {
+			ctx.JSON(domain.Status(err), gin.H{"error": err})
+			ctx.Abort()
+
+			return
+		}
+
+		user, err := gmh.US.FetchByEmail(context, email)
 		if err != nil {
 			ctx.JSON(domain.Status(err), gin.H{"error": err})
 			ctx.Abort()

@@ -10,7 +10,6 @@ import (
 	"github.com/96Asch/mkvstage-server/internal/handler/setlisthandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/setlistrolehandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/songhandler"
-	"github.com/96Asch/mkvstage-server/internal/handler/tokenhandler"
 	userhandler "github.com/96Asch/mkvstage-server/internal/handler/userhandler"
 	"github.com/96Asch/mkvstage-server/internal/handler/userrolehandler"
 	"github.com/gin-gonic/gin"
@@ -43,7 +42,6 @@ func Initialize(config *Config) {
 	version1 := base.Group("v1")
 
 	ug := userhandler.Initialize(version1, config.U, config.T)
-	tokenhandler.Initialize(version1, config.T, config.U)
 	mehandler.Initialize(ug, config.U, config.T, config.MH)
 	bundlehandler.Initialize(version1, config.B, config.MH)
 	songhandler.Initialize(version1, config.S, config.MH)

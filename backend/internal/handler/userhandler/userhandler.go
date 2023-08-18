@@ -24,7 +24,6 @@ func Initialize(group *gin.RouterGroup, us domain.UserService, ts domain.TokenSe
 
 	users.GET("", userhandler.GetAll)
 	users.POST("/create", userhandler.Create)
-	users.POST("/login", userhandler.Login)
 
 	return users
 }

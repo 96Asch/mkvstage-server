@@ -34,6 +34,7 @@ func (u User) HasClearance(clearance Clearance) bool {
 
 type UserService interface {
 	Fetcher[User]
+	FetchByEmail(ctx context.Context, email string) (*User, error)
 	Store(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
 	Remove(ctx context.Context, user *User, id int64) (int64, error)

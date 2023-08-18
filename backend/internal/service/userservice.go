@@ -31,6 +31,15 @@ func (us *userService) FetchByID(ctx context.Context, id int64) (*domain.User, e
 	return user, nil
 }
 
+func (us *userService) FetchByEmail(ctx context.Context, email string) (*domain.User, error) {
+	user, err := us.ur.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, domain.FromError(err)
+	}
+
+	return user, nil
+}
+
 func (us *userService) FetchAll(ctx context.Context) (*[]domain.User, error) {
 	users, err := us.ur.GetAll(ctx)
 	if err != nil {

@@ -29,5 +29,4 @@ func Initialize(
 	me.GET("", mehandler.Me)
 	me.PUT("/update", mehandler.Update)
 	me.DELETE("/delete", mehandler.Delete)
-	me.DELETE("/logout", mehandler.Logout)
 }

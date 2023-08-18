@@ -14,13 +14,13 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func prepareAndServeAuthenticate(t *testing.T, mockTS domain.TokenService, token string) *httptest.ResponseRecorder {
+func prepareAndServeAuthenticate(t *testing.T, mockUS domain.UserService, mockTS domain.TokenService, token string) *httptest.ResponseRecorder {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 
 	router := gin.New()
 	writer := httptest.NewRecorder()
-	gmh := middleware.NewGinMiddlewareHandler(mockTS)
+	gmh := middleware.NewGinMiddlewareHandler(mockUS, mockTS)
 
 	router.POST("/auth", gmh.AuthenticateUser())
 
@@ -51,12 +51,18 @@ func TestAuthenticateUserCorrect(t *testing.T) {
 
 	mockAccess := "access-token"
 
-	mockTS := new(mocks.MockTokenService)
-	mockTS.
-		On("ExtractUser", mock.AnythingOfType("*gin.Context"), mockAccess).
+	mockUS := &mocks.MockUserService{}
+	mockTS := &mocks.MockTokenService{}
+
+	mockUS.
+		On("FetchByEmail", mock.AnythingOfType("*gin.Context"), mockUser.Email).
 		Return(mockUser, nil)
 
-	writer := prepareAndServeAuthenticate(t, mockTS, mockAccess)
+	mockTS.
+		On("ExtractEmail", mock.AnythingOfType("*gin.Context"), mockAccess).
+		Return(mockUser.Email, nil)
+
+	writer := prepareAndServeAuthenticate(t, mockUS, mockTS, mockAccess)
 	assert.Equal(t, http.StatusOK, writer.Code)
 	mockTS.AssertExpectations(t)
 }
@@ -66,13 +72,49 @@ func TestAuthenticateUserExtractErr(t *testing.T) {
 
 	expErr := domain.NewBadRequestErr("")
 	mockAccess := "access-token"
+	mockUS := &mocks.MockUserService{}
 	mockTS := &mocks.MockTokenService{}
 
 	mockTS.
-		On("ExtractUser", mock.AnythingOfType("*gin.Context"), mockAccess).
+		On("ExtractEmail", mock.AnythingOfType("*gin.Context"), mockAccess).
 		Return(nil, expErr)
 
-	writer := prepareAndServeAuthenticate(t, mockTS, mockAccess)
+	writer := prepareAndServeAuthenticate(t, mockUS, mockTS, mockAccess)
+	assert.Equal(t, domain.Status(expErr), writer.Code)
+
+	expBody, err := json.Marshal(gin.H{"error": expErr})
+	assert.NoError(t, err)
+
+	assert.Equal(t, expBody, writer.Body.Bytes())
+	mockTS.AssertExpectations(t)
+}
+
+func TestAuthenticateUserFetchByEmailErr(t *testing.T) {
+	t.Parallel()
+
+	mockUser := &domain.User{
+		FirstName:    "Foo",
+		LastName:     "Bar",
+		Password:     "FooBar",
+		Email:        "Foo@Bar.com",
+		Permission:   domain.GUEST,
+		ProfileColor: "FFFFFF",
+	}
+
+	expErr := domain.NewBadRequestErr("")
+	mockAccess := "access-token"
+	mockUS := &mocks.MockUserService{}
+	mockTS := &mocks.MockTokenService{}
+
+	mockUS.
+		On("FetchByEmail", mock.AnythingOfType("*gin.Context"), mockUser.Email).
+		Return(nil, expErr)
+
+	mockTS.
+		On("ExtractEmail", mock.AnythingOfType("*gin.Context"), mockAccess).
+		Return(mockUser.Email, nil)
+
+	writer := prepareAndServeAuthenticate(t, mockUS, mockTS, mockAccess)
 	assert.Equal(t, domain.Status(expErr), writer.Code)
 
 	expBody, err := json.Marshal(gin.H{"error": expErr})

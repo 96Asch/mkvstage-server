@@ -118,13 +118,12 @@ func setupStore() (*gorm.DB, *redis.Client) {
 
 func main() {
 	router := gin.Default()
-	database, tokenDatabase := setupStore()
+	database, _ := setupStore()
 
 	accessSecret := os.Getenv("ACCESS_SECRET")
 	refreshSecret := os.Getenv("REFRESH_SECRET")
 
 	userRepo := repository.NewGormUserRepository(database)
-	tokenRepo := repository.NewRedisTokenRepository(tokenDatabase)
 	bundleRepo := repository.NewGormBundleRepository(database)
 	songRepo := repository.NewGormSongRepository(database)
 	userroleRepo := repository.NewGormUserRoleRepository(database)
@@ -134,8 +133,8 @@ func main() {
 	setlistRoleRepo := repository.NewGormSetlistRoleRepository(database)
 
 	userService := service.NewUserService(userRepo, roleRepo, userroleRepo)
-	tokenService := service.NewTokenService(tokenRepo, userRepo, accessSecret, refreshSecret)
-	mhw := middleware.NewGinMiddlewareHandler(tokenService)
+	tokenService := service.NewTokenService(accessSecret, refreshSecret)
+	mhw := middleware.NewGinMiddlewareHandler(userService, tokenService)
 	bundleService := service.NewBundleService(bundleRepo)
 	songService := service.NewSongService(userRepo, songRepo)
 	userroleService := service.NewUserRoleService(userroleRepo)

@@ -42,15 +42,8 @@ func (mh meHandler) Delete(ctx *gin.Context) {
 
 	context := ctx.Request.Context()
 
-	deletedUID, err := mh.userService.Remove(context, tokenUser, dID.ID)
+	_, err := mh.userService.Remove(context, tokenUser, dID.ID)
 	if err != nil {
-		log.Println(err)
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
-
-		return
-	}
-
-	if err := mh.tokenService.RemoveAllRefresh(context, deletedUID); err != nil {
 		log.Println(err)
 		ctx.JSON(domain.Status(err), gin.H{"error": err})
 

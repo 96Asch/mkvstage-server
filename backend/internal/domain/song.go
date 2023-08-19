@@ -14,7 +14,7 @@ type Song struct {
 	CreatorID  int64          `json:"creator_id"`
 	Title      string         `json:"title" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
 	Subtitle   string         `json:"subtitle" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
-	Key        string         `json:"key"`
+	Key        string         `json:"key" gorm:"type:varchar(3);column:song_key"`
 	Bpm        uint           `json:"bpm"`
 	ChordSheet datatypes.JSON `json:"chord_sheet"`
 	UpdatedAt  time.Time      `json:"updated_at"`

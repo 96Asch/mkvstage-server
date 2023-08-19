@@ -10,7 +10,6 @@ import (
 
 type songCreateReq struct {
 	BundleID   int64  `json:"bundle_id" binding:"required"`
-	CreatorID  int64  `json:"creator_id" binding:"required"`
 	Title      string `json:"title" binding:"required,lte=255"`
 	Subtitle   string `json:"subtitle" binding:"lte=255"`
 	Key        string `json:"key" binding:"required"`
@@ -46,7 +45,7 @@ func (sh songHandler) Create(ctx *gin.Context) {
 	context := ctx.Request.Context()
 	song := &domain.Song{
 		BundleID:   sReq.BundleID,
-		CreatorID:  sReq.CreatorID,
+		CreatorID:  user.ID,
 		Title:      sReq.Title,
 		Subtitle:   sReq.Subtitle,
 		Key:        sReq.Key,

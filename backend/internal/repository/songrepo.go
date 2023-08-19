@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/96Asch/mkvstage-server/backend/internal/domain"
 	"github.com/go-sql-driver/mysql"
@@ -64,7 +65,7 @@ func (sr gormSongRepository) Get(ctx context.Context, options *domain.SongFilter
 	}
 
 	if len(options.Keys) > 0 {
-		transaction = transaction.Where("key IN ?", options.Keys)
+		transaction = transaction.Where("song_key IN ?", options.Keys)
 	}
 
 	if len(options.Bpms) > 0 {
@@ -72,10 +73,11 @@ func (sr gormSongRepository) Get(ctx context.Context, options *domain.SongFilter
 	}
 
 	if options.Title != "" {
-		transaction = transaction.Where("title LIKE ?", options.Title)
+		transaction = transaction.Where("title LIKE ?", options.Title+"%")
 	}
 
 	var songs []domain.Song
+	log.Println(sr.db.ToSQL(func(tx *gorm.DB) *gorm.DB { return transaction }))
 	res := transaction.Find(&songs)
 
 	if res.Error != nil {

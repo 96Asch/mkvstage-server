@@ -16,7 +16,7 @@ func (sh songHandler) GetByID(ctx *gin.Context) {
 	songID, err := strconv.Atoi(idField)
 	if err != nil {
 		newErr := domain.NewBadRequestErr(err.Error())
-		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr})
+		ctx.JSON(domain.Status(newErr), gin.H{"error": newErr.Error()})
 
 		return
 	}
@@ -25,7 +25,7 @@ func (sh songHandler) GetByID(ctx *gin.Context) {
 
 	song, err := sh.ss.FetchByID(context, int64(songID))
 	if err != nil {
-		ctx.JSON(domain.Status(err), gin.H{"error": err})
+		ctx.JSON(domain.Status(err), gin.H{"error": err.Error()})
 
 		return
 	}

@@ -9,13 +9,13 @@ import (
 
 func StringToInt64Slice(field string) ([]int64, error) {
 	if field == "" {
-		return []int64{}, nil
+		return nil, nil
 	}
 
 	split := strings.Split(field, ",")
 
 	if len(split) == 0 {
-		return []int64{}, nil
+		return nil, nil
 	}
 
 	intSlice := make([]int64, len(split))
@@ -24,7 +24,7 @@ func StringToInt64Slice(field string) ([]int64, error) {
 		number, err := strconv.Atoi(val)
 
 		if err != nil {
-			return []int64{}, domain.NewBadRequestErr(err.Error())
+			return nil, domain.NewBadRequestErr(err.Error())
 		}
 
 		intSlice[idx] = int64(number)
@@ -35,13 +35,13 @@ func StringToInt64Slice(field string) ([]int64, error) {
 
 func StringToUintSlice(field string) ([]uint, error) {
 	if field == "" {
-		return []uint{}, nil
+		return nil, nil
 	}
 
 	split := strings.Split(field, ",")
 
 	if len(split) == 0 {
-		return []uint{}, nil
+		return nil, nil
 	}
 
 	intSlice := make([]uint, len(split))
@@ -50,7 +50,7 @@ func StringToUintSlice(field string) ([]uint, error) {
 		number, err := strconv.Atoi(val)
 
 		if err != nil {
-			return []uint{}, domain.NewBadRequestErr(err.Error())
+			return nil, domain.NewBadRequestErr(err.Error())
 		}
 
 		intSlice[idx] = uint(number)

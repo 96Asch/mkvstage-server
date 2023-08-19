@@ -63,6 +63,9 @@ func (sh songHandler) Get(ctx *gin.Context) {
 	}
 
 	keys := strings.Split(keysQuery, ",")
+	if keys[0] == "" {
+		keys = nil
+	}
 
 	bpms, err := util.StringToUintSlice(bpmsQuery)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/96Asch/mkvstage-server/backend/internal/domain"
 	"github.com/go-sql-driver/mysql"
@@ -77,7 +76,7 @@ func (sr gormSongRepository) Get(ctx context.Context, options *domain.SongFilter
 	}
 
 	var songs []domain.Song
-	log.Println(sr.db.ToSQL(func(tx *gorm.DB) *gorm.DB { return transaction }))
+
 	res := transaction.Find(&songs)
 
 	if res.Error != nil {

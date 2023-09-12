@@ -1,12 +1,9 @@
-import * as models from "../model"
+import models from '../model';
 
-import makeRedisTokenRepo from "./tokenredis"
-import makeUserPg from "./userpg"
+import makeRedisTokenRepo from './tokenredis';
+import makeUserPg from './userpg';
 
-const redisDb = makeRedisTokenRepo(models)
-const userDb = makeUserPg(models)
+const redisDb = makeRedisTokenRepo(models);
+const userDb = makeUserPg(models.pgPool);
 
-export {
-    redisDb,
-    userDb
-}
+export { redisDb, userDb };

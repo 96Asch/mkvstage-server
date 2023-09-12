@@ -1,8 +1,8 @@
-import { makeBadRequestError } from '../../model/error';
+import { makeBadRequestError, makeNotAuthorizedError } from '../../model/error';
 import { User } from '../../model/user';
 import validator from '../../util/password';
 
-export default function makeAuthenticateUser({ userDb }) {
+export default function makeAuthenticateUser({ userDb }: { userDb: any }) {
     return async function authenticateUser(
         email: string,
         password: string
@@ -16,7 +16,7 @@ export default function makeAuthenticateUser({ userDb }) {
         const user = retrievedUsers[0];
 
         if (user.email !== email || !validator.validate(password, user.password)) {
-            return null;
+            throw makeNotAuthorizedError();
         }
 
         return user;

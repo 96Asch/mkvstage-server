@@ -4,9 +4,13 @@ const { REDIS_EXP_HOURS, REDIS_PORT, REDIS_HOST } = process.env;
 
 const redisClient = new Redis({
     host: REDIS_HOST,
-    port: parseInt(REDIS_PORT),
+    port: parseInt(REDIS_PORT ?? ''),
 });
 
 export default redisClient;
+
+if (!REDIS_EXP_HOURS || !REDIS_PORT || !REDIS_HOST) {
+    process.exit(-1);
+}
 
 export const REDIS_EXP: number = parseInt(REDIS_EXP_HOURS) * 3600;

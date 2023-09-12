@@ -14,7 +14,7 @@ type Song struct {
 	CreatorID  int64          `json:"creator_id"`
 	Title      string         `json:"title" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
 	Subtitle   string         `json:"subtitle" gorm:"type:varchar(255);uniqueIndex:title_subtitle"`
-	Key        string         `json:"key"`
+	Key        string         `json:"key" gorm:"type:varchar(3);column:song_key"`
 	Bpm        uint           `json:"bpm"`
 	ChordSheet datatypes.JSON `json:"chord_sheet"`
 	UpdatedAt  time.Time      `json:"updated_at"`
@@ -40,8 +40,18 @@ func (song Song) IsValidKey() bool {
 	return false
 }
 
+type SongFilterOptions struct {
+	IDs   []int64
+	BIDs  []int64
+	CIDs  []int64
+	Title string
+	Keys  []string
+	Bpms  []uint
+}
+
 type SongService interface {
 	Fetcher[Song]
+	Fetch(ctx context.Context, options *SongFilterOptions) ([]Song, error)
 	AuthSingleRemover[Song]
 	AuthSingleStorer[Song]
 	AuthSingleUpdater[Song]
@@ -49,6 +59,7 @@ type SongService interface {
 
 type SongRepository interface {
 	Getter[Song]
+	Get(ctx context.Context, options *SongFilterOptions) ([]Song, error)
 	Create(ctx context.Context, song *Song) error
 	Delete(ctx context.Context, sid int64) error
 	Update(ctx context.Context, song *Song) error

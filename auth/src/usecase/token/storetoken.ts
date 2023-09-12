@@ -3,7 +3,7 @@ import secrets from '../../model/token';
 import { User } from '../../model/user';
 import jwt from '../../util/jwt';
 
-export default function makeCreateTokens({ redisDb }) {
+export default function makeCreateTokens({ redisDb }: { redisDb: any }) {
     return async function createTokens(sender: string, user: User): Promise<TokenPair> {
         const accesToken = jwt.create(
             { email: user.email },

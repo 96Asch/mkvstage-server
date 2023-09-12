@@ -31,7 +31,7 @@ func prepareAndServeDelete(
 	req, err := http.NewRequestWithContext(
 		context.TODO(),
 		http.MethodDelete,
-		fmt.Sprintf("/songs/%s/delete", param),
+		fmt.Sprintf("/songs/%s", param),
 		nil,
 	)
 	assert.NoError(t, err)

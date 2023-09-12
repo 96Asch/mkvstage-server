@@ -12,9 +12,66 @@ import (
 	"gorm.io/datatypes"
 )
 
-func TestCreateSongCorrect(t *testing.T) {
-	t.Parallel()
+func TestSongServiceFetch(t *testing.T) {
+	mockSongs := []domain.Song{
+		{
+			ID:    1,
+			Title: "Foobar",
+		},
+		{
+			ID:    2,
+			Title: "Barfoo",
+		},
+	}
 
+	mockFilterOptions := &domain.SongFilterOptions{}
+
+	mockUR := &mocks.MockUserRepository{}
+	mockBR := &mocks.MockBundleRepository{}
+
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
+
+		mockSR := &mocks.MockSongRepository{}
+
+		mockSR.
+			On("Get", context.TODO(), mockFilterOptions).
+			Return(mockSongs, nil)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+
+		songs, err := ss.Fetch(context.TODO(), mockFilterOptions)
+
+		assert.NoError(t, err)
+		assert.Equal(t, mockSongs, songs)
+		mockSR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+	})
+
+	t.Run("fail Song Get error", func(t *testing.T) {
+		t.Parallel()
+
+		expErr := domain.NewInternalErr()
+		mockSR := &mocks.MockSongRepository{}
+
+		mockSR.
+			On("Get", context.TODO(), mockFilterOptions).
+			Return(nil, expErr)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+
+		songs, err := ss.Fetch(context.TODO(), mockFilterOptions)
+
+		assert.ErrorAs(t, err, &expErr)
+		assert.Nil(t, songs)
+		mockSR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+	})
+}
+
+func TestSongServiceStore(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.EDITOR,
@@ -25,333 +82,134 @@ func TestCreateSongCorrect(t *testing.T) {
 		Title:      "Foo",
 		Subtitle:   "Bar",
 		Key:        "A",
+		BundleID:   1,
 		Bpm:        120,
 		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "foobar",
+		ParentID: 0,
+	}
 
-	mockUR.
-		On("GetByID", context.TODO(), mockSong.CreatorID).
-		Return(mockUser, nil)
-	mockSR.
-		On("Create", context.TODO(), mockSong).
-		Return(nil).
-		Run(func(args mock.Arguments) {
-			arg, ok := args.Get(1).(*domain.Song)
-			assert.True(t, ok)
-			arg.ID = 1
-		})
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
 
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockSong := &domain.Song{
+			CreatorID:  mockUser.ID,
+			Title:      "Foo",
+			Subtitle:   "Bar",
+			Key:        "A",
+			BundleID:   1,
+			Bpm:        120,
+			ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
+		}
+		mockBR.
+			On("GetByID", context.TODO(), mockSong.BundleID).
+			Return(mockBundle, nil)
+		mockSR.
+			On("Create", context.TODO(), mockSong).
+			Return(nil).
+			Run(func(args mock.Arguments) {
+				arg, ok := args.Get(1).(*domain.Song)
+				assert.True(t, ok)
+				arg.ID = 1
+			})
 
-	err := ss.Store(ctx, mockSong, mockUser)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Store(ctx, mockSong, mockUser)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, mockSong.ID)
+		mockSR.AssertExpectations(t)
+	})
+
+	t.Run("Fail invalid permission", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewNotAuthorizedErr("")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockUser := &domain.User{ID: 1, Permission: domain.GUEST}
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		mockUser.Permission = domain.GUEST
+		err := ss.Store(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		mockSR.AssertExpectations(t)
+	})
+
+	t.Run("Fail invalid key", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewBadRequestErr("")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockSong := &domain.Song{Key: "R"}
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Store(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		assert.Empty(t, mockSong.ID)
+		mockSR.AssertExpectations(t)
+	})
+
+	t.Run("Fail invalid chordsheet", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewBadRequestErr("")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockSong := &domain.Song{Key: "A", ChordSheet: datatypes.JSON([]byte(`{"`))}
+
+		mockUR.
+			On("GetByID", context.TODO(), mockSong.CreatorID).
+			Return(mockUser, nil)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Store(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		assert.Empty(t, mockSong.ID)
+		mockSR.AssertExpectations(t)
+	})
+
+	t.Run("Fail Bundle GetByID error", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewRecordNotFoundErr("", "")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+
+		mockBR.
+			On("GetByID", context.TODO(), mockSong.BundleID).
+			Return(nil, mockErr)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Store(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		assert.Empty(t, mockSong.ID)
+		mockSR.AssertExpectations(t)
+	})
 }
 
-func TestCreateSongNoClearance(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.GUEST,
-	}
-
-	mockSong := &domain.Song{
-		CreatorID:  mockUser.ID,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Store(ctx, mockSong, mockUser)
-	mockErr := domain.NewNotAuthorizedErr("")
-	assert.ErrorAs(t, err, &mockErr)
-	assert.Empty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
-}
-
-func TestCreateSongInvalidKey(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.EDITOR,
-	}
-
-	mockSong := &domain.Song{
-		CreatorID:  mockUser.ID,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "Q",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Store(ctx, mockSong, mockUser)
-	mockErr := domain.NewBadRequestErr("")
-	assert.ErrorAs(t, err, &mockErr)
-	assert.Empty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
-}
-
-func TestCreateSongCreatorNotExists(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.EDITOR,
-	}
-
-	mockSong := &domain.Song{
-		CreatorID:  mockUser.ID,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-
-	mockErr := domain.NewRecordNotFoundErr("", "")
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	mockUR.
-		On("GetByID", context.TODO(), mockSong.CreatorID).
-		Return(nil, mockErr)
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Store(ctx, mockSong, mockUser)
-	assert.ErrorAs(t, err, &mockErr)
-	assert.Empty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
-}
-
-func TestCreateSongInvalidChordsheet(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.EDITOR,
-	}
-
-	mockSong := &domain.Song{
-		CreatorID:  mockUser.ID,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"`)),
-	}
-
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	mockUR.
-		On("GetByID", context.TODO(), mockSong.CreatorID).
-		Return(mockUser, nil)
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Store(ctx, mockSong, mockUser)
-	mockErr := domain.NewBadRequestErr("")
-	assert.ErrorAs(t, err, &mockErr)
-	assert.Empty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
-}
-
-func TestUpdateSongCorrect(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.EDITOR,
-	}
-
-	mockSong := &domain.Song{
-		ID:         1,
-		CreatorID:  mockUser.ID,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	mockUR.
-		On("GetByID", context.TODO(), mockSong.CreatorID).
-		Return(mockUser, nil)
-	mockSR.
-		On("Update", context.TODO(), mockSong).
-		Return(nil)
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Update(ctx, mockSong, mockUser)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
-}
-
-func TestUpdateSongNoClearanceNotCreator(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.GUEST,
-	}
-
-	mockSong := &domain.Song{
-		ID:         1,
-		CreatorID:  2,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	mockSR.
-		On("GetByID", context.TODO(), mockSong.ID).
-		Return(mockSong, nil)
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Update(ctx, mockSong, mockUser)
-	mockErr := domain.NewNotAuthorizedErr("")
-	assert.ErrorAs(t, err, &mockErr)
-	mockSR.AssertExpectations(t)
-}
-
-func TestUpdateSongNoClearanceGetByIDErr(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.GUEST,
-	}
-
-	mockSong := &domain.Song{
-		ID:         1,
-		CreatorID:  2,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-
-	mockErr := domain.NewRecordNotFoundErr("", "")
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	mockSR.
-		On("GetByID", context.TODO(), mockSong.ID).
-		Return(nil, mockErr)
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Update(ctx, mockSong, mockUser)
-	assert.ErrorAs(t, err, &mockErr)
-	mockSR.AssertExpectations(t)
-}
-
-func TestSongUpdateInvalidKey(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.EDITOR,
-	}
-
-	mockSong := &domain.Song{
-		CreatorID:  mockUser.ID,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "Q",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Update(ctx, mockSong, mockUser)
-	mockErr := domain.NewBadRequestErr("")
-	assert.ErrorAs(t, err, &mockErr)
-	assert.Empty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
-}
-
-func TestUpdateSongCreatorNotExists(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.EDITOR,
-	}
-
-	mockSong := &domain.Song{
-		CreatorID:  mockUser.ID,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
-
-	mockErr := domain.NewRecordNotFoundErr("", "")
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
-
-	mockUR.
-		On("GetByID", context.TODO(), mockSong.CreatorID).
-		Return(nil, mockErr)
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Update(ctx, mockSong, mockUser)
-	assert.ErrorAs(t, err, &mockErr)
-	assert.Empty(t, mockSong.ID)
-	mockSR.AssertExpectations(t)
-}
-
-func TestUpdateSongInvalidChordsheet(t *testing.T) {
-	t.Parallel()
-
+func TestSongServiceUpdate(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.EDITOR,
@@ -364,28 +222,156 @@ func TestUpdateSongInvalidChordsheet(t *testing.T) {
 		Subtitle:   "Bar",
 		Key:        "A",
 		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar}`)),
+		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
+	mockBundle := &domain.Bundle{
+		ID:       1,
+		Name:     "foobar",
+		ParentID: 0,
+	}
 
-	mockUR.
-		On("GetByID", context.TODO(), mockSong.CreatorID).
-		Return(mockUser, nil)
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
 
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
 
-	err := ss.Update(ctx, mockSong, mockUser)
-	mockErr := domain.NewBadRequestErr("")
-	assert.ErrorAs(t, err, &mockErr)
-	mockSR.AssertExpectations(t)
+		mockBR.
+			On("GetByID", context.TODO(), mockSong.BundleID).
+			Return(mockBundle, nil)
+
+		mockUR.
+			On("GetByID", context.TODO(), mockSong.CreatorID).
+			Return(mockUser, nil)
+		mockSR.
+			On("Update", context.TODO(), mockSong).
+			Return(nil)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Update(ctx, mockSong, mockUser)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, mockSong.ID)
+		mockSR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+	})
+
+	t.Run("Fail invalid permission not creator", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewNotAuthorizedErr("")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockUser := &domain.User{ID: 2, Permission: domain.MEMBER}
+
+		mockSR.
+			On("GetByID", context.TODO(), mockSong.ID).
+			Return(mockSong, nil)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Update(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		mockSR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+	})
+
+	t.Run("Fail User GetByID error", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewRecordNotFoundErr("", "")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockUser := &domain.User{ID: 1, Permission: domain.MEMBER}
+
+		mockSR.
+			On("GetByID", context.TODO(), mockSong.ID).
+			Return(nil, mockErr)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Update(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		mockSR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+	})
+
+	t.Run("Fail invalid key", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewBadRequestErr("")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockSong := &domain.Song{Key: "W"}
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Update(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		assert.Empty(t, mockSong.ID)
+		mockSR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+	})
+
+	t.Run("Fail User GetByID error", func(t *testing.T) {
+		t.Parallel()
+
+		mockErr := domain.NewRecordNotFoundErr("", "")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+
+		mockBR.
+			On("GetByID", context.TODO(), mockSong.BundleID).
+			Return(mockBundle, nil)
+		mockUR.
+			On("GetByID", context.TODO(), mockSong.CreatorID).
+			Return(nil, mockErr)
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Update(ctx, mockSong, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		mockSR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+	})
+
+	t.Run("Fail invalid chordsheet", func(t *testing.T) {
+		t.Parallel()
+
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockSong := &domain.Song{Key: "A", ChordSheet: datatypes.JSON([]byte(``))}
+
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
+
+		err := ss.Update(ctx, mockSong, mockUser)
+		mockErr := domain.NewBadRequestErr("")
+		assert.ErrorAs(t, err, &mockErr)
+		mockSR.AssertExpectations(t)
+		mockUR.AssertExpectations(t)
+		mockBR.AssertExpectations(t)
+	})
 }
 
-func TestRemoveSongCorrect(t *testing.T) {
-	t.Parallel()
-
+func TestSongServiceRemove(t *testing.T) {
 	mockUser := &domain.User{
 		ID:         1,
 		Permission: domain.GUEST,
@@ -401,79 +387,68 @@ func TestRemoveSongCorrect(t *testing.T) {
 		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
 	}
 
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
 
-	mockSR.
-		On("GetByID", context.TODO(), mockSong.ID).
-		Return(mockSong, nil)
-	mockSR.
-		On("Delete", context.TODO(), mockSong.ID).
-		Return(nil)
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
 
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
+		mockSR.
+			On("GetByID", context.TODO(), mockSong.ID).
+			Return(mockSong, nil)
+		mockSR.
+			On("Delete", context.TODO(), mockSong.ID).
+			Return(nil)
 
-	err := ss.Remove(ctx, mockSong.ID, mockUser)
-	assert.NoError(t, err)
-	mockSR.AssertExpectations(t)
-}
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
 
-func TestRemoveSongNoClearanceNotCreator(t *testing.T) {
-	t.Parallel()
+		err := ss.Remove(ctx, mockSong.ID, mockUser)
+		assert.NoError(t, err)
+		mockSR.AssertExpectations(t)
+	})
 
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.GUEST,
-	}
+	t.Run("Fail invalid permission", func(t *testing.T) {
+		t.Parallel()
 
-	mockSong := &domain.Song{
-		ID:         1,
-		CreatorID:  2,
-		Title:      "Foo",
-		Subtitle:   "Bar",
-		Key:        "A",
-		Bpm:        120,
-		ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-	}
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockUser := &domain.User{ID: 2, Permission: domain.GUEST}
 
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
+		mockSR.
+			On("GetByID", context.TODO(), mockSong.ID).
+			Return(mockSong, nil)
 
-	mockSR.
-		On("GetByID", context.TODO(), mockSong.ID).
-		Return(mockSong, nil)
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
 
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
+		err := ss.Remove(ctx, mockSong.ID, mockUser)
+		mockErr := domain.NewNotAuthorizedErr("")
+		assert.ErrorAs(t, err, &mockErr)
+		mockSR.AssertExpectations(t)
+	})
 
-	err := ss.Remove(ctx, mockSong.ID, mockUser)
-	mockErr := domain.NewNotAuthorizedErr("")
-	assert.ErrorAs(t, err, &mockErr)
-	mockSR.AssertExpectations(t)
-}
+	t.Run("Fail Song GetByID error", func(t *testing.T) {
+		t.Parallel()
 
-func TestRemoveSongNoClearanceGetByIDErr(t *testing.T) {
-	t.Parallel()
+		mockSongID := int64(1)
+		mockErr := domain.NewRecordNotFoundErr("", "")
+		mockUR := &mocks.MockUserRepository{}
+		mockSR := &mocks.MockSongRepository{}
+		mockBR := &mocks.MockBundleRepository{}
+		mockUser := &domain.User{ID: 1, Permission: domain.GUEST}
 
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.GUEST,
-	}
+		mockSR.
+			On("GetByID", context.TODO(), mockSongID).
+			Return(nil, mockErr)
 
-	mockSongID := int64(1)
-	mockErr := domain.NewRecordNotFoundErr("", "")
-	mockUR := &mocks.MockUserRepository{}
-	mockSR := &mocks.MockSongRepository{}
+		ss := service.NewSongService(mockUR, mockSR, mockBR)
+		ctx := context.TODO()
 
-	mockSR.
-		On("GetByID", context.TODO(), mockSongID).
-		Return(nil, mockErr)
-
-	ss := service.NewSongService(mockUR, mockSR)
-	ctx := context.TODO()
-
-	err := ss.Remove(ctx, mockSongID, mockUser)
-	assert.ErrorAs(t, err, &mockErr)
-	mockSR.AssertExpectations(t)
+		err := ss.Remove(ctx, mockSongID, mockUser)
+		assert.ErrorAs(t, err, &mockErr)
+		mockSR.AssertExpectations(t)
+	})
 }

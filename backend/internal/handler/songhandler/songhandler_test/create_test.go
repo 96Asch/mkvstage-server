@@ -36,7 +36,7 @@ func prepareAndServeCreate(
 	req, err := http.NewRequestWithContext(
 		context.TODO(),
 		http.MethodPost,
-		"/songs/create",
+		"/songs/",
 		requestBody,
 	)
 	assert.NoError(t, err)

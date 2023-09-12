@@ -1,7 +1,7 @@
-import pgPool from "./pg";
-import redisClient from "./redis";
+import pgPool from './pg';
+import redisClient from './redis';
 
-export {
+export default {
     redisClient,
     pgPool,
-}
+};

@@ -43,6 +43,73 @@ func prepareAndServeGet(
 	return writer
 }
 
+func TestGet(t *testing.T) {
+	mockSongs := []domain.Song{
+		{
+			ID:    1,
+			Title: "Foobar",
+		},
+		{
+			ID:    2,
+			Title: "Barfoo",
+		},
+	}
+
+	mockMWH := &mocks.MockMiddlewareHandler{}
+
+	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {}
+
+	mockMWH.
+		On("AuthenticateUser").
+		Return(mockAuthHF)
+
+	t.Run("Correct", func(t *testing.T) {
+		t.Parallel()
+
+		mockFilterOptions := &domain.SongFilterOptions{}
+		mockSS := &mocks.MockSongService{}
+
+		mockSS.
+			On("Fetch", context.TODO(), mockFilterOptions).
+			Return(mockSongs, nil)
+
+		expBody, err := json.Marshal(gin.H{
+			"songs": mockSongs,
+		})
+		assert.NoError(t, err)
+
+		writer := prepareAndServeGet(t, mockSS, mockMWH, "/")
+
+		assert.Equal(t, http.StatusOK, writer.Code)
+		assert.Equal(t, expBody, writer.Body.Bytes())
+		mockSS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
+	})
+
+	t.Run("Fail Song Fetch error", func(t *testing.T) {
+		t.Parallel()
+
+		expErr := domain.NewInternalErr()
+		mockFilterOptions := &domain.SongFilterOptions{}
+		mockSS := &mocks.MockSongService{}
+
+		mockSS.
+			On("Fetch", context.TODO(), mockFilterOptions).
+			Return(nil, expErr)
+
+		expBody, err := json.Marshal(gin.H{
+			"error": expErr.Message,
+		})
+		assert.NoError(t, err)
+
+		writer := prepareAndServeGet(t, mockSS, mockMWH, "/")
+
+		assert.Equal(t, expErr.Status(), writer.Code)
+		assert.Equal(t, expBody, writer.Body.Bytes())
+		mockSS.AssertExpectations(t)
+		mockMWH.AssertExpectations(t)
+	})
+}
 func TestGetByIDCorrect(t *testing.T) {
 	t.Parallel()
 
@@ -144,92 +211,6 @@ func TestGetByIDNoRecord(t *testing.T) {
 	writer := prepareAndServeGet(t, mockSS, mockMWH, fmt.Sprintf("/%d", sid))
 
 	assert.Equal(t, http.StatusNotFound, writer.Code)
-	mockMWH.AssertExpectations(t)
-	mockSS.AssertExpectations(t)
-}
-
-func TestGetAllCorrect(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.GUEST,
-	}
-
-	mockSongs := &[]domain.Song{
-		{
-			CreatorID:  mockUser.ID,
-			BundleID:   0,
-			Title:      "Foo",
-			Subtitle:   "Bar",
-			Key:        "A",
-			Bpm:        120,
-			ChordSheet: datatypes.JSON([]byte(`{"Verse" : "Foobar"}`)),
-		},
-		{
-			CreatorID:  mockUser.ID,
-			BundleID:   1,
-			Title:      "Bar",
-			Subtitle:   "Foo",
-			Key:        "B",
-			Bpm:        122,
-			ChordSheet: datatypes.JSON([]byte(`{"Verse" : "BarFoo"}`)),
-		},
-	}
-
-	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockSS := &mocks.MockSongService{}
-
-	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
-		ctx.Set("user", mockUser)
-		ctx.Next()
-	}
-
-	mockMWH.
-		On("AuthenticateUser").
-		Return(mockAuthHF)
-	mockSS.
-		On("FetchAll", context.TODO()).
-		Return(mockSongs, nil)
-
-	writer := prepareAndServeGet(t, mockSS, mockMWH, "")
-
-	expectedBody, err := json.Marshal(gin.H{"songs": mockSongs})
-	assert.NoError(t, err)
-
-	assert.Equal(t, http.StatusOK, writer.Code)
-	assert.Equal(t, expectedBody, writer.Body.Bytes())
-	mockMWH.AssertExpectations(t)
-	mockSS.AssertExpectations(t)
-}
-
-func TestGetAllFetchErr(t *testing.T) {
-	t.Parallel()
-
-	mockUser := &domain.User{
-		ID:         1,
-		Permission: domain.GUEST,
-	}
-
-	mockErr := domain.NewInternalErr()
-	mockMWH := &mocks.MockMiddlewareHandler{}
-	mockSS := &mocks.MockSongService{}
-
-	var mockAuthHF gin.HandlerFunc = func(ctx *gin.Context) {
-		ctx.Set("user", mockUser)
-		ctx.Next()
-	}
-
-	mockMWH.
-		On("AuthenticateUser").
-		Return(mockAuthHF)
-	mockSS.
-		On("FetchAll", context.TODO()).
-		Return(nil, mockErr)
-
-	writer := prepareAndServeGet(t, mockSS, mockMWH, "")
-
-	assert.Equal(t, http.StatusInternalServerError, writer.Code)
 	mockMWH.AssertExpectations(t)
 	mockSS.AssertExpectations(t)
 }

@@ -15,6 +15,10 @@ export interface JWTRefreshPayload {
 
 export type JWTPayload = JWTAccessPayload | JWTRefreshPayload;
 
+if (!JWT_ACCESS || !JWT_REFRESH || !JWT_ACCESS_EXP || !JWT_REFRESH_EXP) {
+    process.exit(-1);
+}
+
 export default Object.freeze({
     JWT_ACCESS,
     JWT_ACCESS_EXP,

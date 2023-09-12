@@ -19,7 +19,7 @@ const validate = (token: string, secret: string): JWTPayload => {
         }) as JWTPayload;
 
         return decoded;
-    } catch (error) {
+    } catch (error: any) {
         switch (error.name) {
             case 'NotBeforeError':
                 throw makeBadRequestError('token is not active');

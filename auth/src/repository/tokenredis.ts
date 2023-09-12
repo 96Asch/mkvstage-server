@@ -1,7 +1,8 @@
+import type { Redis } from 'ioredis';
 import { makeInternalError } from '../model/error';
 import { REDIS_EXP } from '../model/redis';
 
-export default function makeRedisTokenRepo({ redisClient }) {
+export default function makeRedisTokenRepo({ redisClient }: { redisClient: Redis }) {
     async function create(sender: string, email: string, refreshtoken: string) {
         const key = `${email}:${sender}`;
 
@@ -21,7 +22,7 @@ export default function makeRedisTokenRepo({ redisClient }) {
                 match: key,
             });
 
-            var keys = [];
+            var keys: string[] = [];
             stream.on('data', function (resultKeys) {
                 for (var i = 0; i < resultKeys.length; i++) {
                     keys.push(resultKeys[i]);

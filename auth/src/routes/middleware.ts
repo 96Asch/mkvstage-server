@@ -4,7 +4,7 @@ import jwt from '../util/jwt';
 import secrets, { JWTAccessPayload } from '../model/token';
 
 const verifyAndExtractEmail = (req: Request, res: Response, next: NextFunction) => {
-    const bearerHeader: string = req.headers.authorization;
+    const bearerHeader = req.headers.authorization;
 
     if (!bearerHeader) {
         next(makeBadRequestError('authorization header is missing'));

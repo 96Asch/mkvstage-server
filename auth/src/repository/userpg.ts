@@ -1,8 +1,8 @@
-import type { QueryResultRow } from 'pg';
+import type { QueryResultRow, Pool } from 'pg';
 import { makeDuplicateError, makeInternalError } from '../model/error';
 import { User } from '../model/user';
 
-export default function makeUserPg({ pgPool }) {
+export default function makeUserPg(pgPool: Pool) {
     async function create(user: User): Promise<User> {
         let createdUser: User = user;
         const createQuery =
@@ -11,8 +11,7 @@ export default function makeUserPg({ pgPool }) {
         try {
             const res = await pgPool.query(createQuery, [user.email, user.password]);
             createdUser.id = res.rows[0].id;
-        } catch (error) {
-            console.log(error.code);
+        } catch (error: any) {
             switch (error.code) {
                 case '23505':
                     throw makeDuplicateError(['email'], [user.email]);

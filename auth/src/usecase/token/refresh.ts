@@ -2,7 +2,13 @@ import { makeNotAuthenticatedError, makeNotAuthorizedError } from '../../model/e
 import secrets, { JWTRefreshPayload } from '../../model/token';
 import jwt from '../../util/jwt';
 
-export default function makeRenewAccess({ userDb, redisDb }) {
+export default function makeRenewAccess({
+    userDb,
+    redisDb,
+}: {
+    userDb: any;
+    redisDb: any;
+}) {
     return async function renewAccess(refresh: string): Promise<string> {
         const refreshPayload = jwt.validate(
             refresh,
